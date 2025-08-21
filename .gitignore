@@ -1,0 +1,5 @@
+nore_modules/ 
+build/ 
+dist/ 
+.env 
+*.log 
