@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 nore_modules/ 
+=======
+node_modules/ 
+>>>>>>> 0868efc (Initial commit with all CP2-WhiskeyWatch-Clean files)
 build/ 
 dist/ 
 .env 
