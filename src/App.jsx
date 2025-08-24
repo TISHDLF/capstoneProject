@@ -15,6 +15,7 @@ import Feeding from './pages/Feeding'
 import CommunityGuide from './pages/CommunityGuide'
 import AdminLogin from './pages/LoginAndSignUp/AdminLogin'
 import SignUp from './pages/LoginAndSignUp/SignUp'
+import CatProfile from './pages/CatAdoption/CatProfile'
 
 
 
@@ -33,6 +34,7 @@ const App = () => {
         <Route path="signup" element={<SignUp />} />
         <Route path="donate" element={<Donate />} />
         <Route path="catadoption" element={<CatAdoption />} />
+        <Route path="catprofile" element={<CatProfile />}/>
         <Route path="feeding" element={<Feeding />} />
         <Route path="communityguide" element={<CommunityGuide />} />
       </Route>
