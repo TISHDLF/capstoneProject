@@ -4,6 +4,7 @@ import { Outlet } from 'react-router-dom'
 import NavigationBar from '../components/NavigationBar'
 import CatBot from '../components/CatBot'
 import SideNavigation from '../components/SideNavigation'
+import Footer from '../components/Footer'
 
 const RootLayout = () => {
   return (
@@ -11,6 +12,7 @@ const RootLayout = () => {
         <SideNavigation />
         <NavigationBar />
         <CatBot />
+        <Footer />
         <Outlet />
     </div>
   )

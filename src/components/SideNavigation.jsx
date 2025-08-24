@@ -1,14 +1,16 @@
 import React from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 
 const SideNavigation = () => {
+  const location = useLocation();
 
   const sideItemStyle = 'flex items-center justify-start gap-4 min-w-[200px] w-full h-auto rounded-tl-[50px] rounded-bl-[50px] box-border pl-3 pr-12 pt-2 pb-2 cursor-pointer bg-white border-2 border-white drop-shadow-md active:border-2 active:border-[#DC8801] hover:text-[#DC8801]'
-
+  const sideItemStyleCurrent = 'flex items-center justify-start gap-4 min-w-[200px] w-full h-auto rounded-tl-[50px] rounded-bl-[50px] box-border pl-3 pr-12 pt-2 pb-2 cursor-pointer bg-white border-2 drop-shadow-md border-[#DC8801] border-[#DC8801] text-[#DC8801]'
+  
   return (
     <div className='fixed right-0 top-[20%] flex flex-col gap-4 min-w-[200px] h-auto z-50'>
       {/* Login or Signup button */}
-      <Link to="/login" className={sideItemStyle}> 
+      <Link to="/login" className={location.pathname === "/login" ? sideItemStyleCurrent : sideItemStyle}> 
         <div className='flex justify-center items-center w-[40px] h-auto'>
           <img src="src/assets/icons/account.png" alt="account" />
         </div>
@@ -19,7 +21,7 @@ const SideNavigation = () => {
       <div className='flex flex-col justify-center gap-4 pl-12'>
 
         {/* Donate */} 
-        <Link to="/donate" className={sideItemStyle}> 
+        <Link to="/donate" className={location.pathname === "/donate" ? sideItemStyleCurrent : sideItemStyle}> 
           <div className='flex justify-center items-center w-[40px] h-auto'>
             <img src="src/assets/icons/donation.png" alt="account" />
           </div>
@@ -27,7 +29,7 @@ const SideNavigation = () => {
         </Link>
 
         {/* Cat Adoption */}
-        <Link to="/catadoption" className={sideItemStyle}>
+        <Link to="/catadoption" className={location.pathname === "/catadoption" ? sideItemStyleCurrent : sideItemStyle}>
           <div className='flex justify-center items-center w-[40px] h-auto'>
             <img src="src/assets/icons/paws.png" alt="account" />
           </div>
@@ -35,7 +37,7 @@ const SideNavigation = () => {
         </Link>
 
         {/* Feeding */}
-        <Link  to="/feeding" className={sideItemStyle}>
+        <Link  to="/feeding" className={location.pathname === "/feeding" ? sideItemStyleCurrent : sideItemStyle}>
           <div className='flex justify-center items-center w-[40px] h-auto'>
             <img src="src/assets/icons/pet-food.png" alt="account" />
           </div>
@@ -43,7 +45,7 @@ const SideNavigation = () => {
         </Link>
 
         {/* Community Guidelines */}
-        <Link to="communityguide" className={sideItemStyle}>
+        <Link to="communityguide" className={location.pathname === "/communityguide" ? sideItemStyleCurrent : sideItemStyle}>
           <div className='flex justify-center items-center w-[40px] h-auto -z-50'>
             <img src="src/assets/icons/information.png" alt="account" />
           </div>
