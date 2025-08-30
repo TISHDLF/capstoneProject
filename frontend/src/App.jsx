@@ -2,6 +2,7 @@ import React from 'react'
 import { Route, createBrowserRouter, createRoutesFromElements, RouterProvider } from 'react-router-dom'
 import RootLayout from './layout/RootLayout'
 
+
 import Home from './pages/Home'
 import AboutUs from './pages/AboutUs'
 import CatCareGuides from './pages/CatCareGuides'
@@ -51,7 +52,8 @@ const App = () => {
   )
 
   return (
-    <RouterProvider router = {router} />
+
+      <RouterProvider router={router} />
 
   )
 }

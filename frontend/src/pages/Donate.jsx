@@ -1,26 +1,28 @@
 import React from 'react'
-
-const handleGoBack = () => {
-  window.history.back();
-}
+import NavigationBar from '../components/NavigationBar';
+import SideNavigation from '../components/SideNavigation';
+import Footer from '../components/Footer';
 
 const Donate = () => {
   return (
-    <div className='flex flex-col pt-5 pl-55 pb-20 min-h-screen w-auto'>
-        <div className='relative flex flex-col w-[900px] h-auto bg-[#FFF] rounded-[25px]'>
+    <div className='flex flex-col min-h-screen pb-10'>
+      <NavigationBar />
+      <div className='grid grid-cols-[80%_20%] h-full'>
+        <div className='flex flex-col  pl-50 p-10'>
 
-           <button onClick={handleGoBack} className='flex flex-row items-center justify-center gap-3 p-2 rounded-[15px] bg-[#DC8801] w-[100px] hover:bg-[#ffb640] active:bg-[#DC8801]'>
-              <div className='w-[40px] h-[30px]'><img src="src/assets/icons/arrow.png" alt="" /></div>
-              <label className="font-bold text-[#FFF]">Back</label>
-            </button>
+          
 
-          <form className='relative flex flex-col gap-5 pt-5'>
+          <form className='relative flex flex-col gap-5 pt-5 bg-[#FFF] rounded-[25px] w-full h-auto'>
+            
             <div className='grid grid-cols-[20%_80%] place-items-center'>
-              <div className='flex flex-row items-center justify-center gap-4 p-4 bg-[#FDF5D8] shadow-md rounded-tr-[15px] rounded-br-[15px]'>
-                <label className="font-bold text-[#DC8801]">Donation Form</label>
-                <div className='w-[30px] h-auto'>
+              <div className='flex items-center gap-5 p-4 bg-[#FDF5D8] shadow-md rounded-tr-[15px] rounded-br-[15px] w-full'>
+                <label className="flex flex-row font-bold text-[#DC8801]">
+                  Donation Form
+                </label>
+                <div className='w-[40px] h-auto'>
                   <img src="src/assets/icons/clipboard-white.png" alt="white clipboard" className='w-full h-auto '/>  
                 </div>
+                
               </div>
               <div className='flex flex-col justify-between'>
                 <label>What do you want to donate?*</label>
@@ -111,6 +113,10 @@ const Donate = () => {
             <button className='absolute right-5 bottom-5 flex flex-row justify-center text-center w-[100px] bg-[#B5C04A] font-bold text-[#FFF] p-3 rounded-[15px] hover:bg-[#CFDA34] active:bg-[#B5C04A]'> Submit </button>
           </form>
         </div>
+        <SideNavigation />
+      </div>
+
+      <Footer />
     </div>
   )
 }

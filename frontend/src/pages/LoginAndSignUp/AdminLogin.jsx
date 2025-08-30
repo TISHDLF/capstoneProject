@@ -18,7 +18,7 @@ const AdminLogin = () => {
                 <input type="password" name="" id="" placeholder='Password' className='border-b-2 border-b-[#977655] p-2' />
             </form>
             <div className='flex gap-2'>
-                <Link to="/dashboard" className='bg-[#DC8801] text-[#FFF] w-30 text-center p-2 rounded-[25px] cursor-pointer active:bg-[#977655]'> Log In </Link>
+                <Link to="/admin/homepage" className='bg-[#DC8801] text-[#FFF] w-30 text-center p-2 rounded-[25px] cursor-pointer active:bg-[#977655]'> Log In </Link>
                 <Link to="/login" className='border-2 border-[#DC8801] text-[#DC8801] w-30 text-center p-2 rounded-[25px] active:bg-[#977655] active:text-[#FFF] active:border-[#977655]'> Cancel </Link>
             </div>
         </div>

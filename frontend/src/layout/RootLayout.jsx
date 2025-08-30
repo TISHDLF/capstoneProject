@@ -11,11 +11,11 @@ const RootLayout = () => {
   return (
     <div className='relative h-full w-full bg-[#f9f7dc] bg-[url(src/assets/background-paws.png)] bg-cover bg-center bg-repeat'> 
         {/* <SideNavigation /> */}
-        <AdminSideBar />
-        <ScrollRestoration />
-        <NavigationBar />
+        {/* <AdminSideBar /> */}
+        {/* <NavigationBar /> */}
         <CatBot />
-        <Footer />
+        {/* <Footer /> */}
+        <ScrollRestoration />
         <Outlet />
     </div>
   )
