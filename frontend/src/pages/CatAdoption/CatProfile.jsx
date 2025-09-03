@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import NavigationBar from '../../components/NavigationBar';
 import Footer from '../../components/Footer';
 import SideNavigation from '../../components/SideNavigation';
+import CatBot from '../../components/CatBot';
 
 
 
@@ -18,10 +19,11 @@ const CatProfile = () => {
 
   return (
     <div className='flex flex-col min-h-screen pb-10'>
+        <CatBot />
         <NavigationBar />
 
         <div className='grid grid-cols-[80%_20%] h-full'>
-            <div className='relative flex flex-col pl-50 p-10'>
+            <div className='relative flex flex-col pl-50 p-8'>
                 <div className='relative flex flex-row items-center gap-2'>
                     <button className='flex items-center justify-center bg-[#B5C04A] w-[50px] h-[50px] p-2 rounded-[50%]  hover:bg-[#CFDA34] active:bg-[#B5C04A]'>
                         <img src="src/assets/icons/arrow-left-no-tail.png" alt="arrow left" className='w-auto h-full' />
@@ -29,7 +31,7 @@ const CatProfile = () => {
 
                     <div className='relative grid grid-cols-[60%_40%] w-[1000px] h-auto bg-[#FFF] p-5 rounded-[25px] shadow-md'>
                         <div className='flex flex-col bg-[#FDF5D8] w-auto p-4 gap-4 rounded-[20px] box-content overflow-hidden'>
-                            <div className='flex flex-col items-center h-[500px] w-full rounded-[16px] overflow-hidden'>
+                            <div className='flex flex-col items-center h-[450px] w-full rounded-[16px] overflow-hidden'>
                                 <img src={selectedImage} alt="cat image" className='h-auto object-cover'/>
                             </div>
                             <div className='grid grid-cols-5 object-cover pl-1 overflow-hidden gap-2 overflow-x-auto'>
@@ -81,7 +83,7 @@ const CatProfile = () => {
                                     </div>
                                     
                                 </div>
-                                <div className='text-justify text-[#5f5f5f]'>
+                                <div className='text-justify text-[#5f5f5f] leading-tight'>
                                     {/* Cat Description */} True to his name, Loki is the trickster of the bunch. Always scheming, always curious, he’s never too far from the scene of a minor disaster, like an upturned water bowl or a mysteriously relocated toy. He thrives on stimulation, loves interactive play, and often greets visitors with bold, playful energy. He’s affectionate too, but on his own terms, often flopping dramatically when he wants belly rubs (and maybe when he doesn’t, just to keep things interesting).
                                 </div>
                             </div>

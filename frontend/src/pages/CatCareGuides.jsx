@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import SideNavigation from '../components/SideNavigation';
 import NavigationBar from '../components/NavigationBar';
 import Footer from '../components/Footer';
+import CatBot from '../components/CatBot';
 
 const handleGoBack = () => {
   window.history.back()
@@ -11,6 +12,7 @@ const handleGoBack = () => {
 const CatCareGuides = () => {
   return (
     <div className='flex flex-col min-h-screen pb-10'>
+      <CatBot />
       <NavigationBar />
 
       <div className='grid grid-cols-[80%_20%] h-full'>
