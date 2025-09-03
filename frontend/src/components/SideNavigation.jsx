@@ -25,7 +25,7 @@ const SideNavigation = () => {
 
       try {
         const response = await axios.get(`http://localhost:5000/users/logged?user_id=${userId}`);
-        console.log(response.data.firstname);
+        console.log(response.data.firstname, response.data.lastname);
         setUser(response.data);
 
       } catch (err) {
@@ -44,14 +44,16 @@ const SideNavigation = () => {
   const toggleProfileMenu = () => {
     setIsvisible(!isVisible);
   }
-  const handleOptionClick = (event) => {
-    event.stopPropagation();
-  };
-
-
+  
+  const isLoggedIn = user.firstname && user.lastname;
+  const isAdminOrHeadVolunteer = user.role === 'admin' || user.role === 'head_volunteer';
+  const dashboardPath = user.role === 'admin' ? '/dashboard' : '/testhvhomepage';
+  
   const handleLogout = () => {
     Cookies.remove('user')
+    window.reload()
   }
+
 
   const sideItemStyle =
     'relative flex items-center justify-start gap-4 min-w-[200px] w-full h-auto rounded-tl-[50px] rounded-bl-[50px] box-border pl-3 pr-6 pt-2 pb-2 cursor-pointer bg-white border-2 border-white shadow-md active:bg-[#fdf4d5] hover:text-[#DC8801]';
@@ -61,7 +63,7 @@ const SideNavigation = () => {
   return (
     <div className="fixed right-0 top-[20%] flex flex-col gap-4 min-w-[200px] h-auto">
       {/* Login or Signup button */} 
-      <div className={sideItemStyle }>
+      <div className={location.pathname === "/profile" ? sideItemStyleCurrent : sideItemStyle}>
         <div className='flex flex-row items-center gap-2'>
           <div className="flex justify-center items-center w-[40px] h-auto">
             <img src="/src/assets/icons/account.png" alt="account" />
@@ -73,23 +75,44 @@ const SideNavigation = () => {
               ? `${user.firstname} ${user.lastname}`
               : 'Guest'}
           </label>
-          <button className='grid place-items-center w-[35px] h-auto  p-2 rounded-[25px] hover:bg-[#f9e390] active:bg-[#FFF]' onClick={toggleProfileMenu}>
+          <button className='grid place-items-center w-[35px] h-auto p-2 rounded-[25px] hover:bg-[#f9e390] active:bg-[#FFF]' onClick={toggleProfileMenu}>
             <img src="/src/assets/icons/down-arrow-orange.png" alt="" />
           </button>
         </div>
-
         {/* Dropdown for */}      
-        <div className='absolute -bottom-25 right-25 box-border z-1 gap-2 bg-[#FFF] shadow-md rounded-tl-[15px] rounded-bl-[15px] rounded-br-[15px] box-border  overflow-hidden'>
-    
-          <div className={isVisible ? 'grid place-items-center gap-1 p-2' : 'hidden'}>
-            <Link to="/" className="text-[#000] p-3 pl-6 pr-6 w-full bg-[#fef8e2] hover:bg-[#f9e394] active:bg-[#feaf31] active:text-[#FFF] rounded-[10px]"> My Profile </Link>
-            <Link to="/login" className="text-[#000] p-3 pl-6 bg-[#fef8e2] pr-6 w-full hover:bg-[#f9e394] active:bg-[#feaf31] active:text-[#FFF] rounded-[10px]" onClick={() => handleLogout()}> Log out </Link>
-          </div>
-           
-        </div>
+
       </div>
 
-      <div className="flex flex-col justify-center gap-4 pl-12">
+      <div className="absolute right-18 top-12 w-40 box-border bg-[#FFF] shadow-md rounded-[15px] rounded-tr-[0px] overflow-hidden z-[9999]"
+      style={{ minHeight: 'fit-content' }} >
+
+        {isLoggedIn ? (
+          <div className={isVisible ? 'grid place-items-center gap-1 p-2' : 'hidden'}>
+            <Link to="/profile" className="text-[#000] p-3 pl-6 pr-6 w-full bg-[#fef8e2] hover:bg-[#f9e394] active:bg-[#feaf31] active:text-[#FFF] rounded-[10px]"
+            >
+              My Profile
+            </Link>
+            {isAdminOrHeadVolunteer && (
+              <Link to={dashboardPath} className="text-[#000] p-3 pl-6 pr-6 w-full bg-[#fef8e2] hover:bg-[#f9e394] active:bg-[#feaf31] active:text-[#FFF] rounded-[10px]" >
+                Dashboard
+              </Link>
+            )}
+            <Link to="/login"
+              className="text-[#000] p-3 pl-6 bg-[#fef8e2] pr-6 w-full hover:bg-[#f9e394] active:bg-[#feaf31] active:text-[#FFF] rounded-[10px]"
+              onClick={handleLogout} replace>
+              Log out
+            </Link>
+          </div>
+          ) : (
+            <div className={isVisible ? 'grid place-items-center gap-1 p-2' : 'hidden'}>
+              <Link to="/login" className="text-[#000] p-3 pl-6 pr-6 w-full bg-[#fef8e2] hover:bg-[#f9e394] active:bg-[#feaf31] active:text-[#FFF] rounded-[10px]">
+                Log in
+              </Link>
+            </div>
+          )}
+      </div>
+
+      <div className="flex flex-col justify-center gap-4 pl-12]">
         {/* Donate */}
         <Link to="/donate" className={location.pathname === "/donate" ? sideItemStyleCurrent : sideItemStyle }>
           <div className="flex justify-center items-center w-[40px] h-auto">
