@@ -54,7 +54,7 @@ const HeadVolunteerSideBar = () => {
     <div className=" flex flex-col gap-4 min-w-[200px] h-auto">
       <div
         className={
-          location.pathname === "/profile"
+          location.pathname === "/headvolunteerprofile"
             ? sideItemStyleCurrent
             : sideItemStyle
         }
@@ -91,7 +91,7 @@ const HeadVolunteerSideBar = () => {
             }
           >
             <Link
-              to="/profile"
+              to="/headvolunteerprofile"
               className="text-[#000] p-3 pl-6 pr-6 w-full bg-[#fef8e2] hover:bg-[#f9e394] active:bg-[#feaf31] active:text-[#FFF] rounded-[10px]"
             >
               My Profile

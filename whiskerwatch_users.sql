@@ -3,7 +3,7 @@
 -- Host: localhost    Database: whiskerwatch
 -- ------------------------------------------------------
 -- Server version	9.4.0
-
+use whiskerwatch;
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
@@ -45,9 +45,68 @@ CREATE TABLE `users` (
 ) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+DROP TABLE IF EXISTS `InKindDonation`;
+CREATE TABLE `InKindDonation` (
+  `ikDonationID` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `donationType` enum('Food','Toys','Litter','Bedding','Other') NOT NULL,
+  `dateSubmitted` date NOT NULL,
+  `status` enum('Pending','Approved','Rejected') NOT NULL DEFAULT 'Pending',
+  PRIMARY KEY (`ikDonationID`),
+  FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+CREATE INDEX idx_dateSubmitted ON InKindDonation (`dateSubmitted`);
+CREATE INDEX idx_status ON InKindDonation (`status`);
+
+DELIMITER //
+CREATE TRIGGER `set_default_dateSubmitted`
+BEFORE INSERT ON `InKindDonation`
+FOR EACH ROW
+BEGIN
+  IF NEW.dateSubmitted IS NULL THEN
+    SET NEW.dateSubmitted = CURRENT_DATE;
+  END IF;
+END;
+//
+DELIMITER ;
+
+
+INSERT INTO `InKindDonation` (`user_id`, `donationType`, `dateSubmitted`, `status`)
+VALUES (1, 'Food', CURDATE(), 'Pending');
+
+SELECT * FROM `InKindDonation`;
+
+SELECT 
+    ik.ikDonationID AS applicationNo,
+    ik.user_id AS userId,
+    CONCAT(u.firstname, ' ', u.lastname) AS name,
+    ik.donationType AS type,
+    DATE_FORMAT(ik.dateSubmitted, '%m-%d-%y') AS date,
+    ik.status
+FROM 
+    InKindDonation ik
+JOIN 
+    users u ON ik.user_id = u.user_id;
+
+ALTER TABLE InKindDonation MODIFY donationType ENUM('Food','Toys','Litter','Bedding','Other','Items','Products');
+
+
+INSERT INTO InKindDonation (user_id, donationType, dateSubmitted, status)
+VALUES 
+  (1, 'Food', '2025-05-15', 'Pending'),
+  (4, 'Items', '2025-05-14', 'Pending'),
+  (5, 'Products', '2025-05-14', 'Pending'),
+  (6, 'Other', '2025-04-17', 'Approved'),
+  (7, 'Food', '2025-04-07', 'Rejected');
 --
 -- Dumping data for table `users`
 --
+UPDATE users SET password = 'johnwick' WHERE user_id = 4;  -- head_volunteer
+UPDATE users SET password = 'misterbean' WHERE user_id = 5; -- admin
+UPDATE users SET password = 'Cabangal10' WHERE user_id = 1; -- regular
+
+
+UPDATE users SET role = 'regular' WHERE role IS NULL;
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;

@@ -37,6 +37,7 @@ import AllUsers from "./pages/Admin/Manage/AllUsers";
 import Donation from "./pages/Admin/Feeding/Donation";
 import CatProfileProperty from "./pages/Admin/CatProfileProperty/CatProfileProperty";
 import HeadVolunteerMainPage from "./pages/HeadVolunteer/HeadVolunteerMainPage";
+import HeadVolunteerProfile from "./pages/HeadVolunteer/HeadVolunteerProfile";
 
 const App = () => {
   const router = createBrowserRouter(
@@ -80,6 +81,7 @@ const App = () => {
 
         {/* Head Volunteer */}
         <Route path="headvolunteerpage" element={<HeadVolunteerMainPage />} />
+        <Route path="headvolunteerprofile" element={<HeadVolunteerProfile />} />
       </Route>
     )
   );

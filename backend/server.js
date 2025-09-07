@@ -113,6 +113,44 @@ app.get("/api/donations", async (req, res) => {
     });
   }
 });
+
+// ✅ Get user by ID
+app.get("/api/users/:id", async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      "SELECT user_id, firstname, lastname, contactnumber, birthday, email, username, role, address, badge FROM users WHERE user_id = ?",
+      [req.params.id]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json(rows[0]);
+  } catch (err) {
+    console.error("Error fetching user:", err);
+    res.status(500).json({ error: "Database error" });
+  }
+});
+// User Meter routes
+router.get("/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const [rows] = await pool.query(
+      "SELECT points, level FROM user_meter WHERE user_id = ?",
+      [userId]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ message: "User meter not found" });
+    }
+
+    res.json(rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
 app.use((err, req, res, next) => {
   console.error("Global error:", err.stack);
   res.status(500).json({ error: "Something went wrong on the server" });
