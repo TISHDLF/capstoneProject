@@ -33,7 +33,11 @@ import  AdminList  from './pages/Admin/Manage/AdminList'
 import AllUsers from './pages/Admin/Manage/AllUsers'
 import Donation from './pages/Admin/Feeding/Donation'
 import CatProfileProperty from './pages/Admin/CatProfileProperty/CatProfileProperty'
-
+import AdopterView from './pages/Admin/Adopters/AdopterView'
+import AdopterApplicationView from './pages/Admin/Adopters/AdopterApplicationView'
+import FeedingApplicationView from './pages/Admin/Feeding/FeedingApplicationView'
+import UserProfile from './pages/Admin/Manage/UserProfile'
+import CatProfileCreate from './pages/Admin/CatProfileProperty/CatProfileCreate'
 
 
 const App = () => {
@@ -53,7 +57,7 @@ const App = () => {
         <Route path="contactus" element={<ContactUs />} />
         <Route path="donate" element={<Donate />} />
         <Route path="catadoption" element={<CatAdoption />} />
-        <Route path="catprofile" element={<CatProfile />} />
+        <Route path="catprofile/:cat_id" element={<CatProfile />} />
         <Route path="adopteeform" element={<AdopteeForm />} />
         <Route path="feeding" element={<Feeding />} />
         <Route path="communityguide" element={<CommunityGuide />} />
@@ -61,20 +65,26 @@ const App = () => {
         {/* Admin */}
         <Route path="profile" element={<Profile />} />
         <Route path="admincatprofile" element={<AdminCatProfile />} />
-        <Route path="catprofileproperty" element={<CatProfileProperty />} />
+        <Route path="catprofileproperty/:cat_id" element={<CatProfileProperty />} />
+        <Route path="catprofilecreate" element={<CatProfileCreate />} />
 
         <Route path="adoptersandvisitors" element={<AdoptersAndVisitors />} />
         <Route path="adopterslist" element={<AdoptersList />}/>
-        <Route path='adopterapplication' element={<AdopterApplication />}/>
+        <Route path="adopterslist/adopterview" element={<AdopterView/> } />
+        <Route path="adopterapplication" element={<AdopterApplication />}/>
+        <Route path="adopterapplication/adopterapplicationview" element={<AdopterApplicationView />}/>
 
         <Route path="volunteers" element={<Volunteers />} />
         <Route path="feedingvolunteers" element={<FeedingVolunteers />} />
         <Route path="feedingapplications" element={<FeedingApplications />} />
+        <Route path="feedingapplications/feedingapplicationview" element={<FeedingApplicationView />}/>
         <Route path="donationadmin" element={<Donation />}/>
         
         <Route path="manage" element={<Manage />} />
         <Route path="adminlist" element={<AdminList />} />
         <Route path="allusers" element={<AllUsers />} />
+        <Route path="userprofile/:user_id" element={<UserProfile />}/>
+        
 
         {/* Head Volunteer */}
         <Route path="testhvhomepage" element={<TestHVHompage /> }/>
