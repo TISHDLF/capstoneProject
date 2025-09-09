@@ -49,6 +49,32 @@ app.get('/', (req, res) => {
   res.json('This is the backend.');
 });
 
+
+app.post('/users/signup', async (req, res) => {
+  try {
+    const { firstname, lastname, contactnumber, birthday, email, username, role, address, password } = req.body;
+
+    const [result] = await db.query(
+      `INSERT INTO users 
+        (firstname, lastname, contactnumber, birthday, email, username, role, address, password) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [firstname, lastname, contactnumber, birthday, email, username, role, address, password]
+    );
+
+    res.status(200).json({
+      message: 'Account created!',
+      newUser: {
+        user_id: result.insertId,
+        role: 'Toe Bean Trainee',
+      }
+    })
+
+  } catch(err) {
+    console.error('Login error:', err);
+    res.status(500).json({ err: 'Internal server error' });
+  }
+})
+
 // Login endpoint
 app.post('/users/login', async (req, res) => {
   try {
@@ -77,7 +103,39 @@ app.post('/users/login', async (req, res) => {
     });
   } catch (err) {
     console.error('Login error:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ err: 'Internal server error' });
+  }
+});
+
+app.post('/users/adminlogin', async (req, res) => {
+  try {
+    const { username, role, password } = req.body;
+
+    if (!username || !role || !password) {
+      return res.status(400).json({ error: 'Username, role and password are required' });
+    }
+
+    const [users] = await db.query(
+      'SELECT * FROM users WHERE username = ? and role = ? and password = ?', [username, role, password]
+    );
+
+    if (users.length === 0) {
+      return res.status(401).json({ error: 'Invalid credentials!' });
+    } 
+     
+ 
+    const user = users[0];
+
+    res.status(200).json({
+      message: 'Login successful',
+      user: {
+        user_id: user.user_id,
+        role: user.role,
+      },
+    });
+  } catch (err) {
+    console.error('Login error:', err);
+    res.status(500).json({ err: 'Internal server error' });
   }
 });
 
