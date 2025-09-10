@@ -133,10 +133,11 @@ app.get("/api/users/:id", async (req, res) => {
   }
 });
 // User Meter routes
-router.get("/:userId", async (req, res) => {
+// ✅ User Meter route
+app.get("/api/meter/:userId", async (req, res) => {
   try {
     const { userId } = req.params;
-    const [rows] = await pool.query(
+    const [rows] = await db.query(
       "SELECT points, level FROM user_meter WHERE user_id = ?",
       [userId]
     );
@@ -147,10 +148,11 @@ router.get("/:userId", async (req, res) => {
 
     res.json(rows[0]);
   } catch (err) {
-    console.error(err);
+    console.error("❌ Error fetching user meter:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
+
 app.use((err, req, res, next) => {
   console.error("Global error:", err.stack);
   res.status(500).json({ error: "Something went wrong on the server" });
