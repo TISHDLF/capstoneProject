@@ -61,6 +61,9 @@ const App = () => {
         <Route path="feeding" element={<Feeding />} />
         <Route path="communityguide" element={<CommunityGuide />} />
 
+        <Route path="/cat/:id" element={<CatProfile />} />
+        <Route path="/adopteeform/:catId" element={<AdopteeForm />} />
+
         {/* Admin */}
         <Route path="profile" element={<Profile />} />
         <Route path="admincatprofile" element={<AdminCatProfile />} />

@@ -51,7 +51,7 @@ const HeadVolunteerSideBar = () => {
     "relative flex items-center justify-start gap-4 min-w-[200px] w-full h-auto rounded-tl-[50px] rounded-bl-[50px] box-border pl-3 pr-6 pt-2 pb-2 cursor-pointer bg-white border-2 drop-shadow-md border-[#DC8801] text-[#DC8801]";
 
   return (
-    <div className=" flex flex-col gap-4 min-w-[200px] h-auto pt-10">
+    <div className=" flex flex-col gap-4 min-w-[200px] h-auto pt-10 fixed right-0 top-30">
       <div
         className={
           location.pathname === "/headvolunteerprofile"

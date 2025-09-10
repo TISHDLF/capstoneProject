@@ -153,6 +153,35 @@ app.get("/api/meter/:userId", async (req, res) => {
   }
 });
 
+// ✅ Get all cats
+app.get("/api/cats", async (req, res) => {
+  try {
+    const [rows] = await db.query(`
+      SELECT 
+        *
+      FROM Cats
+    `);
+    res.json(rows);
+  } catch (err) {
+    console.error("❌ Error fetching cats:", err.sqlMessage || err.message);
+    res.status(500).json({ error: "Failed to fetch cats" });
+  }
+});
+app.get("/api/cats/:id", async (req, res) => {
+  try {
+    const [rows] = await db.query("SELECT * FROM cats WHERE cat_id = ?", [
+      req.params.id,
+    ]);
+    if (rows.length === 0) {
+      return res.status(404).json({ message: "Cat not found" });
+    }
+    res.json(rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch cat" });
+  }
+});
+
 app.use((err, req, res, next) => {
   console.error("Global error:", err.stack);
   res.status(500).json({ error: "Something went wrong on the server" });

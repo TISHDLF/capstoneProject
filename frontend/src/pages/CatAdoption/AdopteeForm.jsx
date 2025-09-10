@@ -1,6 +1,6 @@
-import React from "react";
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useParams, Link } from "react-router-dom";
+
 import NavigationBar from "../../components/NavigationBar";
 import Footer from "../../components/Footer";
 import SideNavigation from "../../components/SideNavigation";
@@ -31,6 +31,28 @@ const AdopteeForm = () => {
     }
   };
 
+  const { catId } = useParams(); // e.g., /adopteeform/1 → catId = 1
+  const [cat, setCat] = useState(null);
+
+  useEffect(() => {
+    const fetchCat = async () => {
+      try {
+        const response = await fetch(`/api/cats/${catId}`);
+        if (!response.ok) throw new Error("Failed to fetch cat data");
+        const data = await response.json();
+        setCat(data);
+      } catch (error) {
+        console.error("Error fetching cat:", error);
+      }
+    };
+
+    fetchCat();
+  }, [catId]);
+
+  if (!cat) {
+    return <p className="p-10">Loading cat info...</p>;
+  }
+
   return (
     <div className="flex flex-col min-h-screen pb-10">
       <CatBot />
@@ -46,7 +68,7 @@ const AdopteeForm = () => {
               >
                 <div className="w-[25px] h-[25px]">
                   <img
-                    src="src/assets/icons/arrow.png"
+                    src="\src\assets\icons\arrow.png"
                     alt=""
                     className="w-full h-auto"
                   />
@@ -58,7 +80,7 @@ const AdopteeForm = () => {
                 <label className="font-bold text-[#DC8801]">Adoptee Form</label>
                 <div className="flex items-center justify-center w-[30px] h-auto">
                   <img
-                    src="src/assets/icons/clipboard-white.png"
+                    src="\src\assets\icons\clipboard-white.png"
                     alt="white clipboard"
                     className="w-full h-auto "
                   />
@@ -76,12 +98,12 @@ const AdopteeForm = () => {
               <div className="flex flex-row gap-2 w-full justify-between">
                 <div className="flex flex-col">
                   <label htmlFor="">1. You will be adopting:</label>
-                  <label className="font-bold pl-4">Cat Name </label>
+                  <label className="font-bold pl-4">{cat.name} </label>
                 </div>
                 <div className="border-dashed border-2 border-[#B5C04A] rounded-[18px] p-2">
                   <div className="w-[250px] h-auto rounded-[15px] overflow-hidden">
                     <img
-                      src="src/assets/icons/CatImages/cat1.jpg"
+                      src={cat.image || "src/assets/icons/CatImages/cat1.jpg"}
                       alt="cat image"
                     />
                   </div>
