@@ -4,22 +4,17 @@ import meterPhoto1 from "../assets/paw2.png";
 
 const WhiskerMeter = ({ user }) => {
   const [expanded, setExpanded] = useState(false);
-
-  // Always 5 circles
   const circleCount = 5;
 
-  // Example: assume we get points from user (default to 0 if not passed)
+  // Points
   const points = user?.points || 0;
 
-  // Normalize points into 0–circleCount
-  // Example: 200 points = full meter (all 5 circles)
   const maxPoints = 200;
   const progressValue = Math.min(
     Math.ceil((points / maxPoints) * circleCount),
     circleCount
   );
 
-  // Labels (badge titles)
   const labels = [
     "The Catnip Captain",
     "Meowntain Mover",
@@ -87,11 +82,10 @@ const WhiskerMeter = ({ user }) => {
 
                     {/* Circles */}
                     {Array.from({ length: circleCount }).map((_, i) => {
-                      // flip so filling starts at bottom
                       const circleIndexFromBottom = circleCount - i;
                       const isFilled =
                         circleIndexFromBottom <= progressValue &&
-                        progressValue > 0; // bottom circle always fills if >=1
+                        progressValue > 0;
 
                       return (
                         <div
