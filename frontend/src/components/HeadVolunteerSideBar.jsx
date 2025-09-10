@@ -51,7 +51,7 @@ const HeadVolunteerSideBar = () => {
     "relative flex items-center justify-start gap-4 min-w-[200px] w-full h-auto rounded-tl-[50px] rounded-bl-[50px] box-border pl-3 pr-6 pt-2 pb-2 cursor-pointer bg-white border-2 drop-shadow-md border-[#DC8801] text-[#DC8801]";
 
   return (
-    <div className=" flex flex-col gap-4 min-w-[200px] h-auto">
+    <div className=" flex flex-col gap-4 min-w-[200px] h-auto pt-10">
       <div
         className={
           location.pathname === "/headvolunteerprofile"
@@ -140,7 +140,7 @@ const HeadVolunteerSideBar = () => {
           }
         >
           <div className="flex justify-center items-center w-[40px] h-auto">
-            <img src="/src/assets/icons/donation.png" alt="donation" />
+            <img src="/src/assets/icons/donationHV.png" alt="donation" />
           </div>
           <label className="cursor-pointer">
             {" "}
@@ -157,7 +157,7 @@ const HeadVolunteerSideBar = () => {
           }
         >
           <div className="flex justify-center items-center w-[40px] h-auto">
-            <img src="/src/assets/icons/donation.png" alt="donation" />
+            <img src="/src/assets/icons/adoptionHV.png" alt="donation" />
           </div>
           <label className="cursor-pointer"> Adoption Applications </label>
         </Link>
@@ -171,7 +171,7 @@ const HeadVolunteerSideBar = () => {
           }
         >
           <div className="flex justify-center items-center w-[40px] h-auto">
-            <img src="/src/assets/icons/donation.png" alt="donation" />
+            <img src="/src/assets/icons/feederHV.png" alt="donation" />
           </div>
           <label className="cursor-pointer"> Feeder Applications</label>
         </Link>
@@ -184,7 +184,7 @@ const HeadVolunteerSideBar = () => {
           }
         >
           <div className="flex justify-center items-center w-[40px] h-auto">
-            <img src="/src/assets/icons/donation.png" alt="donation" />
+            <img src="/src/assets/icons/analyticsHV.png" alt="donation" />
           </div>
           <label className="cursor-pointer"> Report and Analytics</label>
         </Link>
@@ -197,7 +197,7 @@ const HeadVolunteerSideBar = () => {
           }
         >
           <div className="flex justify-center items-center w-[40px] h-auto">
-            <img src="/src/assets/icons/donation.png" alt="donation" />
+            <img src="/src/assets/icons/newcatHV.png" alt="donation" />
           </div>
           <label className="cursor-pointer"> Create New Cat Profile</label>
         </Link>
