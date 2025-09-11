@@ -1,10 +1,47 @@
-import React from "react";
-import {
-  Route,
-  createBrowserRouter,
-  createRoutesFromElements,
-  RouterProvider,
-} from "react-router-dom";
+
+import React from 'react'
+import { Routes, Route, createBrowserRouter, createRoutesFromElements, RouterProvider } from 'react-router-dom'
+import RootLayout from './layout/RootLayout'
+
+
+import Home from './pages/Home'
+import AboutUs from './pages/AboutUs'
+import CatCareGuides from './pages/CatCareGuides'
+import ContactUs from './pages/ContactUs'
+import Login from './pages/LoginAndSignUp/Login'
+import CatCommunityNews from './pages/Home/CatCommunityNews'
+import Donate from './pages/Donate'
+import CatAdoption from './pages/CatAdoption'
+import Feeding from './pages/Feeding'
+import CommunityGuide from './pages/CommunityGuide'
+import AdminLogin from './pages/LoginAndSignUp/AdminLogin'
+import SignUp from './pages/LoginAndSignUp/SignUp'
+import CatProfile from './pages/CatAdoption/CatProfile'
+import AdopteeForm from './pages/CatAdoption/AdopteeForm'
+
+import Dashboard from './pages/Admin/Dashboard'
+import Profile from './pages/Profile/Profile'
+import AdminCatProfile from './pages/Admin/AdminCatProfile'
+import AdoptersAndVisitors from './pages/Admin/AdoptersAndVisitors'
+import Volunteers from './pages/Admin/Volunteers'
+import Manage from './pages/Admin/Manage'
+import TestHVHompage from './pages/HeadVolunteer/TestHVHompage'
+import AdoptersList from './pages/Admin/Adopters/AdoptersList'
+import AdopterApplication from './pages/Admin/Adopters/AdopterApplication'
+import FeedingVolunteers from './pages/Admin/Feeding/FeedingVolunteers'
+import FeedingApplications from './pages/Admin/Feeding/FeedingApplications'
+import  AdminList  from './pages/Admin/Manage/AdminList'
+import AllUsers from './pages/Admin/Manage/AllUsers'
+import Donation from './pages/Admin/Feeding/Donation'
+import CatProfileProperty from './pages/Admin/CatProfileProperty/CatProfileProperty'
+import AdopterView from './pages/Admin/Adopters/AdopterView'
+import AdopterApplicationView from './pages/Admin/Adopters/AdopterApplicationView'
+import FeedingApplicationView from './pages/Admin/Feeding/FeedingApplicationView'
+import UserProfile from './pages/Admin/Manage/UserProfile'
+import CatProfileCreate from './pages/Admin/CatProfileProperty/CatProfileCreate'
+import UpdateRole from './pages/Admin/Manage/UpdateRole'
+import AssignNewAdmin from './pages/Admin/Manage/AssignNewAdmin'
+
 import RootLayout from "./layout/RootLayout";
 
 import Home from "./pages/Home";
@@ -21,6 +58,7 @@ import AdminLogin from "./pages/LoginAndSignUp/AdminLogin";
 import SignUp from "./pages/LoginAndSignUp/SignUp";
 import CatProfile from "./pages/CatAdoption/CatProfile";
 import AdopteeForm from "./pages/CatAdoption/AdopteeForm";
+
 
 import Dashboard from "./pages/Admin/Dashboard";
 import Profile from "./pages/Profile/Profile";
@@ -55,7 +93,7 @@ const App = () => {
         <Route path="contactus" element={<ContactUs />} />
         <Route path="donate" element={<Donate />} />
         <Route path="catadoption" element={<CatAdoption />} />
-        <Route path="catprofile" element={<CatProfile />} />
+        <Route path="catprofile/:cat_id" element={<CatProfile />} />
         <Route path="adopteeform" element={<AdopteeForm />} />
         <Route path="feeding" element={<Feeding />} />
         <Route path="communityguide" element={<CommunityGuide />} />
@@ -63,20 +101,38 @@ const App = () => {
         {/* Admin */}
         <Route path="profile" element={<Profile />} />
         <Route path="admincatprofile" element={<AdminCatProfile />} />
-        <Route path="catprofileproperty" element={<CatProfileProperty />} />
+        <Route path="catprofileproperty/:cat_id" element={<CatProfileProperty />} />
+        <Route path="catprofilecreate" element={<CatProfileCreate />} />
 
         <Route path="adoptersandvisitors" element={<AdoptersAndVisitors />} />
+
+        <Route path="adopterslist" element={<AdoptersList />}/>
+        <Route path="adopterslist/adopterview" element={<AdopterView/> } />
+        <Route path="adopterapplication" element={<AdopterApplication />}/>
+        <Route path="adopterapplication/adopterapplicationview" element={<AdopterApplicationView />}/>
+
         <Route path="adopterslist" element={<AdoptersList />} />
         <Route path="adopterapplication" element={<AdopterApplication />} />
+
 
         <Route path="volunteers" element={<Volunteers />} />
         <Route path="feedingvolunteers" element={<FeedingVolunteers />} />
         <Route path="feedingapplications" element={<FeedingApplications />} />
+
+        <Route path="feedingapplications/feedingapplicationview" element={<FeedingApplicationView />}/>
+        <Route path="donationadmin" element={<Donation />}/>
+        
+
         <Route path="donationadmin" element={<Donation />} />
 
         <Route path="manage" element={<Manage />} />
-        <Route path="adminlist" element={<AdminList />} />
+        <Route path="adminlist" element={<AdminList />}>
+          <Route path="update/:user_id" element={<UpdateRole />} />
+          <Route path="assign" element={<AssignNewAdmin />} />
+        </Route>
         <Route path="allusers" element={<AllUsers />} />
+        <Route path="userprofile/:user_id" element={<UserProfile />}/>
+        
 
         {/* Head Volunteer */}
         <Route path="headvolunteerpage" element={<HeadVolunteerMainPage />} />

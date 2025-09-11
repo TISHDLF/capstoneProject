@@ -12,6 +12,7 @@ const AdminSideBar = () => {
   const [user, setUser] = useState({ firstname: '', lastname: '', role: '' });
   const [loading, setLoading] = useState(true);
 
+
   useEffect(() => {
     const fetchUser = async () => {
       const loggedUser = Cookies.get('user');
@@ -119,7 +120,7 @@ const AdminSideBar = () => {
           </Link>
           
           {/* Donate */} 
-          <Link to="/admincatprofile" className={location.pathname === "/admincatprofile" ? sideItemStyleCurrent : sideItemStyle}> 
+          <Link to="/admincatprofile" className={location.pathname === "/admincatprofile" || location.pathname === '/catprofileproperty/:cat_id' ? sideItemStyleCurrent : sideItemStyle}> 
             <div className='flex flex-row items-center gap-4'>
               <div className='flex justify-center items-center w-[30px] h-auto'>
                 <img src="/src/assets/icons/admin-icons/sidedbar/cat-profile.png" alt="account" />
@@ -139,14 +140,14 @@ const AdminSideBar = () => {
               </div>
               <button onClick={() => {toggleDropdown('adopters')}} 
               className='flex justify-center items-center w-[30px] h-auto p-[8px] rounded-[25px] hover:bg-[#FDF5D8] active:bg-[#FFF]'>
-                <img src="/src/assets/icons/down-arrow-orange.png" alt="orange arrow" className={dropdown.adopters ? 'rotate-0' : '-rotate-90'}/>
+                <img src="/src/assets/icons/down-arrow-orange.png" alt="orange arrow" className={!dropdown.adopters ? 'rotate-0' : '-rotate-90'}/>
               </button>
             </div>
 
-            {dropdown.adopters && (
+            {!dropdown.adopters && (
               <>
-                <Link to="/adopterslist" className={location.pathname === "/adopterslist" ? pageActive : pageInactive}> Adopters List </Link> 
-                <Link to="/adopterapplication" className={location.pathname === "/adopterapplication" ? pageActive : pageInactive}> Applications</Link>
+                <Link to="/adopterslist" className={location.pathname === "/adopterslist" || location.pathname === "/adopterslist/adopterview" ? pageActive : pageInactive}> Adopters List </Link> 
+                <Link to="/adopterapplication" className={location.pathname === "/adopterapplication" || location.pathname === "/adopterapplication/adopterapplicationview" ? pageActive : pageInactive}> Applications</Link>
               </> 
             )} 
           </div>
@@ -161,14 +162,14 @@ const AdminSideBar = () => {
                 <label className='cursor-pointer font-bold hover:text-[#DC8801]'> Feeding </label>
               </div>
               <button onClick={() => (toggleDropdown('feeding'))} className='flex justify-center items-center w-[30px] h-auto p-[8px] rounded-[25px] hover:bg-[#FDF5D8] active:bg-[#FFF]'>
-                <img src="/src/assets/icons/down-arrow-orange.png" alt="orange arrow" className={dropdown.feeding ? 'rotate-0' : '-rotate-90'}/>
+                <img src="/src/assets/icons/down-arrow-orange.png" alt="orange arrow" className={!dropdown.feeding ? 'rotate-0' : '-rotate-90'}/>
               </button>
             </div>
 
-            {dropdown.feeding && (
+            {!dropdown.feeding && (
               <>
                 <Link to="/feedingvolunteers" className={location.pathname === "/feedingvolunteers" ? pageActive : pageInactive}> Feeding Volunteers</Link>
-                <Link to="/feedingapplications" className={location.pathname === "/feedingapplications" ? pageActive : pageInactive}> Applications</Link>
+                <Link to="/feedingapplications" className={location.pathname === "/feedingapplications" || location.pathname === "/feedingapplications/feedingapplicationview" ? pageActive : pageInactive}> Applications</Link>
                 <Link to="/donationadmin" className={location.pathname === "/donationadmin" ? pageActive : pageInactive}>Donations</Link>
               </>
             )}
@@ -185,14 +186,14 @@ const AdminSideBar = () => {
               </div>
 
               <button onClick={() => {toggleDropdown('manage')}} className='flex justify-center items-center w-[30px] h-auto p-[8px] rounded-[25px] hover:bg-[#FDF5D8] active:bg-[#FFF]'>
-                <img src="/src/assets/icons/down-arrow-orange.png" alt="orange arrow" className={dropdown.manage ? 'rotate-0' : '-rotate-90'}/>
+                <img src="/src/assets/icons/down-arrow-orange.png" alt="orange arrow" className={!dropdown.manage ? 'rotate-0' : '-rotate-90'}/>
               </button>
             </div>
 
-            {dropdown.manage && (
+            {!dropdown.manage && (
               <>
                 <Link to="/adminlist" className={location.pathname === "/adminlist" ? pageActive : pageInactive}> Admin List</Link>
-                <Link to="/allusers" className={location.pathname === "/allusers" ? pageActive : pageInactive}> All Users</Link>
+                <Link to="/allusers" className={location.pathname === "/allusers" || location.pathname === "/userprofile" ? pageActive : pageInactive}> All Users</Link>
               </>
             )}
           </div>
