@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
 
-const SideNavigation = () => {
+const HeadVolunteerSideBar = () => {
   const location = useLocation();
 
   const [user, setUser] = useState({ firstname: "", lastname: "", role: "" });
@@ -51,8 +51,7 @@ const SideNavigation = () => {
     "relative flex items-center justify-start gap-4 min-w-[200px] w-full h-auto rounded-tl-[50px] rounded-bl-[50px] box-border pl-3 pr-6 pt-2 pb-2 cursor-pointer bg-white border-2 drop-shadow-md border-[#DC8801] text-[#DC8801]";
 
   return (
-    <div className="fixed right-0 top-[20%] flex flex-col gap-4 min-w-[200px] h-auto">
-      {/* Login or Signup button */}
+    <div className=" flex flex-col gap-4 min-w-[200px] h-auto">
       <div
         className={
           location.pathname === "/profile"
@@ -130,12 +129,12 @@ const SideNavigation = () => {
         )}
       </div>
 
-      <div className="flex flex-col justify-center gap-4 pl-12]">
+      <div className="flex flex-col justify-center gap-4 pl-8">
         {/* Donate */}
         <Link
-          to="/donate"
+          to="/headvolunteerpage"
           className={
-            location.pathname === "/donate"
+            location.pathname === "/headvolunteerpage"
               ? sideItemStyleCurrent
               : sideItemStyle
           }
@@ -143,9 +142,80 @@ const SideNavigation = () => {
           <div className="flex justify-center items-center w-[40px] h-auto">
             <img src="/src/assets/icons/donation.png" alt="donation" />
           </div>
-          <label className="cursor-pointer"> Donate </label>
+          <label className="cursor-pointer">
+            {" "}
+            In-Kind Donation Applications{" "}
+          </label>
         </Link>
 
+        <Link
+          to="/AdoptionApplications"
+          className={
+            location.pathname === "/AdoptionApplications"
+              ? sideItemStyleCurrent
+              : sideItemStyle
+          }
+        >
+          <div className="flex justify-center items-center w-[40px] h-auto">
+            <img src="/src/assets/icons/donation.png" alt="donation" />
+          </div>
+          <label className="cursor-pointer"> Adoption Applications </label>
+        </Link>
+
+        <Link
+          to="/FeederApplications"
+          className={
+            location.pathname === "/FeederApplications"
+              ? sideItemStyleCurrent
+              : sideItemStyle
+          }
+        >
+          <div className="flex justify-center items-center w-[40px] h-auto">
+            <img src="/src/assets/icons/donation.png" alt="donation" />
+          </div>
+          <label className="cursor-pointer"> Feeder Applications</label>
+        </Link>
+        <Link
+          to="/ReportandAnalytics"
+          className={
+            location.pathname === "/ReportandAnalytics"
+              ? sideItemStyleCurrent
+              : sideItemStyle
+          }
+        >
+          <div className="flex justify-center items-center w-[40px] h-auto">
+            <img src="/src/assets/icons/donation.png" alt="donation" />
+          </div>
+          <label className="cursor-pointer"> Report and Analytics</label>
+        </Link>
+        <Link
+          to="/CreateNewCatProfile"
+          className={
+            location.pathname === "/CreateNewCatProfile"
+              ? sideItemStyleCurrent
+              : sideItemStyle
+          }
+        >
+          <div className="flex justify-center items-center w-[40px] h-auto">
+            <img src="/src/assets/icons/donation.png" alt="donation" />
+          </div>
+          <label className="cursor-pointer"> Create New Cat Profile</label>
+        </Link>
+
+        {/* Donate */}
+        <Link
+          to="/Donate"
+          className={
+            location.pathname === "/Donate"
+              ? sideItemStyleCurrent
+              : sideItemStyle
+          }
+        >
+          <div className="flex justify-center items-center w-[40px] h-auto">
+            <img src="/src/assets/icons/donation.png" alt="donation" />
+          </div>
+          <label className="cursor-pointer"> Donation</label>
+        </Link>
         {/* Cat Adoption */}
         <Link
           to="/catadoption"
@@ -195,4 +265,4 @@ const SideNavigation = () => {
   );
 };
 
-export default SideNavigation;
+export default HeadVolunteerSideBar;

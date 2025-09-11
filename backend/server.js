@@ -1,8 +1,9 @@
-import express from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import mysql from 'mysql2/promise';
-import session from 'express-session';
+// server.js
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import mysql from "mysql2/promise";
+import session from "express-session";
 
 import multer from 'multer';
 import fs from 'fs';
@@ -17,40 +18,50 @@ const __dirname = path.dirname(__filename);
 dotenv.config();
 
 const app = express();
+
 app.use(cors());
 app.use(express.json({limit: '10mb'}));
 app.use('/FileUploads', express.static(path.join(__dirname, 'FileUploads')));
+=======
+
+// ✅ CORS
+app.use(
+  cors({
+    origin: [/http:\/\/localhost:\d+$/], // allow any localhost:port
+    credentials: true,
+  })
+);
+app.use(express.json());
+
 
 app.use(
   session({
-    secret: process.env.SESSION_SECRET || 'geloy_session_secret',
+    secret: process.env.SESSION_SECRET || "geloy_session_secret",
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: false, httpOnly: true, sameSite: 'lax' },
+    cookie: { secure: false, httpOnly: true, sameSite: "lax" },
   })
 );
 
-// MySQL pool connection
+// MySQL connection
 let db;
 async function connectDB() {
   try {
     db = await mysql.createConnection({
-      host: process.env.DB_HOST || 'localhost',
-      user: process.env.DB_USER || 'root',
-      password: process.env.DB_PASSWORD || '',
-      database: process.env.DB_NAME || 'whiskerwatch',
-      waitForConnections: true,
-      connectionLimit: 10,
-      queueLimit: 0,
+      host: process.env.DB_HOST || "localhost",
+      user: process.env.DB_USER || "root",
+      password: process.env.DB_PASSWORD || "Password123",
+      database: process.env.DB_NAME || "whiskerwatch",
     });
-    console.log('Connected to MySQL database!');
+    console.log("Connected to MySQL database!");
   } catch (err) {
-    console.error('Failed to connect to MySQL:', err);
+    console.error("Failed to connect to MySQL:", err);
     process.exit(1);
   }
 }
 connectDB();
 const port = process.env.PORT || 5000;
+
 
 
 
@@ -82,7 +93,13 @@ app.post('/users/signup', async (req, res) => {
   }
 })
 
-// Login endpoint
+
+// ✅ Health check
+app.get("/api", (req, res) => {
+  res.json("This is the backend.");
+});
+
+// ✅ Login
 app.post('/users/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -114,34 +131,29 @@ app.post('/users/login', async (req, res) => {
   }
 });
 
+
 // Login for non-basic user
 app.post('/users/adminlogin', async (req, res) => {
+
+app.get("/api/donations", async (req, res) => {
+
   try {
-    const { username, role, password } = req.body;
+    const [rows] = await db.query(`
+      SELECT 
+          ik.ikDonationID AS applicationNo,
+          u.user_id AS userId,
+          CONCAT(u.firstname, ' ', u.lastname) AS name,
+          ik.donationType AS type,
+          DATE_FORMAT(ik.dateSubmitted, '%m-%d-%y') AS date,
+          ik.status
+      FROM InKindDonation ik
+      JOIN users u ON ik.user_id = u.user_id
+      ORDER BY ik.dateSubmitted DESC
+    `);
 
-    if (!username || !role || !password) {
-      return res.status(400).json({ error: 'Username, role and password are required' });
-    }
-
-    const [users] = await db.query(
-      'SELECT * FROM users WHERE username = ? and role = ? and password = ?', [username, role, password]
-    );
-
-    if (users.length === 0) {
-      return res.status(401).json({ error: 'Invalid credentials!' });
-    } 
-     
- 
-    const user = users[0];
-
-    res.status(200).json({
-      message: 'Login successful',
-      user: {
-        user_id: user.user_id,
-        role: user.role,
-      },
-    });
+    res.json(rows);
   } catch (err) {
+
     console.error('Login error:', err);
     res.status(500).json({ err: 'Internal server error' });
   }
@@ -158,18 +170,19 @@ app.get('/users/logged', async (req, res) => {
 
     const [data] = await db.query(
       'SELECT user_id, firstname, lastname, role FROM users WHERE user_id = ?', [userId]
+
+    console.error(
+      "❌ Error fetching donations:",
+      err.sqlMessage || err.message
+
     );
-
-    if (data.length === 0) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    return res.status(200).json(data[0]); // ✅ returns { id, firstname, lastname, role }
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: 'Server error' });
+    res.status(500).json({
+      error: "Failed to fetch donations",
+      details: err.sqlMessage || err.message,
+    });
   }
 });
+
 
 
 
@@ -543,11 +556,11 @@ app.get('/manage/userprofile/:user_id', async (req, res) => {
 
 
 // Global error handler
-app.use((err, req, res, next) => {
-  console.error('Global error:', err.stack);
-  res.status(500).json({ error: 'Something went wrong on the server' });
-});
 
+app.use((err, req, res, next) => {
+  console.error("Global error:", err.stack);
+  res.status(500).json({ error: "Something went wrong on the server" });
+});
 app.listen(port, () => {
   console.log(`Backend server running on http://localhost:${port}`);
 });
