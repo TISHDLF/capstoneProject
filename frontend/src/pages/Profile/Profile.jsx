@@ -15,9 +15,9 @@ const Profile = () => {
                 <div className='grid grid-cols-[20%_80%] bg-[#FFF] rounded-[12px] overflow-hidden'>
                     <div className='flex flex-col gap-10 pt-10'>
                         <div className='flex flex-row justify-between items-center p-3 bg-[#FFF] rounded-tr-[20px] rounded-br-[20px] shadow-md'>
-                            <label className='font-bold text-[#DC8801]'>Adoptee Form</label>
+                            <label className='font-bold text-[#DC8801]'>My Profile</label>
                             <div className='flex items-center justify-center w-[30px] h-auto'> 
-                                <img src="src/assets/icons/clipboard-white.png" alt="white clipboard" className='w-full h-auto '/>
+                                <img src="/src/assets/icons/account.png" alt="white clipboard" className='w-full h-auto '/>
                             </div>
                         </div>
                     </div>

@@ -26,7 +26,7 @@ const CatProfile = () => {
             <div className='relative flex flex-col pl-50 p-8'>
                 <div className='relative flex flex-row items-center gap-2'>
                     <button className='flex items-center justify-center bg-[#B5C04A] w-[50px] h-[50px] p-2 rounded-[50%]  hover:bg-[#CFDA34] active:bg-[#B5C04A]'>
-                        <img src="src/assets/icons/arrow-left-no-tail.png" alt="arrow left" className='w-auto h-full' />
+                        <img src="/src/assets/icons/arrow-left-no-tail.png" alt="arrow left" className='w-auto h-full' />
                     </button>
 
                     <div className='relative grid grid-cols-[60%_40%] w-[1000px] h-auto bg-[#FFF] p-5 rounded-[25px] shadow-md'>
@@ -36,10 +36,10 @@ const CatProfile = () => {
                             </div>
                             <div className='grid grid-cols-5 object-cover pl-1 overflow-hidden gap-2 overflow-x-auto'>
                                 <div className='w-[100px] h-[100px] overflow-hidden object-fill rounded-[10px] opacity-40 hover:opacity-100 active:opacity-40'>
-                                    <img src="src/assets/icons/CatImages/cat1.jpg" alt="cat image" className='w-full h-full object-cover' onClick={handleImageClick}/>
+                                    <img src="/src/assets/icons/CatImages/cat1.jpg" alt="cat image" className='w-full h-full object-cover' onClick={handleImageClick}/>
                                 </div>
                                 <div className='w-[100px] h-[100px] overflow-hidden object-fill rounded-[10px] opacity-40 hover:opacity-100 active:opacity-40'>
-                                    <img src="src/assets/icons/CatImages/cat2.jpg" alt="cat image" className='w-full h-full object-cover' onClick={handleImageClick}/>
+                                    <img src="/src/assets/icons/CatImages/cat2.jpg" alt="cat image" className='w-full h-full object-cover' onClick={handleImageClick}/>
                                 </div>
                             </div>
                         </div>
@@ -48,7 +48,7 @@ const CatProfile = () => {
                             <div className='flex flex-col gap-2 items-start w-full'>
                                 <div className='flex flex-row items-center w-full gap-2 pb-2 border-b-2 border-b-[#DC8801]'>
                                     <div className='w-[30px] h-auto'>
-                                        <img src="src/assets/icons/paw-gray.png" alt="cat paw" />
+                                        <img src="/src/assets/icons/paw-gray.png" alt="cat paw" />
                                     </div>
                                     <label className='font-bold text-[18px] text-[#DC8801]'>Cat Name</label>
                                 </div>
@@ -56,7 +56,7 @@ const CatProfile = () => {
                                 <div className='flex flex-col pt-3 pb-3 w-full'>
                                     <div className='flex flex-row items-center gap-1 border-b-1 border-b-[#B5C04A] pb-1 pt-1'>
                                         <div className='flex flex-col items-center justify-center h-[30px] w-[30px] bg-[#B5C04A] p-[5px] rounded-[50%]'>
-                                            <img src="src/assets/icons/genders.png" alt="gender" />
+                                            <img src="/src/assets/icons/genders.png" alt="gender" />
                                         </div>
                                         <div className='text-[14px]'>
                                             <label className='font-bold pr-2'>Gender:</label>
@@ -65,7 +65,7 @@ const CatProfile = () => {
                                     </div>
                                     <div className='flex flex-row items-center gap-1 border-b-1 border-b-[#B5C04A] pb-1 pt-1'>
                                         <div className='flex flex-col items-center justify-center h-[30px] w-[30px] bg-[#B5C04A] p-[5px] rounded-[50%]'>
-                                            <img src="src/assets/icons/hourglass-white.png" alt="gender" />
+                                            <img src="/src/assets/icons/hourglass-white.png" alt="gender" />
                                         </div>
                                         <div className='text-[14px]'>
                                             <label className='font-bold pr-2'>Age:</label>
@@ -74,7 +74,7 @@ const CatProfile = () => {
                                     </div>
                                     <div className='flex flex-row items-center gap-1 border-b-1 border-b-[#B5C04A] pb-1 pt-1'>
                                         <div className='flex flex-col items-center justify-center h-[30px] w-[30px] bg-[#B5C04A] p-[5px] rounded-[50%]'>
-                                            <img src="src/assets/icons/status.png" alt="gender" />
+                                            <img src="/src/assets/icons/status.png" alt="gender" />
                                         </div>
                                         <div className='text-[14px]'>
                                             <label className='font-bold pr-2x'>Sterilization Status:</label>
@@ -100,7 +100,7 @@ const CatProfile = () => {
                     </div>
 
                     <button className='flex items-center justify-center bg-[#B5C04A] w-[50px] h-[50px] rounded-[50%] p-2 hover:bg-[#CFDA34] active:bg-[#B5C04A]'>
-                        <img src="src/assets/icons/arrow-right-no-tail.png" alt="arrow right" className='w-auto h-full' />
+                        <img src="/src/assets/icons/arrow-right-no-tail.png" alt="arrow right" className='w-auto h-full' />
                     </button>
                 </div>
             </div>
