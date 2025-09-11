@@ -1,5 +1,5 @@
 import React from 'react'
-import { Route, createBrowserRouter, createRoutesFromElements, RouterProvider } from 'react-router-dom'
+import { Routes, Route, createBrowserRouter, createRoutesFromElements, RouterProvider } from 'react-router-dom'
 import RootLayout from './layout/RootLayout'
 
 
@@ -38,6 +38,8 @@ import AdopterApplicationView from './pages/Admin/Adopters/AdopterApplicationVie
 import FeedingApplicationView from './pages/Admin/Feeding/FeedingApplicationView'
 import UserProfile from './pages/Admin/Manage/UserProfile'
 import CatProfileCreate from './pages/Admin/CatProfileProperty/CatProfileCreate'
+import UpdateRole from './pages/Admin/Manage/UpdateRole'
+import AssignNewAdmin from './pages/Admin/Manage/AssignNewAdmin'
 
 
 const App = () => {
@@ -81,7 +83,10 @@ const App = () => {
         <Route path="donationadmin" element={<Donation />}/>
         
         <Route path="manage" element={<Manage />} />
-        <Route path="adminlist" element={<AdminList />} />
+        <Route path="adminlist" element={<AdminList />}>
+          <Route path="update/:user_id" element={<UpdateRole />} />
+          <Route path="assign" element={<AssignNewAdmin />} />
+        </Route>
         <Route path="allusers" element={<AllUsers />} />
         <Route path="userprofile/:user_id" element={<UserProfile />}/>
         

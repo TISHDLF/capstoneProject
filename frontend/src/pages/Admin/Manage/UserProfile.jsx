@@ -10,6 +10,7 @@ const UserProfile = () => {
         user_id: '',
         firstname: '',
         lastname: '',
+        profile_image: '/src/assets/UserProfile/default_profile_image.jpg',
         role:'regular',
         email:'',
         contactnumber:'',
@@ -17,7 +18,6 @@ const UserProfile = () => {
         address: ''
     });
 
-    // const [originalProfile, setOriginalProfile] = useState(null)
     const [profileImage, setProfileImage] = useState('');
 
     useEffect(() => {
@@ -36,24 +36,6 @@ const UserProfile = () => {
         fetchUserProfile();
     }, [user_id]);
 
-    
-    const handleImageChange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            if (!file.type.startsWith('image/')) {
-                alert('Only image files are allowed.');
-                return;
-            }
-
-            const reader = new FileReader();
-            reader.onload = () => {
-                setProfileImage(prevImages => [...prevImages, reader.result]);
-            };
-            reader.readAsDataURL(file);
-        }
-    };
-
-    console.log(profileImage)
 
     return (
         <div className='relative flex flex-col h-screen'>
@@ -83,12 +65,9 @@ const UserProfile = () => {
 
                             <div className='flex gap-3 items-center'>
                                 <div className='flex w-[250px] h-[250px] object-fit rounded-[10px] overflow-hidden'>
-                                    <img src={profileImage ? profileImage : '/src/assets/icons/account.png' } alt="User profile image" className="w-full h-full object-cover"/>
+                                    <img src={profile.profile_image || '/src/assets/UserProfile/default_profile_image.jpg'} alt="User profile image" className="w-full h-full object-cover"/>
                                 </div>
 
-                                <label htmlFor='profilePhoto' className='bg-[#e6e6e6] active:bg-[#cccccc] text-[#2F2F2F] text-[16px] font-bold p-3 rounded-[15px] cursor-pointer'>Change Photo
-                                    <input type="file" accept='.png,.jpg' id="profilePhoto" className='hidden' onChange={handleImageChange}/>
-                                </label>
                             </div>
 
                             <div className='flex items-center justify-between w-full gap-4 pt-2'>
@@ -107,6 +86,7 @@ const UserProfile = () => {
                                     <label className='text-[14px] text-[#595959]'>Role</label>
                                     <select name="" id="" className='text-[16px] text-[#2F2F2F] font-bold p-3 border-1 border-[#CCCCCC] rounded-[10px]'
                                     value={profile?.role || ''} onChange={(e) => setProfile((prev) => ({...prev, role:e.target.value}))}>
+                                        <option hidden>Select a role</option>
                                         <option value="regular">Basic</option>
                                         <option value="head_volunteer">Head Volunteer</option>
                                         <option value="admin">Admin</option>

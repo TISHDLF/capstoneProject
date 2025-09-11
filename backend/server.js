@@ -4,8 +4,14 @@ import dotenv from 'dotenv';
 import mysql from 'mysql2/promise';
 import session from 'express-session';
 
-// route
-import catProfiles from './routes/cat-profiles.js'
+import multer from 'multer';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 
 dotenv.config();
@@ -13,6 +19,7 @@ dotenv.config();
 const app = express();
 app.use(cors());
 app.use(express.json({limit: '10mb'}));
+app.use('/FileUploads', express.static(path.join(__dirname, 'FileUploads')));
 
 app.use(
   session({
@@ -165,6 +172,7 @@ app.get('/users/logged', async (req, res) => {
 });
 
 
+
 // ********************** ADMIN/ CAT ENDPOINT ************************** //
 
 // POST REQUEST: Create cat profile
@@ -257,23 +265,125 @@ app.post('/catimage/:cat_id', async (req, res) => {
   }
 });
 
+
+
+// **************** MULTER CONDITIONS FOR FILE FILTERING ****************** //
+const storage = multer.diskStorage({
+  destination: function(req, file, callback) {
+    const dir = 'FileUploads';
+    if(!fs.existsSync(dir)) {
+      fs.mkdirSync(dir)
+    }
+
+    callback(null, dir);
+  },
+  filename: function(req, file, callback) {
+    callback(null, Date.now() + path.extname(file.originalname))
+  } 
+})
+
+
+const fileFilter = function(req, file, callback) {
+  if (file.mimetype == 'application/pdf') {
+    callback(null, true)
+  } else {
+    req.err = 'File is invalid!'
+    callback(null, false)
+  }
+}
+
+
+const uploadImages = multer({
+  storage,
+  fileFilter: function(req, file, callback) {
+    if (file.mimetype == 'image/jpeg' || file.mimetype == 'image/png') {
+      callback(null, true)
+    } else {
+      !req.invalidFiles ? req.invalidFiles = [file.originalname] : req.invalidFiles.push(file.originalname)
+      callback(null, false)
+    }
+  }
+});
+
+const upload = multer({ storage, fileFilter });
+
+
+
+// POST REQUEST: Upload image to a file path 'FileUploads'
+app.post('/upload/file', upload.single('document') ,  async (req, res) => {
+  console.log(req.file)
+
+  if (req.err) {
+    return res.status(422).json({message: req.err}) 
+  }
+
+  return res.status(200).json({message: 'File uploaded succesfully!'})
+});
+
+
+
+// POST REQUEST: Handles upload of multiple jpeg/png images to database
+app.post('/upload/catimages/:cat_id', uploadImages.array('images'), async (req, res) => {
+  console.log(req.files)
+  
+  if (req.invalidFiles) {
+    return res.status(200).json({
+      warning: true,
+      message: 'Some documents did not upload due to invalid file type: ' + req.invalidFiles.join(', '),
+    }) 
+  }
+
+  if (!req.files || req.files.length === 0) {
+    return res.status(200).json({
+      warning: true,
+      message: 'No valid Images were uploaded.',
+    });
+  }
+
+  const cat_id = req.params.cat_id
+
+  try {
+    for (const file of req.files) {
+      const filename = file.filename;
+
+      await db.query(
+        `INSERT INTO cat_images (cat_id, image_filename) VALUES (?, ?)`, 
+        [cat_id, filename]
+      );
+    }
+
+    return res.status(200).json({ 
+      warning: false, 
+      message: 'Images uploaded succesfully!',
+    })
+
+  } catch(err) {
+    console.error(err);
+    return res.status(500).json({message: 'Database error while saving image info!'})
+  }
+});
+
+
+
+
+
 //GET REQUEST: Fetch image data per cat_id and display
 app.get('/image/:cat_id', async (req, res) => {
   const cat_id = req.params.cat_id;
+
   try {
     const [images] = await db.query(
-      `SELECT image FROM cat_images WHERE cat_id = ?`, [cat_id]
-    );
+      `SELECT image_filename FROM cat_images WHERE cat_id = ?`,
+      [cat_id]
+    );  
 
-    const base64Images = images.map(img => {
-      return Buffer.from(img.image).toString('base64');
-    });
+    const filenames = images.map(img => img.image_filename)
 
-    res.send(base64Images);
-
+    res.json(filenames);
+    console.log(filenames)
   } catch(err) {
-    console.error('Error fetching cat images:', err);
-    return res.status(500).json({ error: 'Failed to fetch cat Images' });
+    console.error('Error fetching cat images: ', err);
+    return res.status(500).json({error: 'Failed to fetch cat images'})
   }
 })
 
@@ -322,6 +432,35 @@ app.patch('/cat/update/:cat_id', async (req, res) => {
 });
 
 
+// DELETE REQUEST: Deletes the filename on the database and the file on the 'FileUploads' folder on this backend
+app.delete('/image/:filename', async (req, res) => {
+  const filename = req.params.filename;
+
+  try {
+    const filePath = path.join(__dirname, 'FileUploads', filename);
+
+    // Delete the file
+    fs.unlink(filePath, async (err) => {
+      if (err && err.code !== 'ENOENT') {
+        console.error(`Error deleting file: ${filename}`, err);
+        return res.status(500).json({ error: 'Failed to delete image file' });
+      }
+
+      // Delete DB record
+      await db.query(`DELETE FROM cat_images WHERE image_filename = ?`, [filename]);
+
+      res.json({ message: `Deleted image ${filename}` });
+      console.log({ message: `Deleted image ${filename}` })
+    });
+
+  } catch (err) {
+    console.error('Error deleting image:', err);
+    res.status(500).json({ error: 'Failed to delete image' });
+  }
+});
+
+
+
 
 
 
@@ -359,7 +498,7 @@ app.get('/catlist', async (req, res) => {
     const [rows] = await db.query(`
       SELECT 
         c.cat_id, c.name, c.gender, c.age, c.description,
-        ci.image AS thumbnail
+        ci.image_filename AS thumbnail
       FROM Cat c
       LEFT JOIN cat_images ci ON c.cat_id = ci.cat_id 
       AND ci.image_id = (
@@ -371,14 +510,8 @@ app.get('/catlist', async (req, res) => {
       );
     `)
 
-    const formattedRows = rows.map(row => {
-      return {
-        ...row,
-        thumbnail: row.thumbnail ? row.thumbnail.toString('base64') : null
-      };
-    });
+    return res.json(rows);
 
-    return res.json(formattedRows)
   } catch(err) {
       console.error('Error fetching cat profiles:', err);
       return res.status(500).json({ err: 'Failed to fetch cat profiles' });   
@@ -386,12 +519,13 @@ app.get('/catlist', async (req, res) => {
 })
 
 
+// GET REQUEST: Fetch the data of a user and displays
 app.get('/manage/userprofile/:user_id', async (req, res) => {
   const user_id = req.params.user_id
   try {
     const [userprofile] = await db.query(
       `SELECT 
-        user_id, firstname, lastname, contactnumber, DATE_FORMAT(birthday, '%Y-%m-%d') AS birthday, email, username, role, badge, address, 
+        user_id, firstname, lastname, profile_image, contactnumber, DATE_FORMAT(birthday, '%Y-%m-%d') AS birthday, email, username, role, badge, address, 
         DATE_FORMAT(created_at, '%Y-%m-%d') AS created_at, DATE_FORMAT(updated_at, '%Y-%m-%d') AS updated_at 
       FROM users
       WHERE user_id = ?;`, [user_id]
