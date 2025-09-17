@@ -1,181 +1,157 @@
-import express from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import mysql from 'mysql2/promise';
-import session from 'express-session';
+// server.js
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import session from "express-session";
+import cookieParser from 'cookie-parser';
+
+import { connectDB } from "./database.js"
+import CatRoute from './routes/Cat.js'
+import UserRoute from "./routes/User.js";
+import AdminRoute from "./routes/Admin.js";
+
+
+import multer from 'multer';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 
 dotenv.config();
 
 const app = express();
 
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:5173', 
+  credentials: true 
+}));
+
+await connectDB()
+app.use('/cat', CatRoute)
+app.use('/user', UserRoute)
+app.use('/admin', AdminRoute)
+
+
+
+app.use(express.json({limit: '10mb'}));
+app.use(cookieParser());
+app.use('/FileUploads', express.static(path.join(__dirname, 'FileUploads')));
+
+
+app.use(
+  cors({
+    origin: [/http:\/\/localhost:\d+$/], // allow any localhost:port
+    // credentials: true,
+  })
+);
 app.use(express.json());
 
 app.use(
   session({
-    secret: process.env.SESSION_SECRET || 'geloy_session_secret',
+    secret: process.env.SESSION_SECRET || "geloy_session_secret",
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: false, httpOnly: true, sameSite: 'lax' },
+    cookie: { secure: false, httpOnly: true, sameSite: "lax" },
   })
 );
 
-// MySQL pool connection
-let db;
-async function connectDB() {
+const port = process.env.PORT || 5000;
+
+
+
+// ********************** DONATION ENDPOINT ************************** //
+app.get("/api/donations", async (req, res) => {
+
   try {
-    db = await mysql.createConnection({
-      host: process.env.DB_HOST || 'localhost',
-      user: process.env.DB_USER || 'root',
-      password: process.env.DB_PASSWORD || '',
-      database: process.env.DB_NAME || 'whiskerwatch',
-      waitForConnections: true,
-      connectionLimit: 10,
-      queueLimit: 0,
-    });
-    console.log('Connected to MySQL database!');
+    const [rows] = await db.query(`
+      SELECT 
+          ik.ikDonationID AS applicationNo,
+          u.user_id AS userId,
+          CONCAT(u.firstname, ' ', u.lastname) AS name,
+          ik.donationType AS type,
+          DATE_FORMAT(ik.dateSubmitted, '%m-%d-%y') AS date,
+          ik.status
+      FROM InKindDonation ik
+      JOIN users u ON ik.user_id = u.user_id
+      ORDER BY ik.dateSubmitted DESC
+    `);
+
+    res.json(rows);
   } catch (err) {
-    console.error('Failed to connect to MySQL:', err);
-    process.exit(1);
+
+    console.error('Login error:', err);
+    res.status(500).json({ err: 'Internal server error' });
+  }
+});
+
+
+// **************** MULTER CONDITIONS FOR FILE FILTERING ****************** //
+const storage = multer.diskStorage({
+  destination: function(req, file, callback) {
+    const dir = 'FileUploads';
+    if(!fs.existsSync(dir)) {
+      fs.mkdirSync(dir)
+    }
+
+    callback(null, dir);
+  },
+  filename: function(req, file, callback) {
+    callback(null, Date.now() + path.extname(file.originalname))
+  } 
+})
+
+const fileFilter = function(req, file, callback) {
+  if (file.mimetype == 'application/pdf') {
+    callback(null, true)
+  } else {
+    req.err = 'File is invalid!'
+    callback(null, false)
   }
 }
 
-connectDB();
-
-const port = process.env.PORT || 5000;
-
-// Root route
-app.get('/', (req, res) => {
-  res.json('This is the backend.');
-});
-
-
-app.post('/users/signup', async (req, res) => {
-  try {
-    const { firstname, lastname, contactnumber, birthday, email, username, role, address, password } = req.body;
-
-    const [result] = await db.query(
-      `INSERT INTO users 
-        (firstname, lastname, contactnumber, birthday, email, username, role, address, password) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [firstname, lastname, contactnumber, birthday, email, username, role, address, password]
-    );
-
-    res.status(200).json({
-      message: 'Account created!',
-      newUser: {
-        user_id: result.insertId,
-        role: 'Toe Bean Trainee',
-      }
-    })
-
-  } catch(err) {
-    console.error('Login error:', err);
-    res.status(500).json({ err: 'Internal server error' });
-  }
-})
-
-// Login endpoint
-app.post('/users/login', async (req, res) => {
-  try {
-    const { email, password } = req.body;
-
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password are required' });
+const uploadImages = multer({
+  storage,
+  fileFilter: function(req, file, callback) {
+    if (file.mimetype == 'image/jpeg' || file.mimetype == 'image/png') {
+      callback(null, true)
+    } else {
+      !req.invalidFiles ? req.invalidFiles = [file.originalname] : req.invalidFiles.push(file.originalname)
+      callback(null, false)
     }
-
-    const [users] = await db.query(
-      'SELECT * FROM users WHERE email = ? and password = ?', [email, password]
-    );
-
-    if (users.length === 0) {
-      return res.status(401).json({ error: 'Invalid email or password' });
-    }
-
-    const user = users[0];
-
-    res.status(200).json({
-      message: 'Login successful',
-      user: {
-        user_id: user.user_id,
-        role: user.role,
-      },
-    });
-  } catch (err) {
-    console.error('Login error:', err);
-    res.status(500).json({ err: 'Internal server error' });
   }
 });
 
-app.post('/users/adminlogin', async (req, res) => {
-  try {
-    const { username, role, password } = req.body;
+const upload = multer({ storage, fileFilter });
 
-    if (!username || !role || !password) {
-      return res.status(400).json({ error: 'Username, role and password are required' });
-    }
+// POST REQUEST: Upload image to a file path 'FileUploads'
+app.post('/upload/file', upload.single('document') ,  async (req, res) => {
+  console.log(req.file)
 
-    const [users] = await db.query(
-      'SELECT * FROM users WHERE username = ? and role = ? and password = ?', [username, role, password]
-    );
-
-    if (users.length === 0) {
-      return res.status(401).json({ error: 'Invalid credentials!' });
-    } 
-     
- 
-    const user = users[0];
-
-    res.status(200).json({
-      message: 'Login successful',
-      user: {
-        user_id: user.user_id,
-        role: user.role,
-      },
-    });
-  } catch (err) {
-    console.error('Login error:', err);
-    res.status(500).json({ err: 'Internal server error' });
+  if (req.err) {
+    return res.status(422).json({message: req.err}) 
   }
+
+  return res.status(200).json({message: 'File uploaded succesfully!'})
 });
 
 
 
 
-
-// Get logged-in user details by ID
-app.get('/users/logged', async (req, res) => {
-  try {
-    const userId = req.query.user_id;
-
-    if (!userId) {
-      return res.status(400).json({ error: 'User ID is required' });
-    }
-
-    const [data] = await db.query(
-      'SELECT user_id, firstname, lastname, role FROM users WHERE user_id = ?', [userId]
-    );
-
-    if (data.length === 0) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    return res.status(200).json(data[0]); // ✅ returns { id, firstname, lastname, role }
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: 'Server error' });
-  }
-});
 
 
 
 
 // Global error handler
 app.use((err, req, res, next) => {
-  console.error('Global error:', err.stack);
-  res.status(500).json({ error: 'Something went wrong on the server' });
+  console.error("Global error:", err.stack);
+  res.status(500).json({ error: "Something went wrong on the server" });
 });
-
 app.listen(port, () => {
   console.log(`Backend server running on http://localhost:${port}`);
 });
+
+
