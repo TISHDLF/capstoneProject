@@ -98,7 +98,7 @@ const CatBot = () => {
       </div>
 
       <button className="flex items-center justify-center bg-[#cfda34] box-border max-w-[75px] h-auto rounded-[100%] p-[12px] active:scale-90">
-        <img src="src/assets/icons/CatBot.png" alt="Cat Bot"/>
+        <img src="/src/assets/icons/CatBot.png" alt="Cat Bot"/>
       </button>
 
     </div>

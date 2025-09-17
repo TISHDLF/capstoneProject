@@ -9,7 +9,6 @@ const CatProfileCreate = () => {
     const [age, setAge] = useState('');
     const [gender, setGender] = useState('');
     const [sterilization_status, setSterilizationStatus] = useState('');
-    const [adoption_status, setAdoptionStatus] = useState("");
     const [description, setDescription] = useState('');
 
     const [catImage, setCatImage] = useState([]);
@@ -23,13 +22,14 @@ const CatProfileCreate = () => {
 
         try {
             const response = await axios.post('http://localhost:5000/cat/create', {
-                name, age, gender, sterilization_status, adoption_status, description
+                name, age, gender, sterilization_status, description
             });
             console.log('Signup response:', response.data);
 
             if (response.status === 201 || response.status === 200) {
                 const cat_id = response.data.cat_id;
                 console.log('Cat profile created: ', response.data);
+                console.log(cat_id)
 
                 await handleUploadImages(cat_id);
                 navigate(`/catprofileproperty/${response.data.cat_id}`);
@@ -41,44 +41,54 @@ const CatProfileCreate = () => {
     }
     
 
-    const handleImageChange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            if (!file.type.startsWith('image/')) {
-                alert('Only image files are allowed.');
-                return;
-            }
 
-            const reader = new FileReader();
-            reader.onload = () => {
-                setCatImagePreview(prevImages => [...prevImages, reader.result]);
-            };
-            reader.readAsDataURL(file);
-        }
+    // UPLOADS & DISPLAYS IMAGE TO THE FRONTEND
+    // NOT YET UPLOADED TO DATABASE
+    const handleImageChange = (event) => {
+        const files = Array.from(event.target.files);
+
+        const newFiles = files.map((file) => ({
+            file,
+            preview: URL.createObjectURL(file)
+        }));
+
+        setCatImagePreview((prev) => [...prev, ...newFiles])
+    }
+
+    const handleDeleteImage = () => {
+        setCatImagePreview([]);
     };
 
-    const handleDeleteImage = (indexToDelete) => {
-        setCatImagePreview(prevImages => prevImages.filter((_, index) => index !== indexToDelete));
-    };
 
-
+    // HANDLES UPLOADING OF NEW IMAGE UPON CAT PROFILE CREATION
     const handleUploadImages = async (cat_id) => {
         try {
-            const response = await axios.post(`http://localhost:5000/catimage/${cat_id}`, {
-                cat_id: cat_id,
-                images: catImagePreview,
-            })
+            const formData = new FormData();
+
+            catImagePreview.forEach(({file}) => {
+                formData.append('images', file);
+            });
+
+            const response = await axios.post(
+                `http://localhost:5000/cat/uploadcatimages/${cat_id}`,
+                formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    },
+                }
+            );
 
             if (response.status === 200) {
-                console.log('Image uploaded successfully!');
-                setCatImage([])
+                console.log('Image uploaded successfully!')
+                setCatImagePreview([])
                 
-            }
-
-        } catch (error) {
-            console.error('Image upload failed:', error.response?.data || error.message);
+            } 
+        } catch(err) {
+            console.error('Image upload failed: ', err.response?.data || err.message);
         }
     }
+
+
 
     return (
         <div className='relative flex flex-col h-screen'>
@@ -129,14 +139,14 @@ const CatProfileCreate = () => {
                                     </select>
                                 </div>
 
-                                <div className='flex flex-col gap-1 w-full'>
+                                {/* <div className='flex flex-col gap-1 w-full'>
                                     <label className='text-[16px] text-[#595959]'>Adoption Status</label>
                                     <select  value={adoption_status} onChange={(e) => setAdoptionStatus(e.target.value)}
                                     className='p-[10px] text-[#2F2F2F] rounded-[10px] border-2 border-[#CFCFCF] font-bold text-[#2F2F2F]'>
                                         <option hidden>Select status</option>
                                         <option value="Pending">Pending</option>
                                     </select>
-                                </div>
+                                </div> */}
                             </div>
 
                             {/* CAT DESCRIPTION */}
@@ -152,18 +162,22 @@ const CatProfileCreate = () => {
                                     <div className='flex gap-4 items-center'>
                                         <label className='text-[18px] text-[#2F2F2F] font-bold'>UPLOAD NEW IMAGE</label>
                                     </div>
-                                    <label htmlFor="catImageUpload"
-                                    className='p-2 pl-4 pr-4 w-auto h-auto bg-[#2F2F2F] text-[#FFF] rounded-[10px] cursor-pointer hover:bg-[#595959] active:bg-[#2F2F2F]'>
-                                        Add Image
-                                        <input type="file" accept='image/*' id="catImageUpload" onChange={handleImageChange} className='hidden'/>
-                                    </label>
+                                    <div className='flex items-center gap-1'>
+                                        <button className='p-2 pl-4 pr-4 w-auto h-auto bg-[#DC8801] text-[#FFF] rounded-[25px] cursor-pointer active:bg-[#2F2F2F]' type='button' onClick={() => handleDeleteImage()}>Reset</button>
+                                        <label htmlFor="catImageUpload"
+                                        className='p-2 pl-4 pr-4 w-auto h-auto bg-[#2F2F2F] text-[#FFF] rounded-[25px] cursor-pointer hover:bg-[#595959] active:bg-[#2F2F2F]'>
+                                            Add Image
+                                            <input type="file" accept='image/*' id="catImageUpload" onChange={handleImageChange} className='hidden' multiple/>
+                                        </label>
+                                    </div>
                                     
                                 </div>
                                 <div className='grid grid-cols-5 gap-2 w-full min-h-[200px]'>
                                     {catImagePreview.map((img, index) => (
                                         <div key={index} className='relative flex items-center bg-[#595959] max-w-[250px] h-[250px] rounded-[10px] overflow-hidden'>
-                                            <button type='button' onClick={() => handleDeleteImage(index)} className='absolute top-2 right-2 p-1 pl-4 pr-4 bg-[#FFF] text-[#2F2F2F] font-bold rounded-[10px] cursor-pointer active:bg-[#CFCFCF]'>Delete</button>
-                                            <img src={img} alt={`uploaded-${index}`} className="w-full h-full object-cover"/> 
+                                            {/* <button type='button' 
+                                            onClick={() => handleDeleteImage(img)} className='absolute top-2 right-2 p-1 pl-4 pr-4 bg-[#FFF] text-[#2F2F2F] font-bold rounded-[10px] cursor-pointer active:bg-[#CFCFCF]'>Delete</button> */}
+                                            <img src={img.preview} alt={`uploaded-${index}`} className="w-full h-full object-cover"/> 
                                         </div> 
                                     ))}
                                 </div>

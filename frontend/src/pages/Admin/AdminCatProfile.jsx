@@ -6,11 +6,12 @@ import axios from 'axios';
 const AdminCatProfile = () => {
 
   const [cats, setCats] = useState([]);
+  const [searchInput, setSearchInput] = useState('');
 
   useEffect(() => {
     const fetchCat = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/list`);
+        const response = await axios.get(`http://localhost:5000/cat/list`);
         console.log(response.data);
         setCats(response.data)
       }catch(err) {
@@ -19,11 +20,15 @@ const AdminCatProfile = () => {
 
     }
     fetchCat();
-  },[]);
 
+  },[]);
+  
+  const filteredItems = cats.filter((cat) =>{
+    return cat.name.toLowerCase().includes(searchInput.toLowerCase())
+  });
 
   return (
-    <div className='flex flex-col -h-screen overflow-x-hidden'>
+    <div className='flex flex-col min-h-screen overflow-hidden'>
       <div className='grid grid-cols-[20%_80%]'>
         <AdminSideBar />
         <div className='flex flex-col items-start p-10 h-screen gap-5 mx-auto'>
@@ -32,8 +37,9 @@ const AdminCatProfile = () => {
           </div>
 
           <div className='flex flex-row items-center justify-between w-full gap-4'>
-            <form className='flex gap-2'>
-              <input type="search" placeholder='Search' className='bg-[#FFF] p-2 min-w-[400px] border-1 border-[#595959] rounded-[15px]'/>
+            <form className='flex gap-2' onSubmit={(e) => {e.preventDefault();}}>
+              <input value={searchInput} onChange={(e) => setSearchInput(e.target.value)}
+              type="search" placeholder="Search for cat's name" className='bg-[#FFF] p-2 min-w-[400px] border-1 border-[#595959] rounded-[15px]'/>
               <button className='bg-[#CFCFCF] p-2 pl-4 pr-4 rounded-[15px] cursor-pointer hover:bg-[#a3a3a3] active:bg-[#CFCFCF]'>Search</button>
             </form>
 
@@ -61,8 +67,10 @@ const AdminCatProfile = () => {
               </tr>
             </thead>
 
+            
+
             <tbody className='flex flex-col w-full overflow-y-scroll max-h-[550px] gap-1'>
-              {cats.map((cat) => (
+              {filteredItems.map((cat) => (
                 <tr key={cat.cat_id} className='grid grid-cols-[10%_15%_15%_25%_35%] place-items-center justify-items-start w-full p-3 bg-[#FFF] rounded-[15px] border-b-1 border-b-[#2F2F2F]'>
                   <td>{cat.cat_id}</td>
                   <td>{cat.name}</td>
@@ -75,6 +83,7 @@ const AdminCatProfile = () => {
                 </tr>
               ))}
             </tbody>
+       
           </table>
 
         </div>

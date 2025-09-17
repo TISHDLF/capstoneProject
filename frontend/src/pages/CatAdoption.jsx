@@ -12,32 +12,10 @@ const CatAdoption = () => {
 
   const [catList, setCatList] = useState([]);
 
-  // useEffect(() => {
-  //   const fetchCats = async () => {
-  //     try {
-  //       const response = await axios.get(`http://localhost:5000/catlist`);
-
-  //       const formattedCats = response.data.map(cat => ({
-  //         ...cat,
-  //         thumbnail: cat.thumbnail ? `data:image/jpeg;base64,${cat.thumbnail}` : null
-  //       }));
-        
-        
-  //       console.log(formattedCats)      
-  //       setCatList(formattedCats)
-
-  //     }catch(err) {
-  //       console.error('Error fetching cat:', err);
-  //     }
-
-  //   }
-  //   fetchCats();
-  // },[]);
-
   useEffect(() => {
     const fetchCats = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/catlist`);
+        const response = await axios.get(`http://localhost:5000/cat/catlist`);
 
         const formattedCats = response.data.map(cat => ({
           ...cat,

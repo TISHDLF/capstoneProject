@@ -3,117 +3,79 @@ import NavigationBar from '../components/NavigationBar';
 import SideNavigation from '../components/SideNavigation';
 import Footer from '../components/Footer';
 import CatBot from '../components/CatBot';
+import { useState } from 'react';
+import Food from './DonateComponents/Food';
+import Money from './DonateComponents/Money';
+import Items from './DonateComponents/Items';
+import Others from './DonateComponents/Others';
+
+
+//TODO: Add screenshot of image of transaction for money dontation
 
 const Donate = () => {
+
+  const [selected, setSelected] = useState(null);
+
+  const handleToggle = (value) => {
+    setSelected(value);
+  };
+
   return (
     <div className='flex flex-col min-h-screen pb-10'>
       <CatBot />
       <NavigationBar />
       <div className='grid grid-cols-[80%_20%] h-full'>
-        <div className='flex flex-col  pl-50 p-10'>
-
-          
-
-          <form className='relative flex flex-col gap-5 pt-5 bg-[#FFF] rounded-[25px] w-full h-auto'>
-            
-            <div className='grid grid-cols-[20%_80%] place-items-center'>
-              <div className='flex items-center gap-5 p-4 bg-[#FDF5D8] shadow-md rounded-tr-[15px] rounded-br-[15px] w-full'>
-                <label className="flex flex-row font-bold text-[#DC8801]">
-                  Donation Form
-                </label>
-                <div className='w-[40px] h-auto'>
-                  <img src="src/assets/icons/clipboard-white.png" alt="white clipboard" className='w-full h-auto '/>  
+        <div className='flex flex-col pl-50 p-10'>
+            <div  className='grid grid-cols-[20%_80%] w-full h-auto object-fit gap-2'>
+              <div className='flex flex-col justify-start gap-10'>
+                <div className='flex gap-2 items-center bg-[#DC8801] p-3 rounded-[10px] rounded-br-[0px]'> {/* HEADER TITLE */}
+                  <div className='flex w-[30px] h-[30px]'>
+                    <img src="/src/assets/icons/document.png" alt="" className='w-full h-full object-cover'/>
+                  </div>
+                  <label className='text-[16px] text-[#FFF] font-bold'>Donation Form</label>
                 </div>
+              </div>
+
+              <div className='flex flex-col gap-2 p-3 bg-[#FFF] rounded-[25px]'>
+                  <div className='flex flex-col items-center gap-2 w-full'> {/* DONATION OPTION TITLE */}
+                    <div className='relative flex flex-col rounded-[15px] bg-[#DC8801]'>
+                      <label className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[24px] text-[#FFF] font-bold z-10'>What do you want to donate?</label>
+                      <div className='w-full h-[150px] rounded-[15px] overflow-hidden isolation-isolate'>
+                        <img src="/src/assets/cats/cat-donate-bg.jpg" alt="" className='w-full h-auto object-cover mix-blend-multiply opacity-20'/>
+                      </div>
+                    </div>
+
+                    {/* RADIO BUTTON */}
+                    <div className='flex gap-3 w-full pb-4 pt-2 pr-4 border-dashed border-b-1 border-b-[#a3a3a3]'>
+                      <label htmlFor="money" className='flex items-center justify-between w-full gap-3 p-2 border-1 border-[#a3a3a3] rounded-[10px]'>
+                        <input type="radio" name="donation_type"  id="money" 
+                        checked={selected === 'money'} onChange={() => handleToggle('money')}/>
+                        Money
+                      </label>
+                      <label htmlFor="food" className='flex items-center justify-between w-full gap-3 p-2 border-1 border-[#a3a3a3] rounded-[10px]'>
+                        <input type="radio" name="donation_type" id="food" 
+                        checked={selected === 'food'} onChange={() => handleToggle('food')}/>
+                        Food
+                      </label>
+                      <label htmlFor="items" className='flex items-center justify-between w-full gap-3 p-2 border-1 border-[#a3a3a3] rounded-[10px]'>
+                        <input type="radio" name="donation_type" id="items" 
+                        checked={selected === 'items'} onChange={() => handleToggle('items')}/>
+                        Items
+                      </label>
+                      <label htmlFor="others" className='flex items-center justify-between w-full gap-3 p-2 border-1 border-[#a3a3a3] rounded-[10px]'>
+                        <input type="radio" name="donation_type" id="others" 
+                        checked={selected === 'others'} onChange={() => handleToggle('others')}/>
+                        Others
+                      </label>
+                    </div>
+                  </div>
                 
-              </div>
-              <div className='flex flex-col justify-between'>
-                <label>What do you want to donate?*</label>
-                <div className='flex flex-row gap-3 w-full justify'>
-                  <label htmlFor="checkMoney" className='flex flex-row gap-2 p-3 rounded-[10px] border-1 border-[#444]'>
-                    <input type="checkbox" name="" id="checkMoney" value="Money"/>
-                    Money
-                  </label>
-                  <label htmlFor="checkFood" className='flex flex-row gap-2 p-3 rounded-[10px] border-1 border-[#444]'>
-                    <input type="checkbox" name="" id="checkFood" value="Food"/>
-                    Food
-                  </label>
-                  <label htmlFor="checkItem" className='flex flex-row gap-2 p-3 rounded-[10px] border-1 border-[#444]'>
-                    <input type="checkbox" name="" id="checkItem" value="Items"/>
-                    Items
-                  </label>
-                  <label htmlFor="checkOthers" className='flex flex-row gap-2 p-3 rounded-[10px] border-1 border-[#444]'>
-                    <input type="checkbox" name="" id="checkOthers" value="Others"/>
-                    Others
-                  </label>
-                </div>
+                  {selected === 'money' && ( <Money /> )}
+                  {selected === 'food' && ( <Food /> )}
+                  {selected === 'items' && ( <Items />)}
+                  {selected === 'others' && ( <Others /> )}
               </div>
             </div>
-
-            <div className='flex flex-col items-end pl-5 pr-5'>
-              <div className='flex flex-row'>
-                <label>if <strong>money</strong>, please specify the amount and scan the Q code:</label>
-              </div>
-              <div className='flex flex-row items-center justify-end gap-3'>
-                <input type="text" name="" id="" placeholder='Add amount' className='flex flex-row gap-2 p-3 rounded-[10px] border-1 border-[#444] w-[150px]'/>
-                <button className='font-bold p-3 rounded-[10px] bg-[#DC8801] text-[#FFF] shadow-md hover:bg-[#ffb030] active:bg-[#DC8801]'>Click here to view QR Code</button>
-                <div className='hidden'> QR Code </div>
-              </div>
-            </div>
-            
-            <div className='grid grid-cols-2 gap-5 p-5 pt-0 pb-20'>
-              <div className='flex flex-col gap-3 justify-between'>
-                <div className='flex flex-col'>
-                  <label>if <strong>food</strong>, please specify:</label>
-                  <div className='flex flex-row gap-3'>
-                    <label htmlFor="wet" className='flex flex-row gap-2 p-3 rounded-[10px] border-1 border-[#444]'>
-                      <input type="radio" name="ifFood" id="wet" value="Wet Food"/>
-                      Wet Food
-                    </label>
-                    <label htmlFor="dry" className='flex flex-row gap-2 p-3 rounded-[10px] border-1 border-[#444]'>
-                      <input type="radio" name="ifFood" id="dry" value="Dry Food"/>
-                      Dry Food
-                    </label>
-                  </div>
-                </div>
-
-                <div className='flex flex-col'>
-                  <label>Quantity</label>
-                  <div className='grid grid-cols-3 place-items-center rounded-[10px] border-1 border-[#DC8801]'>
-                    <button className='flex items-center justify-center w-full p-3 cursor-pointer hover:bg-[#FDF5D8] object-contain rounded-tl-[10px] rounded-bl-[10px] hover:text-[#FFF]  active:bg-[#ffd38d]'>
-                      <div className='w-[20px] h-auto'>
-                        <img src="src/assets/icons/plus.png" alt="add" />
-                      </div>
-                    </button>
-                    <label className='w-full text-center p-2'>3</label>
-                    <button className='flex justify-center w-full p-3 cursor-pointer hover:bg-[#FDF5D8] object-contain rounded-tr-[10px] rounded-br-[10px] hover:text-[#FFF] active:bg-[#ffd38d]'>
-                      <div className='w-[25px] h-auto'>
-                        <img src="src/assets/icons/trash-bin.png" alt="add" />
-                      </div>
-                    </button>
-                  </div>
-                </div>
-
-                <div className='flex flex-col'>
-                  <label>Description:</label>
-                  <textarea name="" id="" rows={5} className='p-2 border-1 border-[#252525] rounded-[8px] resize-none' placeholder='Add description here'></textarea>
-                </div>
-              </div>
-
-              {/* If Items */}
-              <div className='flex flex-col gap-6'>
-                <div className='flex flex-col'>
-                  <label>if <strong>items</strong>, please specify:</label>
-                  <textarea name="" id="" rows={5} className='p-2 border-1 border-[#252525] rounded-[8px] resize-none' placeholder='Add description here'></textarea>
-                </div>
-
-                <div className='flex flex-col'>
-                  <label>if <strong>others</strong>, please specify:</label>
-                  <textarea name="" id="" rows={5} className='p-2 border-1 border-[#252525] rounded-[8px] resize-none' placeholder='Add description here'></textarea>
-                </div>
-              </div>
-            </div>
-            <button className='absolute right-5 bottom-5 flex flex-row justify-center text-center w-[100px] bg-[#B5C04A] font-bold text-[#FFF] p-3 rounded-[15px] hover:bg-[#CFDA34] active:bg-[#B5C04A]'> Submit </button>
-          </form>
         </div>
         <SideNavigation />
       </div>
@@ -121,6 +83,9 @@ const Donate = () => {
       <Footer />
     </div>
   )
+
 }
+
+
 
 export default Donate
