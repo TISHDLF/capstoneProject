@@ -5,10 +5,12 @@ import NavigationBar from "../../components/NavigationBar";
 import SideNavigation from "../../components/HeadVolunteerSideBar";
 import Footer from "../../components/Footer";
 
+import { useSession } from "../../context/SessionContext";
 const AdoptionApplications = () => {
   const navigate = useNavigate();
   const [apps, setApps] = useState([]);
-  const [loading, setLoading] = useState(true);
+
+  const { user, loading } = useSession();
   const [error, setError] = useState("");
   const [page, setPage] = useState(1);
 
@@ -16,35 +18,32 @@ const AdoptionApplications = () => {
   const totalPages = Math.ceil(apps.length / itemsPerPage);
 
   useEffect(() => {
-    const role = sessionStorage.getItem("role");
-    if (role !== "head_volunteer") {
-      navigate("/");
-      return;
-    }
-
-    const fetchUserAndDonations = async () => {
-      try {
-        const response = await axios.get(
-          "http://localhost:5000/api/donations",
-          {
-            withCredentials: true,
-          }
-        );
-
-        const data = Array.isArray(response.data)
-          ? response.data
-          : response.data.donations || [];
-
-        setApps(data);
-        setLoading(false);
-      } catch (err) {
-        setError(err.response?.data?.error || "Failed to fetch data");
-        setLoading(false);
+    if (!loading) {
+      if (!user || user.role !== "head_volunteer") {
+        navigate("/");
+        return;
       }
-    };
 
-    fetchUserAndDonations();
-  }, [navigate]);
+      const fetchUserAndDonations = async () => {
+        try {
+          const response = await axios.get(
+            "http://localhost:5000/api/donations",
+            { withCredentials: true }
+          );
+
+          const data = Array.isArray(response.data)
+            ? response.data
+            : response.data.donations || [];
+
+          setApps(data);
+        } catch (err) {
+          setError(err.response?.data?.error || "Failed to fetch data");
+        }
+      };
+
+      fetchUserAndDonations();
+    }
+  }, [user, loading, navigate]);
 
   const startIndex = (page - 1) * itemsPerPage;
   const currentApps = apps.slice(startIndex, startIndex + itemsPerPage);

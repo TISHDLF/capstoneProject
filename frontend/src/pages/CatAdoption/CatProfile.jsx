@@ -4,17 +4,23 @@ import NavigationBar from "../../components/NavigationBar";
 import Footer from "../../components/Footer";
 import SideNavigation from "../../components/SideNavigation";
 import CatBot from "../../components/CatBot";
+import HeadVolunteerSideBar from "../../components/HeadVolunteerSideBar";
+import AdminSideBar from "../../components/AdminSideBar";
+import { useWhiskerMeter } from "../../context/WhiskerMeterContext";
+import WhiskerMeter from "../../components/WhiskerMeter";
 
 const CatProfile = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const user = JSON.parse(sessionStorage.getItem("user"));
+  const { points } = useWhiskerMeter();
 
-  const [cats, setCats] = useState([]); // 👈 store all cats
-  const [cat, setCat] = useState(null);
+  const [cats, setCats] = useState([]); // list of all cats
+  const [cat, setCat] = useState(null); // single cat
   const [loading, setLoading] = useState(true);
+  const [images, setImages] = useState([]); // 👈 cat images
   const [selectedImage, setSelectedImage] = useState(null);
 
-  // Fetch all cats first
   useEffect(() => {
     const fetchCats = async () => {
       try {
@@ -29,7 +35,7 @@ const CatProfile = () => {
     fetchCats();
   }, []);
 
-  // Fetch the single cat (for details)
+  // Fetch single cat
   useEffect(() => {
     const fetchCat = async () => {
       try {
@@ -38,7 +44,6 @@ const CatProfile = () => {
         if (!res.ok) throw new Error("Failed to fetch cat");
         const data = await res.json();
         setCat(data);
-        setSelectedImage(data.image || "/src/assets/icons/CatImages/cat1.jpg");
       } catch (err) {
         console.error("Failed to fetch cat:", err);
       } finally {
@@ -49,37 +54,65 @@ const CatProfile = () => {
     if (id) fetchCat();
   }, [id]);
 
+  // Fetch cat images
+  useEffect(() => {
+    const fetchImages = async () => {
+      try {
+        const res = await fetch(`http://localhost:5000/upload/catimages/${id}`);
+        if (!res.ok) throw new Error("Failed to fetch images");
+        const data = await res.json();
+
+        setImages(data);
+        if (data.length > 0) {
+          // Prefer primary image
+          const primary = data.find((img) => img.is_primary === 1);
+          setSelectedImage(primary ? primary.url : data[0].url);
+        } else {
+          setSelectedImage("/src/assets/icons/CatImages/cat1.jpg");
+        }
+      } catch (err) {
+        console.error("Failed to fetch images:", err);
+        setSelectedImage("/src/assets/icons/CatImages/cat1.jpg");
+      }
+    };
+
+    if (id) fetchImages();
+  }, [id]);
+
   if (loading) return <p className="p-10">Loading cat info...</p>;
   if (!cat) return <p className="p-10">Cat not found</p>;
 
-  // Find current index
-  // Find current index
   const currentIndex = cats.findIndex((c) => c.cat_id === parseInt(id));
 
-  // Navigate to previous cat
   const goToPrevCat = () => {
     if (currentIndex > 0) {
       const prevCat = cats[currentIndex - 1];
-      navigate(`/cat/${prevCat.cat_id}`); // 👈 use cat_id
+      navigate(`/cat/${prevCat.cat_id}`);
     }
   };
 
-  // Navigate to next cat
   const goToNextCat = () => {
     if (currentIndex < cats.length - 1) {
       const nextCat = cats[currentIndex + 1];
-      navigate(`/cat/${nextCat.cat_id}`); // 👈 use cat_id
+      navigate(`/cat/${nextCat.cat_id}`);
     }
   };
 
-  const handleImageClick = (event) => {
-    setSelectedImage(event.target.src);
+  const handleImageClick = (src) => {
+    setSelectedImage(src);
   };
 
   return (
     <div className="flex flex-col min-h-screen pb-10">
       <CatBot />
       <NavigationBar />
+      {user?.role === "head_volunteer" ? (
+        <HeadVolunteerSideBar />
+      ) : user?.role === "admin" ? (
+        <AdminSideBar />
+      ) : (
+        <SideNavigation />
+      )}
 
       <div className="grid grid-cols-[80%_20%] h-full">
         <div className="relative flex flex-col pl-50 p-8">
@@ -108,12 +141,19 @@ const CatProfile = () => {
                   />
                 </div>
                 <div className="grid grid-cols-5 gap-2 overflow-x-auto">
-                  <img
-                    src={cat.image || "/src/assets/icons/CatImages/cat1.jpg"}
-                    alt={cat.name}
-                    onClick={handleImageClick}
-                    className="w-[100px] h-[100px] rounded-[10px] object-cover cursor-pointer opacity-60 hover:opacity-100"
-                  />
+                  {images.map((img, index) => (
+                    <img
+                      key={img.image_id || `${img.url}-${index}`} // fallback for uniqueness
+                      src={img.url}
+                      alt={`${cat.name} ${index}`}
+                      onClick={() => handleImageClick(img.url)}
+                      className={`w-[100px] h-[100px] rounded-[10px] object-cover cursor-pointer ${
+                        selectedImage === img.url
+                          ? "opacity-100 border-2 border-[#DC8801]"
+                          : "opacity-60 hover:opacity-100"
+                      }`}
+                    />
+                  ))}
                 </div>
               </div>
 
@@ -141,12 +181,22 @@ const CatProfile = () => {
                 </div>
 
                 <div className="flex flex-col w-full gap-2 mt-6">
-                  <Link
-                    to={`/adopteeform/${id}`}
-                    className="bg-[#B5C04A] text-white font-bold p-3 rounded-[15px] text-center hover:bg-[#CFDA34]"
-                  >
-                    I want to adopt this cat
-                  </Link>
+                  {!user ? (
+                    <Link
+                      to="/login"
+                      className="bg-[#B5C04A] text-white font-bold p-3 rounded-[15px] text-center hover:bg-[#CFDA34]"
+                    >
+                      Login to adopt this cat
+                    </Link>
+                  ) : (
+                    <Link
+                      to={`/adopteeform/${id}`}
+                      className="bg-[#B5C04A] text-white font-bold p-3 rounded-[15px] text-center hover:bg-[#CFDA34]"
+                    >
+                      I want to adopt this cat
+                    </Link>
+                  )}
+
                   <Link
                     to="/catadoption"
                     className="border-2 border-[#B5C04A] text-[#B5C04A] font-bold p-3 rounded-[15px] text-center hover:bg-[#B5C04A] hover:text-white"
@@ -170,7 +220,7 @@ const CatProfile = () => {
             </button>
           </div>
         </div>
-        <SideNavigation />
+        <WhiskerMeter user={{ points }} />
       </div>
 
       <Footer />

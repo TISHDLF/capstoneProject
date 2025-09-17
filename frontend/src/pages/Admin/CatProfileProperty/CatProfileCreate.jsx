@@ -32,7 +32,6 @@ const CatProfileCreate = () => {
       if (response.status === 201 || response.status === 200) {
         const cat_id = response.data.cat_id;
 
-        // Upload images after creating profile
         if (catImage.length > 0) {
           await handleUploadImages(cat_id);
         }
@@ -56,7 +55,7 @@ const CatProfileCreate = () => {
     // store file
     setCatImage((prev) => [...prev, file]);
 
-    // create preview
+    // preview
     const reader = new FileReader();
     reader.onload = () => {
       setCatImagePreview((prev) => [...prev, reader.result]);
@@ -73,17 +72,21 @@ const CatProfileCreate = () => {
 
   const handleUploadImages = async (cat_id) => {
     try {
+      const formData = new FormData();
+      catImage.forEach((file) => {
+        formData.append("images", file);
+      });
+
       const response = await axios.post(
-        `http://localhost:5000/catimages/${cat_id}`,
-        {
-          cat_id: cat_id,
-          images: catImagePreview,
-        }
+        `http://localhost:5000/upload/catimages/${cat_id}`,
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
       );
 
       if (response.status === 200) {
-        console.log("Image uploaded successfully!");
+        console.log("Images uploaded successfully!");
         setCatImage([]);
+        setCatImagePreview([]);
       }
     } catch (error) {
       console.error(

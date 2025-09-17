@@ -1,15 +1,17 @@
 import axios from "axios";
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import Cookies from "js-cookie";
+import PopLogout from "../modal/PopLogout.jsx";
+import { useWhiskerMeter } from "../context/WhiskerMeterContext.jsx";
+import { useSession } from "../context/SessionContext.jsx";
 
 const SideNavigation = () => {
   const location = useLocation();
-
+  const { logout } = useSession();
+  const { resetWhiskerMeter } = useWhiskerMeter();
   const [user, setUser] = useState({ firstname: "", lastname: "", role: "" });
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   useEffect(() => {
     const fetchUser = async () => {
       const loggedUser = sessionStorage.getItem("user"); // ✅ from sessionStorage
@@ -41,7 +43,8 @@ const SideNavigation = () => {
 
   const handleLogout = () => {
     sessionStorage.removeItem("user");
-    setUser({ firstname: "", lastname: "", role: "" });
+    logout(); // ✅ sets actualUser to null
+    resetWhiskerMeter(); // optional, will reset points immediately
     window.location.href = "/home";
   };
 
@@ -105,14 +108,15 @@ const SideNavigation = () => {
                 Dashboard
               </Link>
             )}
-            <Link
-              to="/home"
-              className="text-[#000] p-3 pl-6 bg-[#fef8e2] pr-6 w-full hover:bg-[#f9e394] active:bg-[#feaf31] active:text-[#FFF] rounded-[10px]"
-              onClick={handleLogout}
-              replace
+            <button
+              onClick={() => {
+                setShowLogoutModal(true);
+                setIsVisible(false);
+              }}
+              className="text-[#000] p-3 pl-6 pr-6 w-full bg-[#fef8e2] hover:bg-[#f9e394] active:bg-[#feaf31] active:text-[#FFF] rounded-[10px]"
             >
               Log out
-            </Link>
+            </button>
           </div>
         ) : (
           <div
@@ -191,6 +195,13 @@ const SideNavigation = () => {
           <label className="cursor-pointer"> Community Guidelines </label>
         </Link>
       </div>
+      {/* Logout Modal */}
+      {showLogoutModal && (
+        <PopLogout
+          onCancel={() => setShowLogoutModal(false)}
+          onConfirm={handleLogout}
+        />
+      )}
     </div>
   );
 };

@@ -120,17 +120,18 @@ const CatProfileProperty = () => {
   // Fetch cat images
   const fetchCatImage = async () => {
     try {
-      const response = await axios.get(`http://localhost:5000/image/${cat_id}`);
-      const imageUrls = response.data.map((filename) => ({
-        filename,
-        url: `http://localhost:5000/FileUploads/${filename}`,
+      const response = await axios.get(
+        `http://localhost:5000/upload/catimages/${cat_id}`
+      );
+      const imageUrls = response.data.map((img) => ({
+        filename: img.filename,
+        url: img.url, // use backend-provided URL directly
       }));
       setCatImage(imageUrls);
     } catch (err) {
       console.error("Error fetching cat Image:", err);
     }
   };
-
   // Delete image
   const handleDeleteImage = async (filename) => {
     try {
@@ -351,21 +352,21 @@ const CatProfileProperty = () => {
                     </button>
                   </div>
                   <div className="grid grid-cols-5 gap-2 w-full">
-                    {catImage.map((imageURL, index) => (
+                    {catImage.map((image, index) => (
                       <div
                         key={index}
                         className="relative flex items-center max-w-[250px] h-[250px] rounded-[10px] overflow-hidden bg-[#CCCCCC]"
                       >
                         <button
                           type="button"
-                          onClick={() => handleDeleteImage(imageURL.filename)}
+                          onClick={() => handleDeleteImage(image.filename)}
                           className="absolute top-2 right-2 bg-[#DC8801] text-[#FFF] p-1 pl-2 pr-2 rounded-[15px] cursor-pointer active:bg-[#2F2F2F]"
                         >
                           Delete
                         </button>
                         <img
-                          src={imageURL.url}
-                          alt={`Cat ${index}`}
+                          src={image.url}
+                          alt="cat"
                           className="w-full h-full object-cover"
                         />
                       </div>

@@ -1,58 +1,134 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-
+import { useSession } from "../../context/SessionContext";
 import NavigationBar from "../../components/NavigationBar";
 import Footer from "../../components/Footer";
 import SideNavigation from "../../components/SideNavigation";
 import CatBot from "../../components/CatBot";
+import { useRef } from "react";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
+import axios from "axios"; // also needed
 
 const handleGoBack = () => {
   window.history.back();
 };
 
 const AdopteeForm = () => {
-  const [imageSrc, setImageSrc] = useState("src/assets/icons/id-card.png");
+  const printRef = useRef();
+  const { user: loggedInUser } = useSession();
 
+  const [imageSrc, setImageSrc] = useState("src/assets/icons/id-card.png"); // default placeholder
+  const { catId } = useParams(); // e.g. /adopteeform/1 → catId = 1
+  const [cat, setCat] = useState(null);
+  const [images, setImages] = useState([]);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [selectedImageFile, setSelectedImageFile] = useState(null);
+
+  // ✅ PDF generation + upload
+  const generateAdopteePDF = async () => {
+    if (!cat || !loggedInUser) return;
+
+    try {
+      const element = printRef.current;
+      if (!element) return;
+
+      // Generate PDF
+      const canvas = await html2canvas(element, { scale: 2 });
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "px",
+        format: "a4",
+      });
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const imgProps = pdf.getImageProperties(imgData);
+      const pdfHeight = (imgProps.height * pageWidth) / imgProps.width;
+      pdf.addImage(imgData, "PNG", 0, 0, pageWidth, pdfHeight);
+      const pdfBlob = pdf.output("blob");
+
+      // FormData
+      const formData = new FormData();
+      formData.append("adoptedcat_id", cat.cat_id); // critical
+      formData.append("adopter_id", loggedInUser.user_id);
+      formData.append("cat_name", cat.name);
+      formData.append(
+        "adopter",
+        `${loggedInUser.firstname} ${loggedInUser.lastname}`
+      );
+      formData.append("contactnumber", loggedInUser.contactnumber);
+      formData.append("certificate", pdfBlob, `${cat.name}_adoption.pdf`);
+      if (selectedImageFile) {
+        formData.append("id_image", selectedImageFile, selectedImageFile.name);
+      }
+
+      // Submit
+      const response = await axios.post(
+        "http://localhost:5000/api/adoption",
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
+
+      if (response.status === 201) {
+        alert("✅ Adoption form submitted successfully!");
+      }
+    } catch (err) {
+      console.error("Failed to submit PDF:", err.response?.data || err.message);
+      alert(
+        `❌ Submission failed: ${err.response?.data?.error || err.message}`
+      );
+    }
+  };
+
+  // ✅ Handle ID upload preview
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       if (file.size > 10 * 1024 * 1024) {
-        // 10MB limit in bytes
-        alert(
-          "File size exceeds 10MB limit. Please upload an image of 10MB or smaller."
-        );
+        // 10MB limit
+        alert("File size exceeds 10MB limit.");
         return;
       }
+
+      setSelectedImageFile(file); // store actual file
+
+      // For preview
       const reader = new FileReader();
-      reader.onload = () => {
-        setImageSrc(reader.result);
-      };
+      reader.onload = () => setSelectedImage(reader.result);
       reader.readAsDataURL(file);
     }
   };
 
-  const { catId } = useParams(); // e.g., /adopteeform/1 → catId = 1
-  const [cat, setCat] = useState(null);
-
+  // ✅ Fetch cat info + images
   useEffect(() => {
-    const fetchCat = async () => {
+    const fetchCatAndImages = async () => {
       try {
-        const response = await fetch(`/api/cats/${catId}`);
-        if (!response.ok) throw new Error("Failed to fetch cat data");
-        const data = await response.json();
-        setCat(data);
+        const catRes = await fetch(`/api/cats/${catId}`);
+        if (!catRes.ok) throw new Error("Failed to fetch cat data");
+        const catData = await catRes.json();
+        setCat(catData);
+
+        const imagesRes = await fetch(`/api/cats/${catId}/images`);
+        if (!imagesRes.ok) throw new Error("Failed to fetch images");
+        const imagesData = await imagesRes.json();
+        setImages(imagesData);
+
+        if (imagesData.length > 0) {
+          setImageSrc(imagesData[0].url);
+        }
       } catch (error) {
-        console.error("Error fetching cat:", error);
+        console.error("Error fetching cat or images:", error);
       }
     };
 
-    fetchCat();
+    fetchCatAndImages();
   }, [catId]);
 
   if (!cat) {
     return <p className="p-10">Loading cat info...</p>;
   }
-
   return (
     <div className="flex flex-col min-h-screen pb-10">
       <CatBot />
@@ -94,22 +170,33 @@ const AdopteeForm = () => {
                 </label>
               </div>
             </div>
-            <form className="flex flex-col items-start p-10 gap-10">
+
+            <form
+              ref={printRef}
+              className="flex flex-col items-start p-10 gap-10"
+              onSubmit={(e) => {
+                e.preventDefault();
+                generateAdopteePDF();
+              }}
+            >
+              {/* Cat info and image */}
               <div className="flex flex-row gap-2 w-full justify-between">
                 <div className="flex flex-col">
                   <label htmlFor="">1. You will be adopting:</label>
-                  <label className="font-bold pl-4">{cat.name} </label>
+                  <label className="font-bold pl-4">{cat.name}</label>
                 </div>
                 <div className="border-dashed border-2 border-[#B5C04A] rounded-[18px] p-2">
                   <div className="w-[250px] h-auto rounded-[15px] overflow-hidden">
                     <img
-                      src={cat.image || "src/assets/icons/CatImages/cat1.jpg"}
-                      alt="cat image"
+                      src={imageSrc}
+                      alt={`${cat.name} photo`}
+                      className="w-full h-auto object-cover"
                     />
                   </div>
                 </div>
               </div>
 
+              {/* Rest of your form fields remain unchanged */}
               <div className="flex flex-col gap-2">
                 <label>
                   2. Please let us know how you found out about the adoption
@@ -158,8 +245,8 @@ const AdopteeForm = () => {
                   >
                     <input
                       type="radio"
-                      id="referral"
                       name="adaptionOpportunity"
+                      id="referral"
                       value="Referred by a Volunteer"
                     />
                     Referred by a Volunteer
@@ -179,23 +266,22 @@ const AdopteeForm = () => {
                 </div>
               </div>
 
+              {/* ID upload */}
               <div className="flex flex-col gap-2">
                 <div className="flex flex-col">
                   <label>
                     3. Kindly attach an ID to verify your identity - we do our
-                    best to make sure our cats are adopted by verified people so
-                    that they are assured a safe home. Thank you for
-                    understanding.
+                    best to make sure our cats are adopted by verified people.
                   </label>
                   <label className="italic text-[14px] text-[#828282]">
                     (You may opt to blur sensitive data like Social Security
-                    info and etc.)
+                    info etc.)
                   </label>
                 </div>
                 <div className="flex flex-row items-center gap-2">
                   <div className="flex items-center justify-center w-[200px] h-full border-dashed border-2 border-[#898989] p-2 object-cover rounded-[15px]">
                     <img
-                      src={imageSrc}
+                      src={selectedImage || "/src/assets/icons/id-card.png"}
                       alt="id-card"
                       className="w-auto h-full"
                     />

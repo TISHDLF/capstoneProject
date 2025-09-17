@@ -21,7 +21,6 @@ const CatAdoption = () => {
       )}
       <div className="grid grid-cols-[80%_20%] h-full">
         <div className="flex flex-col pl-50 p-10">
-          {/* ALL CONTENTS HERE */}
           <CardAdoption></CardAdoption>
         </div>
       </div>

@@ -12,7 +12,6 @@ const HeadVolunteerSideBar = () => {
 
   const [user, setUser] = useState({ firstname: "", lastname: "", role: "" });
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   const [isVisible, setIsVisible] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);

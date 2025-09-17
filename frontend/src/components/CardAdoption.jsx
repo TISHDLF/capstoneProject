@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import pic from "../assets/SampleCatPic.png";
-
 const CardAdoption = () => {
   const [cats, setCats] = useState([]);
 
@@ -10,7 +9,29 @@ const CardAdoption = () => {
       try {
         const response = await fetch("http://localhost:5000/api/cats");
         const data = await response.json();
-        setCats(data);
+
+        // Fetch images for each cat
+        const catsWithImages = await Promise.all(
+          data.map(async (cat) => {
+            try {
+              const imgRes = await fetch(
+                `http://localhost:5000/upload/catimages/${cat.cat_id}`
+              );
+              const imgData = await imgRes.json();
+
+              // Get the first image (or fallback placeholder)
+              const imageUrl =
+                imgData.length > 0 ? imgData[0].url : "/default-cat.png";
+
+              return { ...cat, imageUrl };
+            } catch (err) {
+              console.error(`Failed to fetch image for cat ${cat.cat_id}`, err);
+              return { ...cat, imageUrl: "/default-cat.png" };
+            }
+          })
+        );
+
+        setCats(catsWithImages);
       } catch (error) {
         console.error("Failed to fetch cats:", error);
       }
@@ -20,14 +41,14 @@ const CardAdoption = () => {
   }, []);
 
   return (
-    <div className="flex gap-10 flex-wrap justify-center">
+    <div className="flex gap-10 flex-wrap justify-center pb-10">
       {cats.map((cat) => (
         <div
           key={cat.cat_id}
           className="rounded-2xl shadow-2xl hover:shadow-xl transition-shadow duration-300 w-72"
         >
           <img
-            src={pic}
+            src={cat.imageUrl}
             alt={cat.name}
             className="rounded-t-2xl w-full h-48 object-cover"
           />
@@ -54,7 +75,7 @@ const CardAdoption = () => {
             <div className="pt-4">
               <Link
                 to={`/cat/${cat.cat_id}`}
-                className="bg-lime-500 text-white px-4 py-2 rounded-xl hover:bg-lime-600"
+                className="bg-[#B5C04A] text-white px-4 py-2 rounded-xl hover:bg-lime-600"
               >
                 View More
               </Link>

@@ -10,6 +10,16 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 
+const pool = mysql.createPool({
+  host: "localhost",
+  user: "root", // your DB username
+  password: "Password123", // your DB password
+  database: "whiskerwatch", // your DB name
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
+});
+
 dotenv.config();
 const app = express();
 
@@ -17,10 +27,15 @@ const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+app.use(
+  "/uploads/cats",
+  express.static(path.join(process.cwd(), "FileUploads/cats"))
+);
+
 // ---------------- MULTER STORAGE ---------------- //
 const storage = multer.diskStorage({
   destination: function (req, file, callback) {
-    const dir = path.join(__dirname, "FileUploads/cats");
+    const dir = path.join(process.cwd(), "FileUploads/cats");
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
@@ -31,15 +46,18 @@ const storage = multer.diskStorage({
   },
 });
 
-const uploadImages = multer({
+const upload = multer({
   storage,
   fileFilter: function (req, file, callback) {
-    if (file.mimetype === "image/jpeg" || file.mimetype === "image/png") {
+    if (
+      file.mimetype === "image/jpeg" ||
+      file.mimetype === "image/png" ||
+      file.mimetype === "application/pdf"
+    ) {
       callback(null, true);
     } else {
-      !req.invalidFiles
-        ? (req.invalidFiles = [file.originalname])
-        : req.invalidFiles.push(file.originalname);
+      if (!req.invalidFiles) req.invalidFiles = [];
+      req.invalidFiles.push(file.originalname);
       callback(null, false);
     }
   },
@@ -325,6 +343,100 @@ app.post("/api/donations/:id/approve", async (req, res) => {
     res.status(500).json({ error: "Failed to approve donation" });
   }
 });
+// ADOPTION
+app.post(
+  "/api/adoption",
+  upload.fields([
+    { name: "certificate", maxCount: 1 },
+    { name: "id_image", maxCount: 1 },
+  ]),
+  async (req, res) => {
+    try {
+      const { adoptedcat_id, adopter_id, cat_name, adopter, contactnumber } =
+        req.body;
+
+      // Validate required fields
+      if (
+        !adoptedcat_id ||
+        !adopter_id ||
+        !cat_name ||
+        !adopter ||
+        !contactnumber
+      ) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+
+      // Certificate is mandatory
+      const certificateFile = req.files["certificate"]?.[0];
+      if (!certificateFile) {
+        return res.status(400).json({ error: "No PDF file uploaded" });
+      }
+
+      // Optional ID image
+      const idImageFile = req.files["id_image"]?.[0];
+
+      // Read files
+      const certificateBuffer = fs.readFileSync(certificateFile.path);
+      const idImageBuffer = idImageFile
+        ? fs.readFileSync(idImageFile.path)
+        : null;
+
+      // Insert into DB
+      await pool.query(
+        `INSERT INTO Adoption 
+        (adoptedcat_id, adopter_id, cat_name, adopter, contactnumber, certificate, id_image) 
+        VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [
+          parseInt(adoptedcat_id),
+          parseInt(adopter_id),
+          cat_name,
+          adopter,
+          contactnumber,
+          certificateBuffer,
+          idImageBuffer,
+        ]
+      );
+
+      // Remove temp files
+      fs.unlinkSync(certificateFile.path);
+      if (idImageFile) fs.unlinkSync(idImageFile.path);
+
+      res.status(201).json({ message: "✅ Adoption PDF stored in DB" });
+    } catch (err) {
+      console.error("Failed to store adoption PDF:", err);
+      res.status(500).json({ error: err.message || "Internal server error" });
+    }
+  }
+);
+
+// Get all adoptions (optional)
+app.get("/api/adoption", async (req, res) => {
+  try {
+    const [rows] = await pool.query(`SELECT * FROM Adoption`);
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch adoptions" });
+  }
+});
+
+app.get("/api/adoption/:id/pdf", async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      "SELECT certificate FROM Adoption WHERE adoption_id = ?",
+      [req.params.id]
+    );
+
+    if (rows.length === 0) return res.status(404).json({ error: "Not found" });
+
+    const pdfBuffer = rows[0].certificate;
+    res.setHeader("Content-Type", "application/pdf");
+    res.send(pdfBuffer);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch PDF" });
+  }
+});
 
 // ---------------- CATS ---------------- //
 app.get("/api/cats", async (req, res) => {
@@ -334,6 +446,171 @@ app.get("/api/cats", async (req, res) => {
   } catch (err) {
     console.error("❌ Error fetching cats:", err);
     res.status(500).json({ error: "Failed to fetch cats" });
+  }
+});
+
+// Create cat profile
+app.post("/cat/create", async (req, res) => {
+  try {
+    const {
+      name,
+      age,
+      gender,
+      sterilization_status,
+      adoption_status,
+      description,
+    } = req.body;
+
+    if (!name || !age || !gender || !sterilization_status || !adoption_status) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    const [result] = await pool.query(
+      `INSERT INTO cats 
+       (name, age, gender, sterilization_status, adoption_status, description, date_created, date_updated) 
+       VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+      [name, age, gender, sterilization_status, adoption_status, description]
+    );
+
+    res.status(201).json({
+      message: "Cat created successfully",
+      cat_id: result.insertId,
+    });
+  } catch (err) {
+    console.error("Error inserting cat:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+// ---------------- ROUTE ---------------- //
+// Upload images
+app.post(
+  "/upload/catimages/:cat_id",
+  upload.array("images", 10),
+  async (req, res) => {
+    try {
+      const { cat_id } = req.params;
+
+      if (req.invalidFiles && req.invalidFiles.length > 0) {
+        return res.status(400).json({
+          error: `Invalid file types: ${req.invalidFiles.join(", ")}`,
+        });
+      }
+
+      if (!req.files || req.files.length === 0) {
+        return res.status(400).json({ error: "No images uploaded" });
+      }
+
+      const insertPromises = req.files.map((file, index) =>
+        pool.query(
+          `INSERT INTO Cat_Images (cat_id, image_filename, is_primary) VALUES (?, ?, ?)`,
+          [cat_id, file.filename, index === 0 ? 1 : 0]
+        )
+      );
+
+      await Promise.all(insertPromises);
+
+      // ✅ return URLs directly
+      const uploadedImages = req.files.map((f) => ({
+        filename: f.filename,
+        url: `http://localhost:5000/uploads/cats/${f.filename}`,
+      }));
+
+      res.status(200).json({
+        message: "Images uploaded successfully",
+        uploaded: uploadedImages,
+      });
+    } catch (err) {
+      console.error("Image upload failed:", err);
+      res.status(500).json({ error: "Server error while uploading images" });
+    }
+  }
+);
+
+// Get all cat images
+app.get("/api/cats/images", async (req, res) => {
+  try {
+    const [rows] = await db.query(`
+      SELECT 
+        image_id, 
+        cat_id, 
+        image_filename, 
+        is_primary,
+        CONCAT('http://localhost:5000/uploads/cats/', image_filename) AS url
+      FROM Cat_Images
+    `);
+
+    if (!rows.length) {
+      return res.status(200).json([]); // no images yet
+    }
+
+    res.json(rows);
+  } catch (err) {
+    console.error("Error fetching cat images:", err);
+    res.status(500).json({ error: "Failed to fetch cat images" });
+  }
+});
+
+// Fetch cat images
+app.get("/upload/catimages/:cat_id", async (req, res) => {
+  try {
+    const { cat_id } = req.params;
+    const [rows] = await pool.query(
+      `SELECT image_filename FROM Cat_Images WHERE cat_id = ?`,
+      [cat_id]
+    );
+
+    // ✅ return both filename + url
+    const formatted = rows.map((r) => ({
+      filename: r.image_filename,
+      url: `http://localhost:5000/uploads/cats/${r.image_filename}`,
+    }));
+
+    res.json(formatted);
+  } catch (err) {
+    console.error("❌ Fetch images failed:", err);
+    res.status(500).json({ error: "Failed to fetch images" });
+  }
+});
+
+// Fetch cat images by catId
+app.get("/api/cats/:catId/images", async (req, res) => {
+  const { catId } = req.params;
+  try {
+    const [rows] = await db.query(
+      "SELECT image_filename FROM Cat_Images WHERE cat_id = ?",
+      [catId]
+    );
+
+    const formatted = rows.map((img) => ({
+      filename: img.image_filename,
+      url: `http://localhost:5000/uploads/cats/${img.image_filename}`, // ✅ direct URL
+    }));
+
+    res.json(formatted);
+  } catch (err) {
+    console.error("❌ Error fetching cat images:", err);
+    res.status(500).json({ error: "Failed to fetch images" });
+  }
+});
+// Delete image
+app.delete("/image/:filename", async (req, res) => {
+  try {
+    const { filename } = req.params;
+
+    // Delete from DB
+    await pool.query(`DELETE FROM Cat_Images WHERE image_filename = ?`, [
+      filename,
+    ]);
+
+    // Delete file
+    const filepath = path.join(process.cwd(), "FileUploads/cats", filename);
+
+    if (fs.existsSync(filepath)) fs.unlinkSync(filepath);
+
+    res.json({ message: "Image deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to delete image" });
   }
 });
 
@@ -349,95 +626,6 @@ app.get("/api/cats/:id", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to fetch cat" });
-  }
-});
-
-app.post("/cat/create", async (req, res) => {
-  try {
-    const {
-      name,
-      age,
-      gender,
-      sterilization_status,
-      adoption_status,
-      description,
-    } = req.body;
-
-    if (!name || !age || !gender) {
-      return res.status(400).json({ error: "Missing required fields" });
-    }
-
-    const [result] = await db.query(
-      `INSERT INTO Cats (name, age, gender, sterilization_status, adoption_status, description) 
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [name, age, gender, sterilization_status, adoption_status, description]
-    );
-
-    res.status(201).json({
-      cat_id: result.insertId,
-      message: "Cat profile created successfully",
-    });
-  } catch (error) {
-    console.error("Error creating cat:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-
-// Upload images
-app.post(
-  "/upload/catimages/:cat_id",
-  uploadImages.array("images"),
-  async (req, res) => {
-    if (req.invalidFiles) {
-      return res.status(200).json({
-        warning: true,
-        message:
-          "Some documents did not upload due to invalid file type: " +
-          req.invalidFiles.join(", "),
-      });
-    }
-
-    if (!req.files || req.files.length === 0) {
-      return res.status(200).json({
-        warning: true,
-        message: "No valid Images were uploaded.",
-      });
-    }
-
-    const cat_id = req.params.cat_id;
-
-    try {
-      for (const file of req.files) {
-        const filename = file.filename;
-        await db.query(
-          `INSERT INTO Cat_Images (cat_id, image_filename) VALUES (?, ?)`,
-          [cat_id, filename]
-        );
-      }
-
-      return res
-        .status(200)
-        .json({ warning: false, message: "Images uploaded successfully!" });
-    } catch (err) {
-      console.error("MySQL Error:", err.sqlMessage);
-      return res
-        .status(500)
-        .json({ message: "Database error while saving image info!" });
-    }
-  }
-);
-
-app.get("/image/:cat_id", async (req, res) => {
-  try {
-    const [images] = await db.query(
-      `SELECT image_filename FROM Cat_Images WHERE cat_id = ?`,
-      [req.params.cat_id]
-    );
-
-    res.json(images);
-  } catch (err) {
-    console.error("Error fetching cat images:", err);
-    return res.status(500).json({ error: "Failed to fetch cat images" });
   }
 });
 
