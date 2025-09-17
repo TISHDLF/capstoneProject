@@ -1,6 +1,11 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import Cookies from 'js-cookie';
 import axios from "axios";
+
+
+/// TODO: Separate account for Admin/User 
+// Admin user have separate access for login user/ admin user
 
 const Login = () => {
   const navigate = useNavigate();
@@ -10,35 +15,42 @@ const Login = () => {
 
   const handleLogin = async (event) => {
     event.preventDefault();
+
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/users/login",
-        { email, password },
-        { withCredentials: true }
+        "http://localhost:5000/user/login",
+        { email, password } // if your server uses cookies/sessions
       );
 
-      // ✅ first get the user
       const user = response.data.user;
 
-      // ✅ store user info in sessionStorage
-      sessionStorage.setItem("user", JSON.stringify(user));
-      sessionStorage.setItem("user_id", user.user_id);
-      sessionStorage.setItem("firstname", user.firstname);
-      sessionStorage.setItem("lastname", user.lastname);
-      sessionStorage.setItem("role", user.role);
-
-      // ✅ redirect by role
-      if (user.role === "head_volunteer") {
-        navigate("/headvolunteerpage");
-      } else if (user.role === "admin") {
-        navigate("/admin");
-      } else {
-        navigate("/home");
+      if (!user) {
+        setError("Incorrect Email & Password!");
+        return;
       }
+
+      // Store user in cookies
+      Cookies.set("user", JSON.stringify(user), { expires: 30 });
+      // const dashboardPath = user.role === 'regular' ? '/home' : '/home';
+
+      if (user.role === 'regular') {
+        navigate('/home')
+      } else {
+        setError('Please login as Admin');
+      }
+
+      // Navigate based on role
+      // if (user.role === "head_volunteer") {
+      //   navigate("/headvolunteerpage");
+      // } else if (user.role === "admin") {
+      //   navigate("/dashboard");
+      // } else {
+      //   navigate("/home");
+      // }
+      // navigate(dashboardPath);
     } catch (err) {
       const errorMessage =
-        err.response?.data?.error ||
-        "Login Failed: Incorrect Email or Password";
+        err.response?.data?.error || "Login Failed: Incorrect Email or Password";
       setError(errorMessage);
       console.error("Login error:", errorMessage);
     }
@@ -78,28 +90,18 @@ const Login = () => {
           />
           <div className="flex flex-col items-center gap-3">
             {error && (
-              <div className="mb-4 p-3 text-[#DC8801] bg-[#FDF5D8] rounded-lg">
-                {error}
-              </div>
+              <div className="mb-4 p-3 text-[#DC8801] bg-[#FDF5D8] rounded-lg">{error}</div>
             )}
             <div className="flex flex-row gap-1 justify-stretch">
-              <button
-                type="submit"
-                className="bg-[#B5C04A] text-[#FFF] p-[10px] w-30 rounded-[50px] active:bg-[#CFDA34] cursor-pointer"
-              >
+              <button type="submit" className="bg-[#B5C04A] text-[#FFF] p-[10px] w-30 rounded-[50px] active:bg-[#CFDA34] cursor-pointer">
                 Log in
               </button>
-              <Link
-                to="/signup"
-                className="bg-amber-600 text-[#FFF] p-[10px] w-30 text-center rounded-[50px] active:bg-[#977655]"
-              >
+              <Link to="/signup" className="bg-amber-600 text-[#FFF] p-[10px] w-30 text-center rounded-[50px] active:bg-[#977655]">
                 Sign Up
               </Link>
             </div>
-            <Link
-              to="/adminlogin"
-              className="pt-4 active:text-[#977655] hover:underline"
-            >
+
+            <Link to="/adminlogin" className="pt-4 active:text-[#977655] hover:underline">
               Log in as Admin
             </Link>
           </div>
