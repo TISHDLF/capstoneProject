@@ -1,13 +1,15 @@
+// WhiskerMeter.jsx
 import React, { useState } from "react";
+import { useWhiskerMeter } from "../context/WhiskerMeterContext"; // ✅ import context
 import meterPhoto from "../assets/paw1.png";
 import meterPhoto1 from "../assets/paw2.png";
 
-const WhiskerMeter = ({ user }) => {
+const WhiskerMeter = () => {
   const [expanded, setExpanded] = useState(false);
   const circleCount = 5;
 
-  // Points
-  const points = user?.points || 0;
+  // ✅ Get points from context
+  const { points } = useWhiskerMeter();
 
   const maxPoints = 200;
   const progressValue = Math.min(
@@ -42,16 +44,15 @@ const WhiskerMeter = ({ user }) => {
               style={{ height: "500px" }}
             >
               <span>
-                {/* Header Section */}
                 <div
                   className={
-                    "rounded-r-4xl shadow-lg p-5 pt-2 pb-2 flex justify-end transition-all duration-300 " +
+                    "rounded-r-4xl shadow-lg p-5 pt-2 pb-2 flex justify-end transition-all duration-500 " +
                     (expanded ? "bg-yellow-600" : "")
                   }
                 >
                   <h1
                     className={
-                      "flex flex-col justify-center ml-10 text-nowrap text-sm font-semibold text-gray-800 space-y-8 transition-all duration-300 " +
+                      "flex flex-col justify-center ml-10 text-nowrap text-sm font-semibold text-gray-800 space-y-8 transition-all duration-700 " +
                       (expanded ? "w-64" : "w-0 overflow-hidden")
                     }
                   >
@@ -60,7 +61,7 @@ const WhiskerMeter = ({ user }) => {
                   <img
                     src={expanded ? meterPhoto1 : meterPhoto}
                     alt="Whisker Meter Icon"
-                    className="w-15 h-15"
+                    className="w-15 h-15 transition-all duration-700"
                   />
                 </div>
 

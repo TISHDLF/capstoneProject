@@ -7,10 +7,10 @@ const catcommunitynews = "/catcommunitynews";
 const CardNews = () => {
   return (
     <div className="p-10">
-      <div className=" rounded-2xl p-4 shadow-2xl hover:shadow-xl transition-shadow duration-300 h-130 w-110 ">
+      <div className=" rounded-2xl p-4 shadow-2xl hover:shadow-xl transition-shadow duration-300 h-120 w-90 ">
         <div className="flex-col">
           <div className="">
-            <img src={pic} alt="" className="w-350" />
+            <img src={pic} alt="" className="w-full" />
             <p className="text-xl font-bold text-left p-2">
               MissionTNVR: A Success Story
             </p>

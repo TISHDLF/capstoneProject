@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-
+import { useSession } from "../../context/SessionContext";
 const Login = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-
+  const { setUser } = useSession();
   const handleLogin = async (event) => {
     event.preventDefault();
     try {
@@ -17,21 +17,16 @@ const Login = () => {
         { withCredentials: true }
       );
 
-      // ✅ first get the user
       const user = response.data.user;
 
-      // ✅ store user info in sessionStorage
-      sessionStorage.setItem("user", JSON.stringify(user));
-      sessionStorage.setItem("user_id", user.user_id);
-      sessionStorage.setItem("firstname", user.firstname);
-      sessionStorage.setItem("lastname", user.lastname);
-      sessionStorage.setItem("role", user.role);
+      setUser(user);
 
-      // ✅ redirect by role
+      sessionStorage.setItem("user", JSON.stringify(user));
+
       if (user.role === "head_volunteer") {
         navigate("/headvolunteerpage");
       } else if (user.role === "admin") {
-        navigate("/admin");
+        navigate("/dashboard");
       } else {
         navigate("/home");
       }
@@ -44,7 +39,6 @@ const Login = () => {
     }
   };
 
-  // ✅ Make sure return is inside the component function
   return (
     <div className="grid grid-cols-[60%_40%] place-items-center h-screen overflow-hidden">
       <div className="block items-center box-border w-auto h-100% overflow-hidden">

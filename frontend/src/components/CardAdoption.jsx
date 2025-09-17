@@ -20,7 +20,7 @@ const CardAdoption = () => {
   }, []);
 
   return (
-    <div className="p-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 w-350">
+    <div className="flex gap-10 flex-wrap justify-center">
       {cats.map((cat) => (
         <div
           key={cat.cat_id}

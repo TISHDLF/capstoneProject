@@ -38,13 +38,24 @@ import Donation from "./pages/Admin/Feeding/Donation";
 import CatProfileProperty from "./pages/Admin/CatProfileProperty/CatProfileProperty";
 import HeadVolunteerMainPage from "./pages/HeadVolunteer/HeadVolunteerMainPage";
 import HeadVolunteerProfile from "./pages/HeadVolunteer/HeadVolunteerProfile";
+import AdopterView from "./pages/Admin/Adopters/AdopterView";
+import AdopterApplicationView from "./pages/Admin/Adopters/AdopterApplicationView";
+import FeedingApplicationView from "./pages/Admin/Feeding/FeedingApplicationView";
+import UserProfile from "./pages/Admin/Manage/UserProfile";
+import CatProfileCreate from "./pages/Admin/CatProfileProperty/CatProfileCreate";
+import UpdateRole from "./pages/Admin/Manage/UpdateRole";
+import AssignNewAdmin from "./pages/Admin/Manage/AssignNewAdmin";
+import AdoptionApplications from "./pages/HeadVolunteer/AdoptionApplications";
+
+import { SessionProvider } from "./context/SessionContext";
+import { WhiskerMeterProvider } from "./context/WhiskerMeterContext";
 
 const App = () => {
   const router = createBrowserRouter(
     createRoutesFromElements(
       <Route path="/" element={<RootLayout />}>
+        {/* Public Routes */}
         <Route index element={<Home />} />
-
         <Route path="home" element={<Home />} />
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="login" element={<Login />} />
@@ -60,36 +71,57 @@ const App = () => {
         <Route path="adopteeform" element={<AdopteeForm />} />
         <Route path="feeding" element={<Feeding />} />
         <Route path="communityguide" element={<CommunityGuide />} />
-
         <Route path="/cat/:id" element={<CatProfile />} />
         <Route path="/adopteeform/:catId" element={<AdopteeForm />} />
 
         {/* Admin */}
+        <Route path="dashboard" element={<Dashboard />} />
         <Route path="profile" element={<Profile />} />
         <Route path="admincatprofile" element={<AdminCatProfile />} />
-        <Route path="catprofileproperty" element={<CatProfileProperty />} />
-
+        <Route
+          path="catprofileproperty/:cat_id"
+          element={<CatProfileProperty />}
+        />
+        <Route path="catprofilecreate" element={<CatProfileCreate />} />
         <Route path="adoptersandvisitors" element={<AdoptersAndVisitors />} />
         <Route path="adopterslist" element={<AdoptersList />} />
+        <Route path="adopterslist/adopterview" element={<AdopterView />} />
         <Route path="adopterapplication" element={<AdopterApplication />} />
-
+        <Route
+          path="adopterapplication/adopterapplicationview"
+          element={<AdopterApplicationView />}
+        />
         <Route path="volunteers" element={<Volunteers />} />
         <Route path="feedingvolunteers" element={<FeedingVolunteers />} />
         <Route path="feedingapplications" element={<FeedingApplications />} />
+        <Route
+          path="feedingapplications/feedingapplicationview"
+          element={<FeedingApplicationView />}
+        />
         <Route path="donationadmin" element={<Donation />} />
-
         <Route path="manage" element={<Manage />} />
-        <Route path="adminlist" element={<AdminList />} />
+        <Route path="adminlist" element={<AdminList />}>
+          <Route path="update/:user_id" element={<UpdateRole />} />
+          <Route path="assign" element={<AssignNewAdmin />} />
+        </Route>
         <Route path="allusers" element={<AllUsers />} />
+        <Route path="userprofile/:user_id" element={<UserProfile />} />
 
         {/* Head Volunteer */}
         <Route path="headvolunteerpage" element={<HeadVolunteerMainPage />} />
         <Route path="headvolunteerprofile" element={<HeadVolunteerProfile />} />
+        <Route path="adoptionapplication" element={<AdoptionApplications />} />
       </Route>
     )
   );
 
-  return <RouterProvider router={router} />;
+  return (
+    <SessionProvider>
+      <WhiskerMeterProvider>
+        <RouterProvider router={router} />
+      </WhiskerMeterProvider>
+    </SessionProvider>
+  );
 };
 
 export default App;

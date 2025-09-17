@@ -8,20 +8,22 @@ import WhiskerMeter from "../components/WhiskerMeter";
 import CardNews from "../components/CardNews";
 import CardAdoption from "../components/CardAdoption";
 import HeadVolunteerSideBar from "../components/HeadVolunteerSideBar";
+import AdminSideBar from "../components/AdminSideBar";
+import { useWhiskerMeter } from "../context/WhiskerMeterContext";
 
 const Home = () => {
-  // Get logged-in user from sessionStorage
-  const storedUser = sessionStorage.getItem("user");
-  const user = storedUser ? JSON.parse(storedUser) : null;
-
+  // Get logged-in user from Session Storage
+  const user = JSON.parse(sessionStorage.getItem("user"));
+  const { points } = useWhiskerMeter();
   return (
-    <div className="flex flex-col min-h-screen pb-10">
+    <div className="flex flex-col min-h-screen pb-10 overflow-x-hidden">
       <CatBot />
       <NavigationBar />
 
-      <WhiskerMeter> </WhiskerMeter>
       {user?.role === "head_volunteer" ? (
         <HeadVolunteerSideBar />
+      ) : user?.role === "admin" ? (
+        <AdminSideBar />
       ) : (
         <SideNavigation />
       )}
@@ -33,7 +35,7 @@ const Home = () => {
             <p className="text-4xl font-bold"> SPR Cat Community News</p>
             <div className="flex justify-around ">
               <div className="pt-10 flex-col gap-10 ">
-                <div className="flex pb-10 justify-around items-center w-full ">
+                <div className="flex pb-10 justify-around items-center w-300 flex-wrap ">
                   <CardNews />
                   <CardNews />
                   <CardNews />
@@ -42,9 +44,8 @@ const Home = () => {
               </div>
             </div>
           </div>
-          <div className="w-40"></div>
         </div>
-        <WhiskerMeter />
+        <WhiskerMeter user={{ points }} />
 
         {/* Cat Community Adoption Section */}
         <div className="h-full flex justify-center">
@@ -54,7 +55,7 @@ const Home = () => {
               <p className="text-4xl font-bold"> These Whiskers Are waiting</p>
               <div className="flex justify-around ">
                 <div className="pt-10 flex-col gap-10 ">
-                  <div className="flex  pb-10 justify-around items-center w-full flex-wrap ">
+                  <div className="flex  pb-10 justify-around items-center w-300 flex-wrap ">
                     <CardAdoption />
                   </div>
                   pagination
