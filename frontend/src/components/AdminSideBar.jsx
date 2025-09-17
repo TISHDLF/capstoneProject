@@ -10,7 +10,10 @@ const AdminSideBar = () => {
   const navigate = useNavigate();
 
   const [user, setUser] = useState({ firstname: '', lastname: '', role: '' });
+  const [profileImage, setProfileImage] = useState([]);
+
   const [loading, setLoading] = useState(true);
+
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -26,9 +29,11 @@ const AdminSideBar = () => {
       const userId = parsedUser.user_id;
 
       try {
-        const response = await axios.get(`http://localhost:5000/users/logged?user_id=${userId}`);
+        const response = await axios.get(`http://localhost:5000/user/logged?user_id=${userId}`);
         console.log(response.data.firstname, response.data.lastname);
         setUser(response.data);
+
+        await profileImage();
 
       } catch (err) {
         console.error('Error fetching user:', err);
@@ -37,6 +42,17 @@ const AdminSideBar = () => {
         setLoading(false);
       }
     };
+
+    const profileImage = async () => {
+      try {
+        const profilImage = await axios.get(`http://localhost:5000/user/profile`, { withCredentials: true })
+        setProfileImage(profilImage.data)
+      }
+      catch (err) {
+        console.error('Error fetching image:', err);
+        setError(err.response?.data?.error || 'Failed to fetch image');
+      }
+    }
 
     fetchUser();
   }, []);
@@ -99,7 +115,8 @@ const AdminSideBar = () => {
 
   return (
     <div className='relative flex flex-col w-auto h-screen bg-[#FFF] z-50 gap-2'>
-      <div className='flex items-center justify-start gap-4  w-auto h-auto box-border pl-3 pr-12 pt-4 pb-4 cursor-pointer bg-white border-b-2 border-b-[#DC8801]'> 
+      <div className='flex items-center justify-start gap-4  w-auto h-auto box-border pl-3 pr-12 pt-4 pb-4 cursor-pointer bg-white border-b-2 border-b-[#DC8801]'
+      onClick={() => navigate('/dashboard')}> 
         <div className='flex justify-center items-center w-[120px] h-auto p-1'>
           <img src="/src/assets/whiskerwatchlogo-no textmarks.png" alt="account" />
         </div>
@@ -119,7 +136,7 @@ const AdminSideBar = () => {
           </Link>
           
           {/* Donate */} 
-          <Link to="/admincatprofile" className={location.pathname === "/admincatprofile" ? sideItemStyleCurrent : sideItemStyle}> 
+          <Link to="/admincatprofile" className={location.pathname === "/admincatprofile" || location.pathname === '/catprofileproperty/:cat_id' ? sideItemStyleCurrent : sideItemStyle}> 
             <div className='flex flex-row items-center gap-4'>
               <div className='flex justify-center items-center w-[30px] h-auto'>
                 <img src="/src/assets/icons/admin-icons/sidedbar/cat-profile.png" alt="account" />
@@ -139,14 +156,14 @@ const AdminSideBar = () => {
               </div>
               <button onClick={() => {toggleDropdown('adopters')}} 
               className='flex justify-center items-center w-[30px] h-auto p-[8px] rounded-[25px] hover:bg-[#FDF5D8] active:bg-[#FFF]'>
-                <img src="/src/assets/icons/down-arrow-orange.png" alt="orange arrow" className={dropdown.adopters ? 'rotate-0' : '-rotate-90'}/>
+                <img src="/src/assets/icons/down-arrow-orange.png" alt="orange arrow" className={!dropdown.adopters ? 'rotate-0' : '-rotate-90'}/>
               </button>
             </div>
 
-            {dropdown.adopters && (
+            {!dropdown.adopters && (
               <>
-                <Link to="/adopterslist" className={location.pathname === "/adopterslist" ? pageActive : pageInactive}> Adopters List </Link> 
-                <Link to="/adopterapplication" className={location.pathname === "/adopterapplication" ? pageActive : pageInactive}> Applications</Link>
+                <Link to="/adopterslist" className={location.pathname === "/adopterslist" || location.pathname === "/adopterslist/adopterview" ? pageActive : pageInactive}> Adopters List </Link> 
+                <Link to="/adopterapplication" className={location.pathname === "/adopterapplication" || location.pathname === "/adopterapplication/adopterapplicationview" ? pageActive : pageInactive}> Applications</Link>
               </> 
             )} 
           </div>
@@ -161,14 +178,14 @@ const AdminSideBar = () => {
                 <label className='cursor-pointer font-bold hover:text-[#DC8801]'> Feeding </label>
               </div>
               <button onClick={() => (toggleDropdown('feeding'))} className='flex justify-center items-center w-[30px] h-auto p-[8px] rounded-[25px] hover:bg-[#FDF5D8] active:bg-[#FFF]'>
-                <img src="/src/assets/icons/down-arrow-orange.png" alt="orange arrow" className={dropdown.feeding ? 'rotate-0' : '-rotate-90'}/>
+                <img src="/src/assets/icons/down-arrow-orange.png" alt="orange arrow" className={!dropdown.feeding ? 'rotate-0' : '-rotate-90'}/>
               </button>
             </div>
 
-            {dropdown.feeding && (
+            {!dropdown.feeding && (
               <>
                 <Link to="/feedingvolunteers" className={location.pathname === "/feedingvolunteers" ? pageActive : pageInactive}> Feeding Volunteers</Link>
-                <Link to="/feedingapplications" className={location.pathname === "/feedingapplications" ? pageActive : pageInactive}> Applications</Link>
+                <Link to="/feedingapplications" className={location.pathname === "/feedingapplications" || location.pathname === "/feedingapplications/feedingapplicationview" ? pageActive : pageInactive}> Applications</Link>
                 <Link to="/donationadmin" className={location.pathname === "/donationadmin" ? pageActive : pageInactive}>Donations</Link>
               </>
             )}
@@ -185,14 +202,14 @@ const AdminSideBar = () => {
               </div>
 
               <button onClick={() => {toggleDropdown('manage')}} className='flex justify-center items-center w-[30px] h-auto p-[8px] rounded-[25px] hover:bg-[#FDF5D8] active:bg-[#FFF]'>
-                <img src="/src/assets/icons/down-arrow-orange.png" alt="orange arrow" className={dropdown.manage ? 'rotate-0' : '-rotate-90'}/>
+                <img src="/src/assets/icons/down-arrow-orange.png" alt="orange arrow" className={!dropdown.manage ? 'rotate-0' : '-rotate-90'}/>
               </button>
             </div>
 
-            {dropdown.manage && (
+            {!dropdown.manage && (
               <>
                 <Link to="/adminlist" className={location.pathname === "/adminlist" ? pageActive : pageInactive}> Admin List</Link>
-                <Link to="/allusers" className={location.pathname === "/allusers" ? pageActive : pageInactive}> All Users</Link>
+                <Link to="/allusers" className={location.pathname === "/allusers" || location.pathname === "/userprofile" ? pageActive : pageInactive}> All Users</Link>
               </>
             )}
           </div>
@@ -201,8 +218,9 @@ const AdminSideBar = () => {
         
         <div className='relative flex flex-row items-center justify-between p-3 gap-3 text-[#767d2c] shadow-lg bg-[#FF] rounded-[50px]'>
           <div className='flex flex-row items-center gap-3'>
-            <div className='flex justify-center items-center w-[30px] h-auto'>
-              <img src="/src/assets/icons/admin-icons/account.png" alt="" />
+            <div className="flex justify-center items-center w-[40px] h-[40px] rounded-[25px] overflow-hidden">
+              <img src={`http://localhost:5000/FileUploads/${profileImage.profile_image}`
+            || '/src/assets/icons/account.png'} alt="account" className='w-full h-full object-cover' />
             </div>
             <label>
               {loading
@@ -217,16 +235,12 @@ const AdminSideBar = () => {
               <img src="/src/assets/icons/admin-icons/arrow-right.png" alt="" />
           </button>
 
-          <div className="absolute left-75 bottom-12 flex flex-col w-full gap-2 box-border bg-[#FFF] shadow-md rounded-[15px] rounded-bl-[0px] overflow-hidden z-[9999]"
-          style={{ minHeight: 'fit-content' }}>
+          <div className="absolute left-75 bottom-12 flex flex-col w-full gap-2 box-border bg-[#FFF] shadow-md rounded-[15px] rounded-bl-[0px] overflow-hidden z-[9999]">
             
             {isLoggedIn && (
               <div ref={menuRef} className={isVisible ? 'flex flex-col w-full p-2 gap-2' : 'hidden'}>
-                <Link to="/home" replace className={'text-[#000] text-center p-3 pl-6 pr-6 w-full bg-[#f0f2c8] hover:bg-[#E3E697] active:bg-[#f0f2c8] active:text-[#FFF] rounded-[10px]'}>
-                  Home page
-                </Link>
                 <Link to="/login" replace onClick={handleLogout} className={'text-[#000] text-center  p-3 pl-6 pr-6 w-full bg-[#f0f2c8] hover:bg-[#E3E697] active:bg-[#f0f2c8] active:text-[#FFF] rounded-[10px]'}>
-                  Log out
+                  <label className='w-full'>Log out</label>
                 </Link>
               </div>
             )}
