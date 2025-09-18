@@ -109,7 +109,6 @@ const AdopteeForm = () => {
 
       const formData = new FormData();
       formData.append("certificate", pdfBlob, `${cat.name}_adoption.pdf`);
-      formData.append("adoptedcat_id", cat.cat_id);
       formData.append("adopter_id", loggedInUser.user_id);
       formData.append("cat_name", cat.name);
       formData.append(
