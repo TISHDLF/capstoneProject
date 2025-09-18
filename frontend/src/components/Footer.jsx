@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 
 const Footer = () => {
   return (
-    <div className="absolute bottom-0 flex flex-row justify-between items-center bg-[#DC8801] w-screen h-12 pl-50 pr-50">
+    <div className="absolute z-0 bottom-0 flex flex-row justify-between items-center bg-[#DC8801] w-full h-12 pl-50 pr-50">
       <label className="text-[#FFF]">WhiskerWatch est. 2025</label>
       <Link
         to="https://www.facebook.com/sprcats"

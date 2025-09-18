@@ -26,7 +26,7 @@ const WhiskerMeter = () => {
   ];
 
   return (
-    <div className="w-24 h-full z-50 fixed left-0 top-[20%]">
+    <div className="w-24 h-full z-0 fixed left-0 top-[20%]">
       <div
         className={`transition-all duration-300 ${
           expanded ? "w-80 " : "w-24 "
