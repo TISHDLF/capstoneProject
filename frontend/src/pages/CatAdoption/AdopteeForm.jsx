@@ -8,7 +8,7 @@ import CatBot from "../../components/CatBot";
 import { useRef } from "react";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
-import axios from "axios"; // also needed
+import axios from "axios";
 
 const handleGoBack = () => {
   window.history.back();
@@ -17,15 +17,24 @@ const handleGoBack = () => {
 const AdopteeForm = () => {
   const printRef = useRef();
   const { user: loggedInUser } = useSession();
-
-  const [imageSrc, setImageSrc] = useState("src/assets/icons/id-card.png"); // default placeholder
-  const { catId } = useParams(); // e.g. /adopteeform/1 → catId = 1
+  const { catId } = useParams();
   const [cat, setCat] = useState(null);
   const [images, setImages] = useState([]);
   const [selectedImage, setSelectedImage] = useState(null);
   const [selectedImageFile, setSelectedImageFile] = useState(null);
+  const [imageSrc, setImageSrc] = useState("src/assets/icons/id-card.png");
 
-  // ✅ PDF generation + upload
+  const fetchCatImageBlob = async (catId) => {
+    const res = await fetch(`http://localhost:5000/api/cats/${catId}/images`);
+    const images = await res.json();
+    if (!images.length) return null;
+
+    const imageUrl = images[0].url;
+    const imageRes = await fetch(imageUrl);
+    const blob = await imageRes.blob();
+    return blob;
+  };
+
   const generateAdopteePDF = async () => {
     if (!cat || !loggedInUser) return;
 
@@ -33,23 +42,74 @@ const AdopteeForm = () => {
       const element = printRef.current;
       if (!element) return;
 
-      // Generate PDF
-      const canvas = await html2canvas(element, { scale: 2 });
-      const imgData = canvas.toDataURL("image/png");
+      // Capture the form at a lower scale to reduce size
+      const canvas = await html2canvas(element, { scale: 1, useCORS: true });
+      const imgData = canvas.toDataURL("image/jpeg", 0.7); // Use JPEG with 70% quality
+
       const pdf = new jsPDF({
         orientation: "portrait",
         unit: "px",
         format: "a4",
+        compress: true,
       });
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const imgProps = pdf.getImageProperties(imgData);
-      const pdfHeight = (imgProps.height * pageWidth) / imgProps.width;
-      pdf.addImage(imgData, "PNG", 0, 0, pageWidth, pdfHeight);
-      const pdfBlob = pdf.output("blob");
 
-      // FormData
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const imgProps = pdf.getImageProperties(imgData);
+      const imgHeight = (imgProps.height * pageWidth) / imgProps.width;
+
+      // Calculate number of pages needed
+      const pageHeightPx = pageHeight;
+      const totalHeightPx = imgHeight;
+      const pages = Math.ceil(totalHeightPx / pageHeightPx);
+
+      // Add form content across multiple pages
+      for (let i = 0; i < pages; i++) {
+        if (i > 0) pdf.addPage();
+        const offsetY = i * pageHeightPx;
+        pdf.addImage(
+          imgData,
+          "JPEG",
+          0,
+          -offsetY,
+          pageWidth,
+          imgHeight,
+          undefined,
+          "FAST"
+        );
+      }
+
+      // Add cat image to the first page
+      const catBlob = await fetchCatImageBlob(cat.cat_id);
+      if (catBlob) {
+        const catImgData = await new Promise((resolve) => {
+          const img = new Image();
+          img.src = URL.createObjectURL(catBlob);
+          img.onload = () => {
+            const canvas = document.createElement("canvas");
+            const ctx = canvas.getContext("2d");
+            canvas.width = 150;
+            canvas.height = 150 * (img.height / img.width);
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            resolve(canvas.toDataURL("image/jpeg", 0.7)); // Compress to JPEG
+          };
+        });
+        pdf.setPage(1); // Ensure cat image is on the first page
+        pdf.addImage(catImgData, "JPEG", 20, 20, 150, 150, undefined, "FAST");
+      }
+
+      const pdfBlob = pdf.output("blob");
+      console.log("PDF Size:", pdfBlob.size / 1024 / 1024, "MB");
+      if (pdfBlob.size > 60 * 1024 * 1024) {
+        alert(
+          "PDF is too large (>60MB). Please simplify the form or contact support."
+        );
+        return;
+      }
+
       const formData = new FormData();
-      formData.append("adoptedcat_id", cat.cat_id); // critical
+      formData.append("certificate", pdfBlob, `${cat.name}_adoption.pdf`);
+      formData.append("adoptedcat_id", cat.cat_id);
       formData.append("adopter_id", loggedInUser.user_id);
       formData.append("cat_name", cat.name);
       formData.append(
@@ -57,51 +117,41 @@ const AdopteeForm = () => {
         `${loggedInUser.firstname} ${loggedInUser.lastname}`
       );
       formData.append("contactnumber", loggedInUser.contactnumber);
-      formData.append("certificate", pdfBlob, `${cat.name}_adoption.pdf`);
       if (selectedImageFile) {
         formData.append("id_image", selectedImageFile, selectedImageFile.name);
       }
 
-      // Submit
       const response = await axios.post(
         "http://localhost:5000/api/adoption",
         formData,
-        {
-          headers: { "Content-Type": "multipart/form-data" },
-        }
+        { headers: { "Content-Type": "multipart/form-data" } }
       );
 
       if (response.status === 201) {
         alert("✅ Adoption form submitted successfully!");
       }
     } catch (err) {
-      console.error("Failed to submit PDF:", err.response?.data || err.message);
+      console.error("Error:", err.response?.data || err.message);
       alert(
-        `❌ Submission failed: ${err.response?.data?.error || err.message}`
+        "Failed to submit adoption form. Please try again or contact support."
       );
     }
   };
 
-  // ✅ Handle ID upload preview
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       if (file.size > 10 * 1024 * 1024) {
-        // 10MB limit
         alert("File size exceeds 10MB limit.");
         return;
       }
-
-      setSelectedImageFile(file); // store actual file
-
-      // For preview
+      setSelectedImageFile(file);
       const reader = new FileReader();
       reader.onload = () => setSelectedImage(reader.result);
       reader.readAsDataURL(file);
     }
   };
 
-  // ✅ Fetch cat info + images
   useEffect(() => {
     const fetchCatAndImages = async () => {
       try {
@@ -129,11 +179,11 @@ const AdopteeForm = () => {
   if (!cat) {
     return <p className="p-10">Loading cat info...</p>;
   }
+
   return (
     <div className="flex flex-col min-h-screen pb-10">
       <CatBot />
       <NavigationBar />
-
       <div className="grid grid-cols-[80%_20%] h-full">
         <div className="flex flex-col pl-50 p-10">
           <div className="relative grid grid-cols-[30%_70%] bg-[#FFF] w-[1000px] rounded-[25px]">
@@ -151,18 +201,16 @@ const AdopteeForm = () => {
                 </div>
                 <label className="font-bold text-[#FFF]">Back</label>
               </Link>
-
               <div className="flex flex-row justify-between items-center p-3 bg-[#FDF5D8] rounded-tr-[20px] rounded-br-[20px] shadow-md">
                 <label className="font-bold text-[#DC8801]">Adoptee Form</label>
                 <div className="flex items-center justify-center w-[30px] h-auto">
                   <img
                     src="\src\assets\icons\clipboard-white.png"
                     alt="white clipboard"
-                    className="w-full h-auto "
+                    className="w-full h-auto"
                   />
                 </div>
               </div>
-
               <div className="flex flex-row justify-between items-center p-3 bg-[#FDF5D8] rounded-tr-[20px] rounded-br-[20px] shadow-md">
                 <label className="text-[#DC8801]">
                   Please answer the following questions to submit an adoption
@@ -170,7 +218,6 @@ const AdopteeForm = () => {
                 </label>
               </div>
             </div>
-
             <form
               ref={printRef}
               className="flex flex-col items-start p-10 gap-10"
@@ -179,7 +226,6 @@ const AdopteeForm = () => {
                 generateAdopteePDF();
               }}
             >
-              {/* Cat info and image */}
               <div className="flex flex-row gap-2 w-full justify-between">
                 <div className="flex flex-col">
                   <label htmlFor="">1. You will be adopting:</label>
@@ -195,8 +241,6 @@ const AdopteeForm = () => {
                   </div>
                 </div>
               </div>
-
-              {/* Rest of your form fields remain unchanged */}
               <div className="flex flex-col gap-2">
                 <label>
                   2. Please let us know how you found out about the adoption
@@ -265,8 +309,6 @@ const AdopteeForm = () => {
                   </label>
                 </div>
               </div>
-
-              {/* ID upload */}
               <div className="flex flex-col gap-2">
                 <div className="flex flex-col">
                   <label>
@@ -300,14 +342,12 @@ const AdopteeForm = () => {
                         onChange={handleImageChange}
                       />
                     </label>
-
                     <label className="italic text-[#828282] text-[14px]">
                       (Upload 1 supported file. Max. 10MB)
                     </label>
                   </div>
                 </div>
               </div>
-
               <div className="flex flex-col gap-2">
                 <label>4. Have you raised a cat before?</label>
                 <label
@@ -335,25 +375,22 @@ const AdopteeForm = () => {
                   No, this is my first time.
                 </label>
               </div>
-
               <div className="flex flex-col gap-3">
                 <div className="flex flex-col">
                   <label>
                     5. Do you have other pets right now? kindly provide
-                    informatio:{" "}
+                    informatio:
                   </label>
                   <label className="italic text-[14px] text-[#7d7d7d]">
                     (Eg. "Yes, I have two dogs.")
                   </label>
                 </div>
-
                 <input
                   type="text"
                   placeholder="Your answer here"
                   className="flex items-center p-2 border-1 border-[#252525] rounded-[8px]"
                 />
               </div>
-
               <div className="flex flex-col gap-2">
                 <label>6. What is your current living situation?</label>
                 <label
@@ -376,9 +413,9 @@ const AdopteeForm = () => {
                     type="radio"
                     name="currentSituation"
                     id="family"
-                    value="I live with my family (no childred)."
+                    value="I live with my family (no children)."
                   />
-                  I live with my family (no childred).
+                  I live with my family (no children).
                 </label>
                 <label
                   htmlFor="nochildren"
@@ -393,9 +430,8 @@ const AdopteeForm = () => {
                   I live with my family (with one or more children).
                 </label>
               </div>
-
               <div className="flex flex-col gap-2">
-                <div className="flex flex-col ">
+                <div className="flex flex-col">
                   <label htmlFor="">7. Do you have a regular income?</label>
                   <label className="italic text-[14px] leading-tight text-[#898989]">
                     (Raising indoor cats involves costs for essentials like
@@ -427,7 +463,6 @@ const AdopteeForm = () => {
                   </label>
                 </div>
               </div>
-
               <div className="flex flex-col gap-2">
                 <label>
                   8. Are you available to pick up the cat from Siena Park
@@ -458,9 +493,8 @@ const AdopteeForm = () => {
                   Yes, we can arrange a halfway meeting.
                 </label>
               </div>
-
               <div className="flex flex-col gap-2">
-                <label htmlFor="">
+                <label>
                   9. Please share any additional information in order for us to
                   know you better, we'd love to know more about you.
                 </label>
@@ -468,11 +502,10 @@ const AdopteeForm = () => {
                   name=""
                   id=""
                   rows="8"
-                  placeholder="You answer here"
+                  placeholder="Your answer here"
                   className="p-2 border-1 border-[#252525] rounded-[8px] resize-none"
                 ></textarea>
               </div>
-
               <button className="flex justify-center w-full text-center bg-[#B5C04A] text-[#FFF] font-bold p-2 rounded-[15px] hover:bg-[#CFDA34] active:bg-[#B5C04A]">
                 Submit
               </button>

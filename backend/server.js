@@ -1,4 +1,3 @@
-// server.js
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -29,6 +28,7 @@ const __dirname = path.dirname(__filename);
 
 app.use(
   "/uploads/cats",
+  cors({ origin: "http://localhost:5173" }), // allow your frontend
   express.static(path.join(process.cwd(), "FileUploads/cats"))
 );
 
@@ -74,7 +74,6 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(cookieParser());
 app.use("/FileUploads", express.static(path.join(__dirname, "FileUploads")));
-
 app.use(
   session({
     secret: process.env.SESSION_SECRET || "geloy_session_secret",
@@ -116,16 +115,13 @@ app.post("/api/users/login", async (req, res) => {
     if (!email || !password) {
       return res.status(400).json({ error: "Email and password are required" });
     }
-
     const [users] = await db.query(
       "SELECT * FROM users WHERE email = ? AND password = ?",
       [email, password]
     );
-
     if (users.length === 0) {
       return res.status(401).json({ error: "Invalid email or password" });
     }
-
     const user = users[0];
     req.session.user = {
       user_id: user.user_id,
@@ -133,7 +129,6 @@ app.post("/api/users/login", async (req, res) => {
       firstname: user.firstname,
       lastname: user.lastname,
     };
-
     res.status(200).json({
       message: "Login successful",
       user: {
@@ -178,11 +173,9 @@ app.get("/api/users/:id", async (req, res) => {
       "SELECT user_id, firstname, lastname, contactnumber, birthday, email, username, role, address, badge FROM users WHERE user_id = ?",
       [req.params.id]
     );
-
     if (rows.length === 0) {
       return res.status(404).json({ error: "User not found" });
     }
-
     res.json(rows[0]);
   } catch (err) {
     console.error("Error fetching user:", err);
@@ -197,7 +190,6 @@ app.get("/api/whiskermeter/:userId", async (req, res) => {
       "SELECT points FROM whiskermeter WHERE user_id = ?",
       [req.params.userId]
     );
-
     res.json(rows[0] || { points: 0 });
   } catch (err) {
     console.error("❌ Error fetching whiskermeter:", err.message);
@@ -208,26 +200,19 @@ app.get("/api/whiskermeter/:userId", async (req, res) => {
 // ---------------- DONATIONS ---------------- //
 app.get("/api/donations", async (req, res) => {
   try {
-    const [rows] = await db.query(`
-      SELECT 
-          d.donation_id AS donationId,
-          u.user_id AS userId,
-          CONCAT(u.firstname, ' ', u.lastname) AS name,
-          d.donation_type AS type,
-          DATE_FORMAT(d.date_donated, '%m-%d-%y') AS date,
-          d.description,
-          d.status
-      FROM donation d
-      JOIN users u ON d.donator_id = u.user_id
-      ORDER BY d.date_donated DESC
-    `);
-
+    const [rows] = await db.query(
+      `SELECT d.donation_id AS donationId, u.user_id AS userId, CONCAT(u.firstname, ' ', u.lastname) AS name, 
+              d.donation_type AS type, DATE_FORMAT(d.date_donated, '%m-%d-%y') AS date, 
+              d.description, d.status 
+       FROM donation d 
+       JOIN users u ON d.donator_id = u.user_id 
+       ORDER BY d.date_donated DESC`
+    );
     const formatted = rows.map((r) => ({
       ...r,
       type: r.type ? r.type.split(",") : [],
       status: r.status || "Pending", // default to Pending if null
     }));
-
     res.json(formatted);
   } catch (err) {
     console.error(
@@ -244,7 +229,6 @@ app.post("/api/donations", async (req, res) => {
     if (!req.session.user) {
       return res.status(401).json({ error: "Unauthorized" });
     }
-
     const donator_id = req.session.user.user_id;
     let {
       donationType,
@@ -259,18 +243,17 @@ app.post("/api/donations", async (req, res) => {
     if (!donationType || donationType.length === 0) {
       return res.status(400).json({ error: "Donation type is required" });
     }
-
     if (Array.isArray(donationType)) {
       donationType = donationType.join(",");
     }
 
-    const description = `
-      Amount: ${amount || "N/A"}
-      Food: ${foodType || "N/A"} (${foodQuantity || 0})
-      Food Desc: ${foodDescription || "N/A"}
-      Item Desc: ${itemDescription || "N/A"}
-      Other Desc: ${otherDescription || "N/A"}
-    `;
+    const description = `Amount: ${amount || "N/A"} Food: ${
+      foodType || "N/A"
+    } (${foodQuantity || 0}) Food Desc: ${
+      foodDescription || "N/A"
+    } Item Desc: ${itemDescription || "N/A"} Other Desc: ${
+      otherDescription || "N/A"
+    }`;
 
     const [user] = await db.query(
       "SELECT firstname, lastname FROM users WHERE user_id = ?",
@@ -279,15 +262,12 @@ app.post("/api/donations", async (req, res) => {
     if (user.length === 0) {
       return res.status(404).json({ error: "Donator not found" });
     }
-
     const donatorName = `${user[0].firstname} ${user[0].lastname}`;
-
     const [result] = await db.query(
       `INSERT INTO donation (donator_id, donator, donation_type, description) 
        VALUES (?, ?, ?, ?)`,
       [donator_id, donatorName, donationType, description]
     );
-
     res.status(201).json({
       message: "✅ Donation submitted successfully!",
       donation_id: result.insertId,
@@ -302,7 +282,6 @@ app.post("/api/donations", async (req, res) => {
 app.post("/api/donations/:id/approve", async (req, res) => {
   try {
     const donationId = req.params.id;
-
     const [donation] = await db.query(
       "SELECT * FROM donation WHERE donation_id = ?",
       [donationId]
@@ -310,21 +289,16 @@ app.post("/api/donations/:id/approve", async (req, res) => {
     if (donation.length === 0) {
       return res.status(404).json({ error: "Donation not found" });
     }
-
     const userId = donation[0].donator_id;
-
     await db.query(
       "UPDATE donation SET status = 'Approved' WHERE donation_id = ?",
       [donationId]
     );
-
     const rewardPoints = 20;
-
     const [meter] = await db.query(
       "SELECT * FROM whiskermeter WHERE user_id = ?",
       [userId]
     );
-
     if (meter.length === 0) {
       await db.query(
         "INSERT INTO whiskermeter (user_id, points) VALUES (?, ?)",
@@ -336,13 +310,13 @@ app.post("/api/donations/:id/approve", async (req, res) => {
         [rewardPoints, userId]
       );
     }
-
     res.json({ message: "Donation approved and points rewarded!" });
   } catch (err) {
     console.error("❌ Error approving donation:", err);
     res.status(500).json({ error: "Failed to approve donation" });
   }
 });
+
 // ADOPTION
 app.post(
   "/api/adoption",
@@ -354,7 +328,6 @@ app.post(
     try {
       const { adoptedcat_id, adopter_id, cat_name, adopter, contactnumber } =
         req.body;
-
       // Validate required fields
       if (
         !adoptedcat_id ||
@@ -365,27 +338,22 @@ app.post(
       ) {
         return res.status(400).json({ error: "Missing required fields" });
       }
-
       // Certificate is mandatory
       const certificateFile = req.files["certificate"]?.[0];
       if (!certificateFile) {
         return res.status(400).json({ error: "No PDF file uploaded" });
       }
-
       // Optional ID image
       const idImageFile = req.files["id_image"]?.[0];
-
       // Read files
       const certificateBuffer = fs.readFileSync(certificateFile.path);
       const idImageBuffer = idImageFile
         ? fs.readFileSync(idImageFile.path)
         : null;
-
       // Insert into DB
       await pool.query(
-        `INSERT INTO Adoption 
-        (adoptedcat_id, adopter_id, cat_name, adopter, contactnumber, certificate, id_image) 
-        VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO Adoption (adoptedcat_id, adopter_id, cat_name, adopter, contactnumber, certificate, id_image) 
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
         [
           parseInt(adoptedcat_id),
           parseInt(adopter_id),
@@ -396,11 +364,9 @@ app.post(
           idImageBuffer,
         ]
       );
-
       // Remove temp files
       fs.unlinkSync(certificateFile.path);
       if (idImageFile) fs.unlinkSync(idImageFile.path);
-
       res.status(201).json({ message: "✅ Adoption PDF stored in DB" });
     } catch (err) {
       console.error("Failed to store adoption PDF:", err);
@@ -409,11 +375,22 @@ app.post(
   }
 );
 
-// Get all adoptions (optional)
+// Get all adoptions
 app.get("/api/adoption", async (req, res) => {
   try {
-    const [rows] = await pool.query(`SELECT * FROM Adoption`);
-    res.json(rows);
+    const [rows] = await pool.query(
+      `SELECT * FROM Adoption ORDER BY date_created DESC`
+    );
+    // Map DB columns to frontend-friendly names
+    const formatted = rows.map((r) => ({
+      applicationNo: r.adoption_id,
+      user_id: r.adopter_id,
+      name: r.adopter,
+      type: r.cat_name,
+      date: r.date_created.toISOString().split("T")[0], // format as yyyy-mm-dd
+      status: r.status || "Pending",
+    }));
+    res.json(formatted);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to fetch adoptions" });
@@ -426,9 +403,7 @@ app.get("/api/adoption/:id/pdf", async (req, res) => {
       "SELECT certificate FROM Adoption WHERE adoption_id = ?",
       [req.params.id]
     );
-
     if (rows.length === 0) return res.status(404).json({ error: "Not found" });
-
     const pdfBuffer = rows[0].certificate;
     res.setHeader("Content-Type", "application/pdf");
     res.send(pdfBuffer);
@@ -460,18 +435,14 @@ app.post("/cat/create", async (req, res) => {
       adoption_status,
       description,
     } = req.body;
-
     if (!name || !age || !gender || !sterilization_status || !adoption_status) {
       return res.status(400).json({ error: "Missing required fields" });
     }
-
     const [result] = await pool.query(
-      `INSERT INTO cats 
-       (name, age, gender, sterilization_status, adoption_status, description, date_created, date_updated) 
+      `INSERT INTO cats (name, age, gender, sterilization_status, adoption_status, description, date_created, date_updated) 
        VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())`,
       [name, age, gender, sterilization_status, adoption_status, description]
     );
-
     res.status(201).json({
       message: "Cat created successfully",
       cat_id: result.insertId,
@@ -490,32 +461,27 @@ app.post(
   async (req, res) => {
     try {
       const { cat_id } = req.params;
-
       if (req.invalidFiles && req.invalidFiles.length > 0) {
         return res.status(400).json({
           error: `Invalid file types: ${req.invalidFiles.join(", ")}`,
         });
       }
-
       if (!req.files || req.files.length === 0) {
         return res.status(400).json({ error: "No images uploaded" });
       }
-
       const insertPromises = req.files.map((file, index) =>
         pool.query(
-          `INSERT INTO Cat_Images (cat_id, image_filename, is_primary) VALUES (?, ?, ?)`,
+          `INSERT INTO Cat_Images (cat_id, image_filename, is_primary) 
+           VALUES (?, ?, ?)`,
           [cat_id, file.filename, index === 0 ? 1 : 0]
         )
       );
-
       await Promise.all(insertPromises);
-
       // ✅ return URLs directly
       const uploadedImages = req.files.map((f) => ({
         filename: f.filename,
         url: `http://localhost:5000/uploads/cats/${f.filename}`,
       }));
-
       res.status(200).json({
         message: "Images uploaded successfully",
         uploaded: uploadedImages,
@@ -530,20 +496,14 @@ app.post(
 // Get all cat images
 app.get("/api/cats/images", async (req, res) => {
   try {
-    const [rows] = await db.query(`
-      SELECT 
-        image_id, 
-        cat_id, 
-        image_filename, 
-        is_primary,
-        CONCAT('http://localhost:5000/uploads/cats/', image_filename) AS url
-      FROM Cat_Images
-    `);
-
+    const [rows] = await db.query(
+      `SELECT image_id, cat_id, image_filename, is_primary, 
+              CONCAT('http://localhost:5000/uploads/cats/', image_filename) AS url 
+       FROM Cat_Images`
+    );
     if (!rows.length) {
       return res.status(200).json([]); // no images yet
     }
-
     res.json(rows);
   } catch (err) {
     console.error("Error fetching cat images:", err);
@@ -559,13 +519,11 @@ app.get("/upload/catimages/:cat_id", async (req, res) => {
       `SELECT image_filename FROM Cat_Images WHERE cat_id = ?`,
       [cat_id]
     );
-
     // ✅ return both filename + url
     const formatted = rows.map((r) => ({
       filename: r.image_filename,
       url: `http://localhost:5000/uploads/cats/${r.image_filename}`,
     }));
-
     res.json(formatted);
   } catch (err) {
     console.error("❌ Fetch images failed:", err);
@@ -581,33 +539,28 @@ app.get("/api/cats/:catId/images", async (req, res) => {
       "SELECT image_filename FROM Cat_Images WHERE cat_id = ?",
       [catId]
     );
-
     const formatted = rows.map((img) => ({
       filename: img.image_filename,
       url: `http://localhost:5000/uploads/cats/${img.image_filename}`, // ✅ direct URL
     }));
-
     res.json(formatted);
   } catch (err) {
     console.error("❌ Error fetching cat images:", err);
     res.status(500).json({ error: "Failed to fetch images" });
   }
 });
+
 // Delete image
 app.delete("/image/:filename", async (req, res) => {
   try {
     const { filename } = req.params;
-
     // Delete from DB
     await pool.query(`DELETE FROM Cat_Images WHERE image_filename = ?`, [
       filename,
     ]);
-
     // Delete file
     const filepath = path.join(process.cwd(), "FileUploads/cats", filename);
-
     if (fs.existsSync(filepath)) fs.unlinkSync(filepath);
-
     res.json({ message: "Image deleted successfully" });
   } catch (err) {
     res.status(500).json({ error: "Failed to delete image" });
