@@ -59,7 +59,7 @@ const Home = () => {
         <div className="flex p-10 pl-0 pr-0">
           <div className="flex justify-center p-10 gap-10">
             <div className="w-13"></div>
-            <div className="justify-center w-300 rounded-br-4xl rounded-bl-4xl rounded-tl-4xl shadow-2xl hover:shadow-xl transition-shadow duration-300 p-3">
+            <div className="justify-center w-270 rounded-br-4xl rounded-bl-4xl rounded-tl-4xl shadow-2xl hover:shadow-xl transition-shadow duration-300 p-3">
               <img src={pic} alt="" className="w-full" />
               <p className="absolute top-150 left-50 text-white font-bold text-[50px]">
                 Start Today,
@@ -73,16 +73,17 @@ const Home = () => {
         <div className="flex p-10 pl-0 pr-0">
           <div className="flex justify-center p-10 gap-10">
             <div className="w-13"></div>
-            <div className="justify-center w-300 rounded-br-4xl rounded-bl-4xl rounded-tr-4xl shadow-2xl hover:shadow-xl transition-shadow duration-300 p-3">
+            <div className="justify-center w-270 rounded-br-4xl rounded-bl-4xl rounded-tr-4xl shadow-2xl hover:shadow-xl transition-shadow duration-300 p-3">
               <div>
-                <div className="bg-yellow-600 w-50 p-4 text-white rounded-tr-4xl rounded-tl-4xl absolute top-244 left-33 hover: transition-shadow duration-300 z-0">
+                <div className="bg-yellow-600 w-50 p-4 text-white rounded-tr-4xl rounded-tl-4xl absolute top-227 left-33 hover: transition-shadow duration-300 z-0">
                   Be part of our mission
                 </div>
-                <div className="flex-col p-5">
-                  <div className="flex gap-5 justify-around pb-5">
-                    <img src={news1} alt="" />
-                    <img src={news2} alt="" />
-                    <img src={news3} alt="" />
+                {}
+                <div className="flex-col p-5 w-auto">
+                  <div className="flex gap-5 justify-around pb-5 flex-auto w-full">
+                    <img src={news1} alt="" className="w-auto h-auto" />
+                    <img src={news2} alt="" className="w-[450px] h-auto" />
+                    <img src={news3} alt="" className="w-auto h-auto" />
                   </div>
                   <div>
                     The Siena Park Cat Community is a group that cares for the
@@ -109,10 +110,10 @@ const Home = () => {
         <div className="flex p-10 pl-0 pr-0">
           <div className="flex justify-center p-10 gap-10">
             <div className="w-13"></div>
-            <div className="bg-yellow-600 w-50 p-4 text-white rounded-tr-4xl rounded-tl-4xl absolute top-390 left-33 hover: transition-shadow duration-300 z-0">
+            <div className="bg-yellow-600 w-50 p-4 text-white rounded-tr-4xl rounded-tl-4xl absolute top-374 left-33 hover: transition-shadow duration-300 z-0">
               Adopt a cat
             </div>
-            <div className="justify-center w-300 rounded-br-4xl rounded-bl-4xl rounded-tr-4xl shadow-2xl hover:shadow-xl transition-shadow duration-300 p-5">
+            <div className="justify-center w-270 rounded-br-4xl rounded-bl-4xl rounded-tr-4xl shadow-2xl hover:shadow-xl transition-shadow duration-300 p-5">
               <div className="w-full h-45">
                 {/* Cat Images */}
                 <div className="flex justify-around gap-3 overflow-hidden">

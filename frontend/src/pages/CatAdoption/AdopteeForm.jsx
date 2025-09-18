@@ -79,25 +79,6 @@ const AdopteeForm = () => {
         );
       }
 
-      // Add cat image to the first page
-      const catBlob = await fetchCatImageBlob(cat.cat_id);
-      if (catBlob) {
-        const catImgData = await new Promise((resolve) => {
-          const img = new Image();
-          img.src = URL.createObjectURL(catBlob);
-          img.onload = () => {
-            const canvas = document.createElement("canvas");
-            const ctx = canvas.getContext("2d");
-            canvas.width = 150;
-            canvas.height = 150 * (img.height / img.width);
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            resolve(canvas.toDataURL("image/jpeg", 0.7)); // Compress to JPEG
-          };
-        });
-        pdf.setPage(1); // Ensure cat image is on the first page
-        pdf.addImage(catImgData, "JPEG", 20, 20, 150, 150, undefined, "FAST");
-      }
-
       const pdfBlob = pdf.output("blob");
       console.log("PDF Size:", pdfBlob.size / 1024 / 1024, "MB");
       if (pdfBlob.size > 60 * 1024 * 1024) {
@@ -109,6 +90,8 @@ const AdopteeForm = () => {
 
       const formData = new FormData();
       formData.append("certificate", pdfBlob, `${cat.name}_adoption.pdf`);
+      formData.append("adoptedcat_id", cat.cat_id);
+
       formData.append("adopter_id", loggedInUser.user_id);
       formData.append("cat_name", cat.name);
       formData.append(

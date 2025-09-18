@@ -8,6 +8,19 @@ import CatBot from "../../components/CatBot";
 import { useSession } from "../../context/SessionContext";
 
 const HeadVolunteerMainPage = () => {
+  const [selectedProof, setSelectedProof] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const openModal = (proofUrl) => {
+    setSelectedProof(proofUrl);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setSelectedProof(null);
+    setIsModalOpen(false);
+  };
+
   const navigate = useNavigate();
   const [apps, setApps] = useState([]);
   const [error, setError] = useState("");
@@ -97,6 +110,7 @@ const HeadVolunteerMainPage = () => {
                     <th className="px-6 py-3">Name</th>
                     <th className="px-6 py-3">Type</th>
                     <th className="px-6 py-3">Date Submitted</th>
+                    <th className="px-6 py-3">Proof of Payment</th>
                     <th className="px-6 py-3">Status</th>
                   </tr>
                 </thead>
@@ -130,6 +144,21 @@ const HeadVolunteerMainPage = () => {
                             : app.type}
                         </td>
                         <td className="px-6 py-3">{app.date}</td>
+
+                        {/*PROOF OF PAYMENT */}
+                        <td className="px-6 py-3 text-center">
+                          {app.proofUrl ? (
+                            <button
+                              onClick={() => openModal(app.proofUrl)}
+                              className="bg-[#DC8801] text-white px-4 py-2 rounded-lg hover:bg-[#ffb030] active:bg-[#DC8801] font-bold shadow"
+                            >
+                              View Proof
+                            </button>
+                          ) : (
+                            <span className="text-gray-400">No Proof</span>
+                          )}
+                        </td>
+
                         <td className="px-6 py-3 flex items-center gap-2">
                           {/* if backend doesn’t return status, default to Pending */}
                           <span
@@ -160,6 +189,26 @@ const HeadVolunteerMainPage = () => {
                     ))
                   )}
                 </tbody>
+                {isModalOpen && (
+                  <div className="fixed inset-0 bg-black/50 bg-opacity-50 flex justify-center items-center z-50">
+                    <div className="bg-white rounded-2xl shadow-lg max-w-2xl w-full p-6 relative">
+                      <button
+                        onClick={closeModal}
+                        className="absolute top-3 right-3 text-gray-600 hover:text-black text-xl"
+                      >
+                        ✖
+                      </button>
+                      <h2 className="text-lg font-bold mb-4 text-[#DC8801]">
+                        Proof of Payment
+                      </h2>
+                      <img
+                        src={selectedProof}
+                        alt="Proof of Payment"
+                        className="w-full max-h-[80vh] object-contain rounded-lg border"
+                      />
+                    </div>
+                  </div>
+                )}
               </table>
               <div className="flex justify-center gap-2 mt-6 pt-10 pb-10">
                 <button

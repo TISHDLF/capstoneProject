@@ -45,6 +45,32 @@ const storage = multer.diskStorage({
     callback(null, Date.now() + path.extname(file.originalname));
   },
 });
+const proofStorage = multer.diskStorage({
+  destination: function (req, file, callback) {
+    const dir = path.join(process.cwd(), "FileUploads/proofs");
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    callback(null, dir);
+  },
+  filename: function (req, file, callback) {
+    callback(null, Date.now() + path.extname(file.originalname));
+  },
+});
+
+const uploadProof = multer({
+  storage: proofStorage,
+  fileFilter: (req, file, callback) => {
+    if (file.mimetype.startsWith("image/")) {
+      callback(null, true);
+    } else {
+      callback(
+        new Error("Only images are allowed for proof of payment"),
+        false
+      );
+    }
+  },
+});
 
 const upload = multer({
   storage,
@@ -203,80 +229,97 @@ app.get("/api/donations", async (req, res) => {
     const [rows] = await db.query(
       `SELECT d.donation_id AS donationId, u.user_id AS userId, CONCAT(u.firstname, ' ', u.lastname) AS name, 
               d.donation_type AS type, DATE_FORMAT(d.date_donated, '%m-%d-%y') AS date, 
-              d.description, d.status 
+              d.description, d.status, d.proofimage
        FROM donation d 
        JOIN users u ON d.donator_id = u.user_id 
        ORDER BY d.date_donated DESC`
     );
+
     const formatted = rows.map((r) => ({
       ...r,
       type: r.type ? r.type.split(",") : [],
-      status: r.status || "Pending", // default to Pending if null
+      status: r.status || "Pending",
+      proofUrl: r.proofimage
+        ? `data:image/png;base64,${r.proofimage.toString("base64")}`
+        : null,
     }));
+
     res.json(formatted);
   } catch (err) {
-    console.error(
-      "❌ Error fetching donations:",
-      err.sqlMessage || err.message
-    );
+    console.error("❌ Error fetching donations:", err.message);
     res.status(500).json({ error: "Failed to fetch donations" });
   }
 });
 
-// Post donation
-app.post("/api/donations", async (req, res) => {
-  try {
-    if (!req.session.user) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
-    const donator_id = req.session.user.user_id;
-    let {
-      donationType,
-      amount,
-      foodType,
-      foodQuantity,
-      foodDescription,
-      itemDescription,
-      otherDescription,
-    } = req.body;
+// ---------------- DONATIONS ---------------- //
 
-    if (!donationType || donationType.length === 0) {
-      return res.status(400).json({ error: "Donation type is required" });
-    }
-    if (Array.isArray(donationType)) {
-      donationType = donationType.join(",");
-    }
+app.post(
+  "/api/donations",
+  uploadProof.single("proofImage"),
+  async (req, res) => {
+    try {
+      if (!req.session.user) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
 
-    const description = `Amount: ${amount || "N/A"} Food: ${
-      foodType || "N/A"
-    } (${foodQuantity || 0}) Food Desc: ${
-      foodDescription || "N/A"
-    } Item Desc: ${itemDescription || "N/A"} Other Desc: ${
-      otherDescription || "N/A"
-    }`;
+      const donator_id = req.session.user.user_id;
+      let {
+        donationType,
+        amount,
+        foodType,
+        foodQuantity,
+        foodDescription,
+        itemDescription,
+        otherDescription,
+      } = req.body;
 
-    const [user] = await db.query(
-      "SELECT firstname, lastname FROM users WHERE user_id = ?",
-      [donator_id]
-    );
-    if (user.length === 0) {
-      return res.status(404).json({ error: "Donator not found" });
+      if (!donationType || donationType.length === 0) {
+        return res.status(400).json({ error: "Donation type is required" });
+      }
+      if (Array.isArray(donationType)) {
+        donationType = donationType.join(",");
+      }
+
+      const description = `Amount: ${amount || "N/A"} Food: ${
+        foodType || "N/A"
+      } (${foodQuantity || 0}) Food Desc: ${
+        foodDescription || "N/A"
+      } Item Desc: ${itemDescription || "N/A"} Other Desc: ${
+        otherDescription || "N/A"
+      }`;
+
+      // ✅ Handle proof of payment
+      let proofBuffer = null;
+      if (req.file) {
+        proofBuffer = fs.readFileSync(req.file.path);
+        fs.unlinkSync(req.file.path); // delete temp file
+      }
+
+      const [user] = await db.query(
+        "SELECT firstname, lastname FROM users WHERE user_id = ?",
+        [donator_id]
+      );
+      if (user.length === 0) {
+        return res.status(404).json({ error: "Donator not found" });
+      }
+      const donatorName = `${user[0].firstname} ${user[0].lastname}`;
+
+      const [result] = await db.query(
+        `INSERT INTO donation (donator_id, donator, donation_type, description, proofimage) 
+       VALUES (?, ?, ?, ?, ?)`,
+        [donator_id, donatorName, donationType, description, proofBuffer]
+      );
+
+      res.status(201).json({
+        message: "✅ Donation submitted successfully!",
+        donation_id: result.insertId,
+      });
+    } catch (err) {
+      console.error("❌ Error inserting donation:", err);
+      res.status(500).json({ error: "Failed to submit donation" });
     }
-    const donatorName = `${user[0].firstname} ${user[0].lastname}`;
-    const [result] = await db.query(
-      `INSERT INTO donation (donator_id, donator, donation_type, description) 
-       VALUES (?, ?, ?, ?)`,
-      [donator_id, donatorName, donationType, description]
-    );
-    res.status(201).json({
-      message: "✅ Donation submitted successfully!",
-      donation_id: result.insertId,
-    });
-  } catch (err) {
-    console.error("❌ Error inserting donation:", err);
-    res.status(500).json({ error: "Failed to submit donation" });
   }
-});
+);
 
 // Approve donation + reward user points
 app.post("/api/donations/:id/approve", async (req, res) => {
@@ -353,9 +396,9 @@ app.post(
       // Insert into DB
       await pool.query(
         `INSERT INTO Adoption (adoptedcat_id, adopter_id, cat_name, adopter, contactnumber, certificate, id_image) 
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+   VALUES (?, ?, ?, ?, ?, ?, ?)`,
         [
-          parseInt(adoptedcat_id),
+          adoptedcat_id ? parseInt(adoptedcat_id) : null,
           parseInt(adopter_id),
           cat_name,
           adopter,
@@ -364,6 +407,7 @@ app.post(
           idImageBuffer,
         ]
       );
+
       // Remove temp files
       fs.unlinkSync(certificateFile.path);
       if (idImageFile) fs.unlinkSync(idImageFile.path);
