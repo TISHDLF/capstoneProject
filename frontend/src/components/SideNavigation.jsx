@@ -12,7 +12,6 @@ const SideNavigation = () => {
   const [user, setUser] = useState({ firstname: "", lastname: "", role: "" });
   const [loading, setLoading] = useState(true);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-
   useEffect(() => {
     const fetchUser = async () => {
       const loggedUser = sessionStorage.getItem("user"); // ✅ from sessionStorage
@@ -86,7 +85,7 @@ const SideNavigation = () => {
       </div>
 
       <div
-        className="absolute  right-18 top-12 w-40 box-border bg-[#FFF] shadow-md rounded-[15px] rounded-tr-[0px] overflow-hidden z-10"
+        className="absolute right-18 top-12 w-40 box-border bg-[#FFF] shadow-md rounded-[15px] rounded-tr-[0px] overflow-hidden z-[9999]"
         style={{ minHeight: "fit-content" }}
       >
         {isLoggedIn ? (

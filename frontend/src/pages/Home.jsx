@@ -47,10 +47,8 @@ const Home = () => {
       <CatBot />
       <NavigationBar />
       <WhiskerMeter user={{ points }} />
-      {user?.role === "head_volunteer" ? (
+      {user?.role === "head_volunteer" && "admin" ? (
         <HeadVolunteerSideBar />
-      ) : user?.role === "admin" ? (
-        <AdminSideBar />
       ) : (
         <SideNavigation />
       )}
@@ -82,7 +80,7 @@ const Home = () => {
                 <div className="flex-col p-5 w-auto">
                   <div className="flex gap-5 justify-around pb-5 flex-auto w-full">
                     <img src={news1} alt="" className="w-auto h-auto" />
-                    <img src={news2} alt="" className="w-[450px] h-auto" />
+                    <img src={news2} alt="" className="w-[400px] h-auto" />
                     <img src={news3} alt="" className="w-auto h-auto" />
                   </div>
                   <div>
@@ -142,8 +140,9 @@ const Home = () => {
             </div>
             <div></div>
           </div>
-          <Footer />
         </div>
+
+        <Footer />
       </div>
     </div>
   );

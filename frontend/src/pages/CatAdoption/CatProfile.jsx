@@ -108,8 +108,6 @@ const CatProfile = () => {
       <NavigationBar />
       {user?.role === "head_volunteer" ? (
         <HeadVolunteerSideBar />
-      ) : user?.role === "admin" ? (
-        <AdminSideBar />
       ) : (
         <SideNavigation />
       )}

@@ -5,6 +5,10 @@ import {
   createRoutesFromElements,
   RouterProvider,
 } from "react-router-dom";
+
+import { SessionProvider } from "./context/SessionContext";
+import { WhiskerMeterProvider } from "./context/WhiskerMeterContext";
+
 import RootLayout from "./layout/RootLayout";
 
 import Home from "./pages/Home";
@@ -12,15 +16,22 @@ import AboutUs from "./pages/AboutUs";
 import CatCareGuides from "./pages/CatCareGuides";
 import ContactUs from "./pages/ContactUs";
 import Login from "./pages/LoginAndSignUp/Login";
-import CatCommunityNews from "./pages/Home/CatCommunityNews";
-import Donate from "./pages/Donate";
-import CatAdoption from "./pages/CatAdoption";
-import Feeding from "./pages/Feeding";
-import CommunityGuide from "./pages/CommunityGuide";
 import AdminLogin from "./pages/LoginAndSignUp/AdminLogin";
 import SignUp from "./pages/LoginAndSignUp/SignUp";
+
+import CatCommunityNews from "./pages/Home/CatCommunityNews";
+
+import Donate from "./pages/Donate";
+import Money from "./pages/DonateComponents/Money";
+import Food from "./pages/DonateComponents/Food";
+import Items from "./pages/DonateComponents/Items";
+import Others from "./pages/DonateComponents/Others";
+
+import CatAdoption from "./pages/CatAdoption";
 import CatProfile from "./pages/CatAdoption/CatProfile";
 import AdopteeForm from "./pages/CatAdoption/AdopteeForm";
+import Feeding from "./pages/Feeding";
+import CommunityGuide from "./pages/CommunityGuide";
 
 import Dashboard from "./pages/Admin/Dashboard";
 import Profile from "./pages/Profile/Profile";
@@ -28,53 +39,62 @@ import AdminCatProfile from "./pages/Admin/AdminCatProfile";
 import AdoptersAndVisitors from "./pages/Admin/AdoptersAndVisitors";
 import Volunteers from "./pages/Admin/Volunteers";
 import Manage from "./pages/Admin/Manage";
+
 import AdoptersList from "./pages/Admin/Adopters/AdoptersList";
 import AdopterApplication from "./pages/Admin/Adopters/AdopterApplication";
-import FeedingVolunteers from "./pages/Admin/Feeding/FeedingVolunteers";
-import FeedingApplications from "./pages/Admin/Feeding/FeedingApplications";
-import AdminList from "./pages/Admin/Manage/AdminList";
-import AllUsers from "./pages/Admin/Manage/AllUsers";
-import Donation from "./pages/Admin/Feeding/Donation";
-import CatProfileProperty from "./pages/Admin/CatProfileProperty/CatProfileProperty";
-import HeadVolunteerMainPage from "./pages/HeadVolunteer/HeadVolunteerMainPage";
-import HeadVolunteerProfile from "./pages/HeadVolunteer/HeadVolunteerProfile";
 import AdopterView from "./pages/Admin/Adopters/AdopterView";
 import AdopterApplicationView from "./pages/Admin/Adopters/AdopterApplicationView";
+
+import FeedingVolunteers from "./pages/Admin/Feeding/FeedingVolunteers";
+import FeedingApplications from "./pages/Admin/Feeding/FeedingApplications";
 import FeedingApplicationView from "./pages/Admin/Feeding/FeedingApplicationView";
+import Donation from "./pages/Admin/Feeding/Donation";
+
+import AdminList from "./pages/Admin/Manage/AdminList";
+import AllUsers from "./pages/Admin/Manage/AllUsers";
 import UserProfile from "./pages/Admin/Manage/UserProfile";
-import CatProfileCreate from "./pages/Admin/CatProfileProperty/CatProfileCreate";
 import UpdateRole from "./pages/Admin/Manage/UpdateRole";
 import AssignNewAdmin from "./pages/Admin/Manage/AssignNewAdmin";
-import AdoptionApplications from "./pages/HeadVolunteer/AdoptionApplications";
 
-import { SessionProvider } from "./context/SessionContext";
-import { WhiskerMeterProvider } from "./context/WhiskerMeterContext";
+import CatProfileProperty from "./pages/Admin/CatProfileProperty/CatProfileProperty";
+import CatProfileCreate from "./pages/Admin/CatProfileProperty/CatProfileCreate";
+import HeadVolunteerDashboard from "./pages/HeadVolunteer/HeadVolunteerDashboard";
+import HeadVolunteerMainPage from "./pages/HeadVolunteer/HeadVolunteerMainPage";
 
+import HeadVolunteerProfile from "./pages/HeadVolunteer/HeadVolunteerProfile";
 const App = () => {
   const router = createBrowserRouter(
     createRoutesFromElements(
       <Route path="/" element={<RootLayout />}>
         {/* Public Routes */}
         <Route index element={<Home />} />
+
         <Route path="home" element={<Home />} />
-        <Route path="dashboard" element={<Dashboard />} />
-        <Route path="login" element={<Login />} />
-        <Route path="adminlogin" element={<AdminLogin />} />
-        <Route path="signup" element={<SignUp />} />
-        <Route path="catcommunitynews" element={<CatCommunityNews />} />
         <Route path="aboutus" element={<AboutUs />} />
         <Route path="catcareguides" element={<CatCareGuides />} />
         <Route path="contactus" element={<ContactUs />} />
-        <Route path="donate" element={<Donate />} />
+        <Route path="catcommunitynews" element={<CatCommunityNews />} />
+        <Route path="donate" element={<Donate />}>
+          <Route path="money" element={<Money />} />
+          <Route path="food" element={<Food />} />
+          <Route path="items" element={<Items />} />
+          <Route path="others" element={<Others />} />
+        </Route>
+
         <Route path="catadoption" element={<CatAdoption />} />
-        <Route path="catprofile" element={<CatProfile />} />
-        <Route path="adopteeform" element={<AdopteeForm />} />
+        <Route path="catprofile/:cat_id" element={<CatProfile />} />
+        <Route path="adopteeform/:cat_id" element={<AdopteeForm />} />
         <Route path="feeding" element={<Feeding />} />
         <Route path="communityguide" element={<CommunityGuide />} />
         <Route path="/cat/:id" element={<CatProfile />} />
         <Route path="/adopteeform/:catId" element={<AdopteeForm />} />
 
-        {/* Admin */}
+        {/* Auth */}
+        <Route path="login" element={<Login />} />
+        <Route path="adminlogin" element={<AdminLogin />} />
+        <Route path="signup" element={<SignUp />} />
+
+        {/* Admin Routes */}
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="profile" element={<Profile />} />
         <Route path="admincatprofile" element={<AdminCatProfile />} />
@@ -95,10 +115,11 @@ const App = () => {
         <Route path="feedingvolunteers" element={<FeedingVolunteers />} />
         <Route path="feedingapplications" element={<FeedingApplications />} />
         <Route
-          path="feedingapplications/feedingapplicationview"
+          path="feedingapplications/feedingapplicationview/:application_id"
           element={<FeedingApplicationView />}
         />
         <Route path="donationadmin" element={<Donation />} />
+
         <Route path="manage" element={<Manage />} />
         <Route path="adminlist" element={<AdminList />}>
           <Route path="update/:user_id" element={<UpdateRole />} />
@@ -108,9 +129,11 @@ const App = () => {
         <Route path="userprofile/:user_id" element={<UserProfile />} />
 
         {/* Head Volunteer */}
+        {/* <Route path="hvdashboard" element={<HeadVoluneerDashboard />} /> */}
+        <Route path="hvdashboard" element={<HeadVolunteerDashboard />} />
         <Route path="headvolunteerpage" element={<HeadVolunteerMainPage />} />
         <Route path="headvolunteerprofile" element={<HeadVolunteerProfile />} />
-        <Route path="adoptionapplication" element={<AdoptionApplications />} />
+        <Route path="adoptionapplication" element={<AdopterApplication />} />
       </Route>
     )
   );

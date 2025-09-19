@@ -207,6 +207,8 @@ app.get("/api/users/:id", async (req, res) => {
     console.error("Error fetching user:", err);
     res.status(500).json({ error: "Database error" });
   }
+
+  return res.status(200).json({ message: "File uploaded succesfully!" });
 });
 
 // ---------------- WHISKER METER ---------------- //

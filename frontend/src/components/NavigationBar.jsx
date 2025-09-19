@@ -12,7 +12,7 @@ const NavigationBar = () => {
   const location = useLocation();
 
   return (
-    <div className=" sticky top-0 left-0 grid grid-cols-[40%_40%_20%] bg-[#f9f7dc] box-content items-center max-h-[100px] border-b-2 border-b-[#DC8801] z-0">
+    <div className=" sticky top-0 left-0 grid grid-cols-[40%_40%_20%] bg-[#f9f7dc] box-content items-center max-h-[100px] border-b-2 border-b-[#DC8801] z-10">
       <Link
         to="/home"
         className="flex items-center justify-center w-auto h-[100px]"

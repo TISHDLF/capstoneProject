@@ -10,8 +10,13 @@ import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import axios from "axios";
 import { useState } from "react";
+import Cookies from "js-cookie";
+import { useEffect } from "react";
 
 const Feeding = () => {
+  const loggedUser = Cookies.get("user");
+  const userParsed = JSON.parse(loggedUser);
+
   const [interestReason, setInterestReason] = useState("");
   const [experienceDetails, setExperienceDetails] = useState("");
   const [feedingDay, setFeedingDay] = useState("");
@@ -21,10 +26,25 @@ const Feeding = () => {
   const [feedingExperience, setfeedingExperience] = useState(false);
   const [feedingSchedule, setFeedingSchedule] = useState(false);
 
+  const [submitMessage, setSubmitMessage] = useState("");
+
   const handleExpSelected = (value) => setfeedingExperience(value);
   const handleSchedSelected = (value) => setFeedingSchedule(value);
 
   const printRef = React.useRef(null);
+
+  const fetchUser = async () => {
+    try {
+      const response = await axios.get(
+        `http://localhost:5000/user/logged?user_id=${userParsed.user_id}`
+      );
+      console.log(response.data);
+
+      return response.data;
+    } catch (err) {
+      console.error("Failed to fetch user data: ", err);
+    }
+  };
 
   const generateFeedingForm = async () => {
     if (
@@ -61,7 +81,41 @@ const Feeding = () => {
     const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
 
     pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-    pdf.save("feeding-form.pdf");
+
+    const pdfBlob = pdf.output("blob");
+    // pdf.save('feeding-form.pdf');
+
+    const user = await fetchUser();
+
+    const formData = new FormData();
+    const filename = `feeding-form-${user.firstname}-${user.lastname}.pdf`;
+
+    formData.append("file", pdfBlob, filename);
+    formData.append("user_id", userParsed.user_id);
+
+    try {
+      await axios.post(`http://localhost:5000/user/feeding/form`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      setSubmitMessage(
+        "You successfully submitted your application!\nPlease wait for approval. Thank you!"
+      );
+
+      console.log(
+        "You successfully submitted your application!\nPlease wait for approval. Thank you!"
+      );
+    } catch (err) {
+      if (err.response && err.response.status === 409) {
+        setError(
+          "You already have a pending application. Please wait for it to be processed."
+        );
+      } else {
+        setError("Your submission failed. Please try again.");
+      }
+
+      console.error("Submission failed:", err);
+    }
   };
 
   return (
@@ -95,174 +149,186 @@ const Feeding = () => {
                 </div>
               </div>
 
-              <form
-                ref={printRef}
-                className="flex flex-col gap-8 p-5 bg-[#FFF] rounded-[15px] w-full h-fit"
-              >
-                <div className="flex flex-col gap-2">
-                  <label>
-                    1. Why are you interested in becoming a feeder for the Siera
-                    Park Residences Cat Community?
-                  </label>
-                  <textarea
-                    placeholder="Answer here"
-                    rows={5}
-                    value={interestReason}
-                    onChange={(e) => setInterestReason(e.target.value)}
-                    className="p-2 border-1 border-[#252525] rounded-[8px] resize-none"
-                  ></textarea>
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <label>
-                    2. Do you have any prior experience with feeding or caring
-                    for stray cats or community animals?
-                  </label>
-                  <div className="flex flex-row gap-2">
-                    <label
-                      htmlFor="feedingYes"
-                      className="flex items-center gap-2 p-2 border-1 border-[#252525] rounded-[8px]"
-                    >
-                      <input
-                        type="radio"
-                        name="feedingExp"
-                        id="feedingYes"
-                        value="Yes"
-                        checked={feedingExperience === "Yes"}
-                        onChange={() => handleExpSelected("Yes")}
-                      />
-                      Yes
-                    </label>
-                    <label
-                      htmlFor="feedingNo"
-                      className="flex items-center gap-2 p-2 border-1 border-[#252525] rounded-[8px]"
-                    >
-                      <input
-                        type="radio"
-                        name="feedingExp"
-                        id="feedingNo"
-                        value="No"
-                        checked={feedingExperience === "No"}
-                        onChange={() => handleExpSelected("No")}
-                      />
-                      No
-                    </label>
-                  </div>
-                  {feedingExperience === "Yes" && (
-                    <div
-                      className={
-                        feedingExperience === "No" ? "hidden" : "flex flex-col"
-                      }
-                    >
-                      <label htmlFor="feedingDescribe">
-                        if <strong>Yes</strong>, please describe your experience
-                        to us.
-                      </label>
-
-                      <textarea
-                        name=""
-                        id="feedingDescribe"
-                        placeholder="Answer here"
-                        rows={5}
-                        value={experienceDetails}
-                        onChange={(e) => setExperienceDetails(e.target.value)}
-                        className={
-                          "p-2 border-1 border-[#252525] rounded-[8px] resize-none"
-                        }
-                      ></textarea>
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <label htmlFor="">
-                    3. Which day of the week can you commit to feeding the cats?
-                  </label>
-                  <div className="flex flex-row gap-2">
-                    <select
-                      name="feedingDay"
-                      id="feedingDay"
-                      value={feedingDay}
-                      onChange={(e) => setFeedingDay(e.target.value)}
-                      className="flex items-center justify-center border-1 border-[#A3A3A3] rounded-[10px]"
-                    >
-                      <option hidden>Select a day</option>
-                      <option value="Monday">Monday</option>
-                      <option value="Tuesday">Tuesday</option>
-                      <option value="Wednesday">Wednesday</option>
-                      <option value="Thursday">Thursday</option>
-                      <option value="Friday">Friday</option>
-                      <option value="Saturday">Saturday</option>
-                      <option value="Sunday">Sunday</option>
-                    </select>
-
-                    <label className="text-[14px] text-[#626262] italic leading-tight">
-                      (There's no guarantee that day you choose will be your
-                      feeding day due to other active feeders. Coordinate with
-                      the Head volunteers for this matter.)
-                    </label>
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-4">
-                  <label>
-                    4. Feeding typically begins at 8:00 pm and may continue late
-                    into the evening. Are you comfortable with this schedule?{" "}
-                  </label>
-                  <div className="flex flex-row gap-2">
-                    <label
-                      htmlFor="eveningYes"
-                      className="flex items-center gap-2 p-2 border-1 border-[#252525] rounded-[8px]"
-                    >
-                      <input
-                        type="radio"
-                        name="feedingNight"
-                        id="eveningYes"
-                        value="Yes"
-                        checked={feedingSchedule === "Yes"}
-                        onChange={() => handleSchedSelected("Yes")}
-                      />
-                      Yes
-                    </label>
-                    <label
-                      htmlFor="eveningNo"
-                      className="flex items-center gap-2 p-2 border-1 border-[#252525] rounded-[8px]"
-                    >
-                      <input
-                        type="radio"
-                        name="feedingNight"
-                        id="eveningNo"
-                        value="No"
-                        checked={feedingSchedule === "No"}
-                        onChange={() => handleSchedSelected("No")}
-                      />
-                      No
-                    </label>
-                  </div>
-                  <div
-                    className={
-                      feedingSchedule === "No" ? "flex flex-col" : "hidden"
-                    }
-                  >
-                    <label htmlFor="nightFeedConcern">
-                      if <strong>No</strong>, please explain if you have any
-                      concerns.
+              {!submitMessage ? (
+                <form
+                  ref={printRef}
+                  className="flex flex-col justify-center gap-8 p-5 bg-[#FFF] rounded-[15px] w-full h-fit"
+                >
+                  <div className="flex flex-col gap-2">
+                    <label>
+                      1. Why are you interested in becoming a feeder for the
+                      Siera Park Residences Cat Community?
                     </label>
                     <textarea
-                      id="nightFeedConcern"
                       placeholder="Answer here"
                       rows={5}
-                      value={concernReason}
-                      onChange={(e) => setConcernReason(e.target.value)}
+                      value={interestReason}
+                      onChange={(e) => setInterestReason(e.target.value)}
                       className="p-2 border-1 border-[#252525] rounded-[8px] resize-none"
                     ></textarea>
                   </div>
+
+                  <div className="flex flex-col gap-2">
+                    <label>
+                      2. Do you have any prior experience with feeding or caring
+                      for stray cats or community animals?
+                    </label>
+                    <div className="flex flex-row gap-2">
+                      <label
+                        htmlFor="feedingYes"
+                        className="flex items-center gap-2 p-2 border-1 border-[#252525] rounded-[8px]"
+                      >
+                        <input
+                          type="radio"
+                          name="feedingExp"
+                          id="feedingYes"
+                          value="Yes"
+                          checked={feedingExperience === "Yes"}
+                          onChange={() => handleExpSelected("Yes")}
+                        />
+                        Yes
+                      </label>
+                      <label
+                        htmlFor="feedingNo"
+                        className="flex items-center gap-2 p-2 border-1 border-[#252525] rounded-[8px]"
+                      >
+                        <input
+                          type="radio"
+                          name="feedingExp"
+                          id="feedingNo"
+                          value="No"
+                          checked={feedingExperience === "No"}
+                          onChange={() => handleExpSelected("No")}
+                        />
+                        No
+                      </label>
+                    </div>
+                    {feedingExperience === "Yes" && (
+                      <div
+                        className={
+                          feedingExperience === "No"
+                            ? "hidden"
+                            : "flex flex-col"
+                        }
+                      >
+                        <label htmlFor="feedingDescribe">
+                          if <strong>Yes</strong>, please describe your
+                          experience to us.
+                        </label>
+
+                        <textarea
+                          name=""
+                          id="feedingDescribe"
+                          placeholder="Answer here"
+                          rows={5}
+                          value={experienceDetails}
+                          onChange={(e) => setExperienceDetails(e.target.value)}
+                          className={
+                            "p-2 border-1 border-[#252525] rounded-[8px] resize-none"
+                          }
+                        ></textarea>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <label htmlFor="">
+                      3. Which day of the week can you commit to feeding the
+                      cats?
+                    </label>
+                    <div className="flex flex-row gap-2">
+                      <select
+                        name="feedingDay"
+                        id="feedingDay"
+                        value={feedingDay}
+                        onChange={(e) => setFeedingDay(e.target.value)}
+                        className="flex items-center justify-center border-1 border-[#A3A3A3] rounded-[10px]"
+                      >
+                        <option hidden>Select a day</option>
+                        <option value="Monday">Monday</option>
+                        <option value="Tuesday">Tuesday</option>
+                        <option value="Wednesday">Wednesday</option>
+                        <option value="Thursday">Thursday</option>
+                        <option value="Friday">Friday</option>
+                        <option value="Saturday">Saturday</option>
+                        <option value="Sunday">Sunday</option>
+                      </select>
+
+                      <label className="text-[14px] text-[#626262] italic leading-tight">
+                        (There's no guarantee that day you choose will be your
+                        feeding day due to other active feeders. Coordinate with
+                        the Head volunteers for this matter.)
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-4">
+                    <label>
+                      4. Feeding typically begins at 8:00 pm and may continue
+                      late into the evening. Are you comfortable with this
+                      schedule?{" "}
+                    </label>
+                    <div className="flex flex-row gap-2">
+                      <label
+                        htmlFor="eveningYes"
+                        className="flex items-center gap-2 p-2 border-1 border-[#252525] rounded-[8px]"
+                      >
+                        <input
+                          type="radio"
+                          name="feedingNight"
+                          id="eveningYes"
+                          value="Yes"
+                          checked={feedingSchedule === "Yes"}
+                          onChange={() => handleSchedSelected("Yes")}
+                        />
+                        Yes
+                      </label>
+                      <label
+                        htmlFor="eveningNo"
+                        className="flex items-center gap-2 p-2 border-1 border-[#252525] rounded-[8px]"
+                      >
+                        <input
+                          type="radio"
+                          name="feedingNight"
+                          id="eveningNo"
+                          value="No"
+                          checked={feedingSchedule === "No"}
+                          onChange={() => handleSchedSelected("No")}
+                        />
+                        No
+                      </label>
+                    </div>
+                    <div
+                      className={
+                        feedingSchedule === "No" ? "flex flex-col" : "hidden"
+                      }
+                    >
+                      <label htmlFor="nightFeedConcern">
+                        if <strong>No</strong>, please explain if you have any
+                        concerns.
+                      </label>
+                      <textarea
+                        id="nightFeedConcern"
+                        placeholder="Answer here"
+                        rows={5}
+                        value={concernReason}
+                        onChange={(e) => setConcernReason(e.target.value)}
+                        className="p-2 border-1 border-[#252525] rounded-[8px] resize-none"
+                      ></textarea>
+                    </div>
+                  </div>
+                  <label className="self-end font-[14px] italic text-[#DC8801]">
+                    {error}
+                  </label>
+                </form>
+              ) : (
+                <div className="flex items-center justify-center p-5 bg-[#FFF] rounded-[15px] w-full h-full">
+                  <label className="text-[#DC8801] text-center">
+                    {submitMessage}
+                  </label>
                 </div>
-              </form>
+              )}
             </div>
-            <label className="self-end font-[14px] italic text-[#DC8801]">
-              {error}
-            </label>
             <button
               type="button"
               onClick={generateFeedingForm}

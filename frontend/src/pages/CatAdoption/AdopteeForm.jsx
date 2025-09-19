@@ -24,17 +24,6 @@ const AdopteeForm = () => {
   const [selectedImageFile, setSelectedImageFile] = useState(null);
   const [imageSrc, setImageSrc] = useState("src/assets/icons/id-card.png");
 
-  const fetchCatImageBlob = async (catId) => {
-    const res = await fetch(`http://localhost:5000/api/cats/${catId}/images`);
-    const images = await res.json();
-    if (!images.length) return null;
-
-    const imageUrl = images[0].url;
-    const imageRes = await fetch(imageUrl);
-    const blob = await imageRes.blob();
-    return blob;
-  };
-
   const generateAdopteePDF = async () => {
     if (!cat || !loggedInUser) return;
 
@@ -158,8 +147,16 @@ const AdopteeForm = () => {
     fetchCatAndImages();
   }, [catId]);
 
+  // 🔥 ADD THIS
   if (!cat) {
-    return <p className="p-10">Loading cat info...</p>;
+    return (
+      <div className="flex flex-col min-h-screen pb-10">
+        <CatBot />
+        <NavigationBar />
+        <div className="p-10">Loading cat information...</div>
+        <Footer />
+      </div>
+    );
   }
 
   return (
