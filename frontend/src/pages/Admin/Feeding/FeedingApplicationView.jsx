@@ -1,54 +1,114 @@
 import React from 'react'
 import AdminSideBar from '../../../components/AdminSideBar'
-import { Link } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import axios from 'axios'
 
 const FeedingApplicationView = () => {
-  return (
-    <div className='relative flex flex-col h-screen overflow-x-hidden '>
-        <div className='grid grid-cols-[20%_80%] overflow-x-hidden'> 
-            <AdminSideBar />
-            <div className='flex flex-col p-10 min-h-screen w-full gap-4 mx-auto overflow-hidden'>
-                <div className='flex w-full justify-between pb-2 border-b-1 border-b-[#2F2F2F]'>
-                    <label className='text-[24px] font-bold text-[#2F2F2F]'>Feeding Application Form</label>
-                    <Link to="/feedingapplications" className='flex items-center bg-[#2F2F2F] p-1 pl-6 pr-6 text-[#FFF] font-bold rounded-[15px]'> Go Back</Link>
-                </div>
 
-                <div className='flex flex-col p-5 bg-[#FFF] h-auto w-full rounded-[10px] gap-2'> 
-                    <div className='flex items-center justify-between border-b-1 border-b-[#595959] shadow-md pb-3'>
-                        <div className='flex justify-start items-center gap-10'>
-                            <div className='flex flex-col justify-start'>
-                                <label className='text-[#595959] text-[14px]'>Application No.:</label>
-                                <label className='text-[#2F2F2F] text-[18px] font-bold' >01</label>
-                            </div>
-                            <div className='flex flex-col justify-start'>
-                                <label className='text-[#595959] text-[14px]'>Name of Applicant:</label>
-                                <label className='text-[#2F2F2F] text-[18px] font-bold' > Angelo Cabangal</label>
-                            </div>
-                            <div className='flex flex-col justify-start'>
-                                <label className='text-[#595959] text-[14px]'>User ID:</label>
-                                <label className='text-[#2F2F2F] text-[18px] font-bold' > 01</label>
-                            </div>
-                            <div className='flex flex-col justify-start'>
-                                <label className='text-[#595959] text-[14px]'>Date of Application:</label>
-                                <label className='text-[#2F2F2F] text-[18px] font-bold' >09/01/25</label>
-                            </div>
-                        </div>
+    const { application_id } = useParams();
+    const [applicant, setApplicant] = useState([]);
+    const [statusMessage, setStatusMessage] = useState('');
 
-                        <div className='flex gap-3 items-center' >
-                            <button className='bg-[#B5C04A] text-[#FFF] p-2 pl-4 pr-4 rounded-[15px] cursor-pointer active:bg-[#E3E697] active:text-[#2F2F2F]'>Accept</button>
-                            <button className='bg-[#DC8801] text-[#FFF] p-2 pl-4 pr-4 rounded-[15px] cursor-pointer active:bg-[#977655]'>Reject</button>
-                        </div>
+
+    useEffect(() => {
+        const fetchApplications = async () => {
+            try {
+                const response = await axios.get(`http://localhost:5000/admin/form/${application_id}`);
+                console.log(response.data)
+                setApplicant(response.data);
+            } catch(err) {
+                console.error('Error fetching user:', err.response?.data || err.message);
+            }
+        }
+
+        fetchApplications()
+    },[]);
+
+
+    const handleUpdateStatus = async (status) => {
+
+        try {
+            const response = await axios.patch(`http://localhost:5000/admin/form/status_update/${applicant.application_id}`,
+                { status }
+            );
+
+            setApplicant(prev => ({ ...prev, status }));   
+            console.log('Update successfull, status is now ', status);
+
+            if (status === 'Accepted') {
+                setStatusMessage(`${applicant.firstname} ${applicant.lastname}'s application is accepted. Update successfull!`);
+            } else if (status === 'Rejected') {
+                setStatusMessage(`${applicant.firstname} ${applicant.lastname}'s application is rejected. Update successfull!`);
+            }
+
+        } catch (err) {
+            console.error('Update failed:', err.response?.data || err.message);
+        }
+
+    }
+
+
+    console.log('Application form: ', applicant.application_form)
+    return (
+        <div className='relative flex flex-col h-screen overflow-x-hidden '>
+            <div className='grid grid-cols-[20%_80%] overflow-x-hidden'> 
+                <AdminSideBar />
+                <div className='flex flex-col p-10 min-h-screen w-full gap-4 mx-auto overflow-hidden'>
+                    <div className='flex w-full justify-between pb-2 border-b-1 border-b-[#2F2F2F]'>
+                        <label className='text-[24px] font-bold text-[#2F2F2F]'>Feeding Application Form</label>
+                        <Link to="/feedingapplications" className='flex items-center bg-[#2F2F2F] p-1 pl-6 pr-6 text-[#FFF] font-bold rounded-[15px]'> Go Back</Link>
                     </div>
 
-                    <object data="/src/assets/UserProfile/(01 Laboratory Exercise 1 - ARG) Angelo Cabangal - Game Development.pdf" type="application/pdf" width="100%" height="600">
-                        alt : <a href="/src/assets/UserProfile/(01 Laboratory Exercise 1 - ARG) Angelo Cabangal - Game Development.pdf">test.pdf</a>
-                    </object>
- 
+                    {applicant && (
+                        <div className='flex flex-col p-5 bg-[#FFF] h-auto w-full rounded-[10px] gap-2'> 
+                            <div className='flex items-center justify-between border-b-1 border-b-[#595959] shadow-md pb-3'>
+                                <div className='flex justify-start items-center gap-10'>
+                                    <div className='flex flex-col justify-start'>
+                                        <label className='text-[#595959] text-[14px]'>Application No.:</label>
+                                        <label className='text-[#2F2F2F] text-[18px] font-bold' >{applicant.application_id}</label>
+                                    </div>
+                                    <div className='flex flex-col justify-start'>
+                                        <label className='text-[#595959] text-[14px]'>Name of Applicant:</label>
+                                        <label className='text-[#2F2F2F] text-[18px] font-bold' >{`${applicant.firstname} ${applicant.lastname}`}</label>
+                                    </div>
+                                    <div className='flex flex-col justify-start'>
+                                        <label className='text-[#595959] text-[14px]'>Date of Application:</label>
+                                        <label className='text-[#2F2F2F] text-[18px] font-bold' >{applicant.date_applied}</label>
+                                    </div>
+                                </div>
+
+                                {!statusMessage ? (
+                                    <div className='flex gap-2 items-center' >
+                                        <button onClick={() => handleUpdateStatus('Accepted')} className='bg-[#B5C04A] text-[#FFF] p-2 pl-4 pr-4 rounded-[15px] cursor-pointer active:bg-[#E3E697] active:text-[#2F2F2F]'>Accept</button>
+                                        <button onClick={() => handleUpdateStatus('Rejected')} className='bg-[#DC8801] text-[#FFF] p-2 pl-4 pr-4 rounded-[15px] cursor-pointer active:bg-[#977655]'>Reject</button>
+                                    </div>
+                                ) : <label className={
+                                    applicant.status === 'Accepted' ? 'bg-[#FDF5D8] rounded-[10px] p-2 text-[#8D9634]' 
+                                    : 'bg-[#FDF5D8] rounded-[10px] p-2 text-[#DC8801]'
+                                }> {statusMessage} </label>}
+                            </div>
+
+                            {applicant.application_form && (
+                                <object
+                                    data={`http://localhost:5000/FileUploads/${applicant.application_form}`}
+                                    type="application/pdf"
+                                    width="100%"
+                                    height="600px" >
+                                    <p> Your browser does not support embedded PDFs.
+                                        <a href={`http://localhost:5000/FileUploads/${applicant.application_form}`} target="_blank" rel="noopener noreferrer">
+                                            Click here to download the PDF.
+                                        </a>
+                                    </p>
+                                </object>
+                            )}
+        
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
-    </div>
-  )
+    )
 }
 
 export default FeedingApplicationView

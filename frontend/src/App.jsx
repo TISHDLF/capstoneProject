@@ -3,6 +3,9 @@ import { Routes, Route, createBrowserRouter, createRoutesFromElements, RouterPro
 
 import RootLayout from './layout/RootLayout';
 
+import { SessionProvider } from './context/SessionContext';
+import { WhiskerMeterProvider } from './context/WhiskerMeterContext';
+
 import Home from './pages/Home';
 import AboutUs from './pages/AboutUs';
 import CatCareGuides from './pages/CatCareGuides';
@@ -51,8 +54,9 @@ import AssignNewAdmin from './pages/Admin/Manage/AssignNewAdmin';
 import CatProfileProperty from './pages/Admin/CatProfileProperty/CatProfileProperty';
 import CatProfileCreate from './pages/Admin/CatProfileProperty/CatProfileCreate';
 import HeadVolunteerDashboard from './pages/HeadVolunteer/HeadVolunteerDashboard';
-
-// import HeadVolunteerMainPage from './pages/HeadVolunteer/HeadVolunteerMainPage';
+import HeadVolunteerMainPage from './pages/HeadVolunteer/HeadVolunteerMainPage';
+import HeadVolunteerProfile from './pages/HeadVolunteer/HeadVolunteerProfile';
+import AdoptionApplication from './pages/HeadVolunteer/AdoptionApplication';
 
 const App = () => {
   const router = createBrowserRouter(
@@ -101,7 +105,7 @@ const App = () => {
         <Route path="volunteers" element={<Volunteers />} />
         <Route path="feedingvolunteers" element={<FeedingVolunteers />} />
         <Route path="feedingapplications" element={<FeedingApplications />} />
-        <Route path="feedingapplications/feedingapplicationview" element={<FeedingApplicationView />} />
+        <Route path="feedingapplications/feedingapplicationview/:application_id" element={<FeedingApplicationView />} />
         <Route path="donationadmin" element={<Donation />} />
 
         <Route path="manage" element={<Manage />} />
@@ -113,13 +117,21 @@ const App = () => {
         <Route path="userprofile/:user_id" element={<UserProfile />} />
 
         {/* Head Volunteer */}
-        {/* <Route path="hvdashboard" element={<HeadVoluneerDashboard />} /> */}
         <Route path="hvdashboard" element={<HeadVolunteerDashboard />}/>
+        <Route path="headvolunteerpage" element={<HeadVolunteerMainPage /> }/>
+        <Route path="adoptionapplication" element={<AdoptionApplication/>}/>
+        <Route path="headvolunteerprofile" element={<HeadVolunteerProfile/>}/>
       </Route>
     )
   );
 
-  return <RouterProvider router={router} />;
+  return (
+    <SessionProvider>
+      <WhiskerMeterProvider>
+        <RouterProvider router={router} />
+      </WhiskerMeterProvider>
+    </SessionProvider>
+  );
 };
 
 export default App;
