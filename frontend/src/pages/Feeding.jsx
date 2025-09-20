@@ -3,6 +3,7 @@ import React, { use } from 'react'
 import NavigationBar from '../components/NavigationBar';
 import Footer from '../components/Footer';
 import SideNavigation from '../components/SideNavigation';
+import HeadVolunteerSideBar from "../components/HeadVolunteerSideBar";
 import CatBot from '../components/CatBot';
 
 import { Link } from 'react-router-dom'
@@ -14,10 +15,19 @@ import Cookies from 'js-cookie';
 import { useEffect } from 'react';
 
 
+import WhiskerMeter from '../components/WhiskerMeter'
+import { useWhiskerMeter } from '../context/WhiskerMeterContext'
+import { useSession } from '../context/SessionContext'
+
+
 const Feeding = () => {
 
-  const loggedUser = Cookies.get('user');
-  const userParsed = JSON.parse(loggedUser);
+  const { user } = useSession();
+  const { points } = useWhiskerMeter();
+
+  // const loggedUser = Cookies.get('user');
+  // const userParsed = JSON.parse(loggedUser);
+  const [userData, setUserData] = useState(null);
 
   const [interestReason, setInterestReason] = useState('');
   const [experienceDetails, setExperienceDetails] = useState('');
@@ -25,10 +35,11 @@ const Feeding = () => {
   const [concernReason, setConcernReason] = useState('');
   const [error, setError] = useState('');
 
-  const [feedingExperience, setfeedingExperience] = useState(false);
-  const [feedingSchedule, setFeedingSchedule] = useState(false)
+  const [feedingExperience, setfeedingExperience] = useState('');
+  const [feedingSchedule, setFeedingSchedule] = useState('')
 
   const [submitMessage, setSubmitMessage] = useState('');
+  const [isDisabled, setIsDisabled] = useState(true);
 
   const handleExpSelected = (value) => setfeedingExperience(value);
   const handleSchedSelected = (value) => setFeedingSchedule(value);
@@ -36,20 +47,43 @@ const Feeding = () => {
 
   const printRef = React.useRef(null);
 
+  // const fetchUser = async () => {
+  //   try {
+  //     const response = await axios.get(`http://localhost:5000/user/logged?user_id=${userParsed.user_id}`)
+  //     console.log(response.data);
 
-  
-  const fetchUser = async () => {
-    try {
-      const response = await axios.get(`http://localhost:5000/user/logged?user_id=${userParsed.user_id}`)
-      console.log(response.data);
+  //     return response.data
+  //   } catch (err) {
+  //     console.error('Failed to fetch user data: ', err);
+  //   }
+  // }
 
-      return response.data
-    } catch (err) {
-      console.error('Failed to fetch user data: ', err);
-    }
-  }
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/user/profile', {
+          withCredentials: true,
+        });
+        console.log('Fetched user:', response.data);
+        setUserData(response.data); // Store user data
+      } catch (err) {
+        console.error('Failed to fetch user data:', err);
+        setError(err.response?.data?.error || 'Failed to fetch user data');
+      }
+    };
+    fetchUser();
+  }, []);
 
   const generateFeedingForm = async  () => {
+    // console.log({
+    //   interestReason,
+    //   feedingExperience,
+    //   experienceDetails,
+    //   feedingDay,
+    //   feedingSchedule,
+    //   concernReason
+    // });
+
     if (
       !interestReason.trim() ||
       !feedingExperience ||
@@ -62,12 +96,15 @@ const Feeding = () => {
       return;
     }
 
+    if (!userData || !userData.user_id) {
+      setError('User not authenticated. Please log in again.');
+      return;
+    }
+
     const element = printRef.current
     if (!element) { return };
 
-    const canvas = await  html2canvas(element, {
-      scale: 2,
-    });
+    const canvas = await html2canvas(element, { scale: 2 });
 
     const imgData = canvas.toDataURL('image/png');
     const pdf = new jsPDF({
@@ -86,13 +123,11 @@ const Feeding = () => {
     const pdfBlob = pdf.output('blob');
     // pdf.save('feeding-form.pdf');
 
-    const user = await fetchUser();
-
     const formData = new FormData();
-    const filename = `feeding-form-${user.firstname}-${user.lastname}.pdf`;
+    const filename = `feeding-form-${userData.firstname}-${userData.lastname}.pdf`;
 
     formData.append('file', pdfBlob, filename);
-    formData.append('user_id', userParsed.user_id);
+    formData.append('user_id', userData.user_id);
 
     try {
       await axios.post(`http://localhost:5000/user/feeding/form`, formData, {
@@ -102,14 +137,25 @@ const Feeding = () => {
       setSubmitMessage('You successfully submitted your application!\nPlease wait for approval. Thank you!');
 
       console.log('You successfully submitted your application!\nPlease wait for approval. Thank you!');
+      Console.log('CLiking submit!')
     } catch (err) {
-      if (err.response && err.response.status === 409) {
-        setError('You already have a pending application. Please wait for it to be processed.');
-      } else {
-        setError('Your submission failed. Please try again.');
-      }
+        if (err.response && err.response.status === 409) {
+          const errorMsg = err.response.data?.error;
+
+          if (errorMsg.includes('pending application')) {
+            setError('You already have a pending application. Please wait for it to be processed.');
+          } else if (errorMsg.includes('approved volunteer')) {
+            setError('You already have an approved volunteer application. Please wait until it expires before applying again.');
+          } else {
+            setError(errorMsg || 'Conflict occurred. Please try again later.');
+          }
+        } else {
+          setError('Your submission failed. Please try again.');
+        }
+
 
       console.error('Submission failed:', err);
+
     }
   }
 
@@ -120,6 +166,8 @@ const Feeding = () => {
     <div className='flex flex-col min-h-full pb-10'>
       <CatBot />
       <NavigationBar />
+
+      <WhiskerMeter user={{ points }} />
 
       <div className='grid grid-cols-[80%_20%] h-full'>
         <div className='flex flex-col pl-50 p-10'> 
@@ -215,21 +263,37 @@ const Feeding = () => {
                       className='p-2 border-1 border-[#252525] rounded-[8px] resize-none'></textarea>
                     </div>
                   </div>
-                  <label className='self-end font-[14px] italic text-[#DC8801]'>{error}</label>
+                    {error && (
+                      <label className='font-[14px] italic text-[#DC8801]'>{error}</label>
+                    )}
                 </form>
               ) : (
                 <div className='flex items-center justify-center p-5 bg-[#FFF] rounded-[15px] w-full h-full'>
-                  <label className='text-[#DC8801] text-center'>{submitMessage}</label>
+                  {error ? (
+                    <label className='font-[14px] italic text-[#DC8801]'>{error}</label>
+                  ) : (
+                    <label className='text-[#DC8801] text-center'>{submitMessage}</label>
+                  )}
                 </div>
               )}
               
             </div>
-                <button type='button' onClick={generateFeedingForm} className='self-end w-fit text-center bg-[#B5C04A] text-[#FFF] font-bold p-2 pl-4 pr-4 rounded-[15px] hover:bg-[#CFDA34] active:bg-[#B5C04A] cursor-pointer'>
-                  Submit
-                </button>
+                <div className='flex gap-2 justify-end items-center'>
+                  
+                  <button type='button' onClick={generateFeedingForm }
+                  className={'self-end w-fit text-center bg-[#B5C04A] text-[#FFF] font-bold p-2 pl-4 pr-4 rounded-[15px] hover:bg-[#CFDA34] active:bg-[#B5C04A] cursor-pointer'}>
+                    Submit
+                  </button>
+                </div>
           </div>
         </div>
-        <SideNavigation />
+
+        {user?.role === "head_volunteer" && "admin" ? (
+          <HeadVolunteerSideBar />
+        ) : (
+          <SideNavigation />
+        )}
+
       </div>
       <Footer />
     </div>

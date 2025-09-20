@@ -1,15 +1,31 @@
 import express from "express";
+import cors from "cors";
 import { Router } from "express";
 import {getDB} from "../database.js"
 import cookieParser from 'cookie-parser';
 
 import multer from 'multer';
-import fs from 'fs';
+import fs, { stat } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
 const AdminRoute = Router();
 AdminRoute.use(express.json());
+
+AdminRoute.use(
+    cors({ origin: "http://localhost:5173",
+        credentials: true, 
+        methods: ['GET', 'POST', 'PUT', 'DELETE'],
+        allowedHeaders: ['Content-Type', 'Authorization'],
+    }), 
+);
+
+AdminRoute.use(
+  cors({
+    origin: [/http:\/\/localhost:\d+$/], // allow any localhost:port
+    // credentials: true,
+  })
+);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -17,6 +33,7 @@ const __dirname = path.dirname(__filename);
 
 AdminRoute.use(cookieParser());
 AdminRoute.use('/FileUploads', express.static(path.join(__dirname, 'FileUploads')));
+
 
 const storage = multer.diskStorage({
   destination: function(req, file, callback) {
@@ -238,7 +255,8 @@ AdminRoute.get('/feeders/application', async (req, res) => {
             FROM
                 volunteer_application va
             JOIN
-                users u ON va.user_id = u.user_id   
+                users u ON va.user_id = u.user_id  
+            WHERE va.status = 'Pending'
         `);
 
         return res.json(applications)
@@ -259,7 +277,8 @@ AdminRoute.get('/form/:application_id', async (req, res) => {
                 u.firstname,
                 u.lastname,
                 va.application_form,
-                DATE_FORMAT(va.application_date, '%Y-%m-%d') AS date_applied
+                DATE_FORMAT(va.application_date, '%Y-%m-%d') AS date_applied,
+                va.status
             FROM
                 volunteer_application va
             JOIN
@@ -273,6 +292,78 @@ AdminRoute.get('/form/:application_id', async (req, res) => {
         res.status(500).json({error: 'Internal Server failed!'})
     }
 })
+
+
+AdminRoute.patch('/form/status_update/:application_id', async (req, res) => {
+    const db = getDB();
+    const application_id = req.params.application_id;
+    const { status } = req.body;
+
+    console.log('Incoming PATCH request');
+    console.log('Application ID:', application_id);
+    console.log('Status:', status);
+
+    try {
+        const [statusupdate] = await db.query(`
+            UPDATE volunteer_application SET
+                status = ? 
+            WHERE application_id = ?
+        `, [status, application_id]);
+
+        if (status === 'Accepted') {
+            // 2.1 Get user info linked to this application
+            const [userData] = await db.query(`
+                SELECT va.user_id, u.firstname, u.lastname, va.application_date
+                FROM volunteer_application va
+                JOIN users u ON va.user_id = u.user_id
+                WHERE va.application_id = ?
+            `, [application_id]);
+
+            if (userData.length === 0) {
+                return res.status(404).json({ error: 'User not found for this application' });
+            }
+
+            const { user_id, firstname, lastname, application_date } = userData[0];
+            const fullName = `${firstname} ${lastname}`;
+
+            // 2.2 Insert into volunteer table
+            await db.query(`
+                INSERT INTO volunteer (feeder_id, name, feeding_date, application_date, status)
+                VALUES (?, ?, NOW(), ?, 'Approved')
+            `, [user_id, fullName, application_date]);
+
+            console.log('Volunteer record created for user_id:', user_id);
+            console.log('User Info:', { user_id, firstname, lastname, application_date });
+
+        } 
+
+        console.log('Status received:', status);
+        return res.json({ success: true, result: statusupdate});
+    } catch (err) {
+        return res.status(500).json({err: 'Failed to update status!'})
+    }
+});
+
+
+
+AdminRoute.get('/feeders', async (req, res) => {
+    const db = getDB();
+
+    try {
+        const [volunteers] = await db.query(`
+            SELECT v.feeder_id, u.firstname, u.lastname, u.contactnumber, 
+                DATE_FORMAT(v.feeding_date, '%Y-%m-%d') AS feeding_date, v.status
+            FROM volunteer v
+            JOIN users u ON v.feeder_id = u.user_id
+            WHERE v.status = 'Approved';
+        `);
+
+        return res.json(volunteers);
+    } catch (err) {
+        return res.status(500).json({err: 'Failed to retrieve volunteers!'})
+    }
+})
+
 
 
 

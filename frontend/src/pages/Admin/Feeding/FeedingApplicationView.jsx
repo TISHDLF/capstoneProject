@@ -7,8 +7,9 @@ import axios from 'axios'
 const FeedingApplicationView = () => {
 
     const { application_id } = useParams();
-
     const [applicant, setApplicant] = useState([]);
+    const [statusMessage, setStatusMessage] = useState('');
+
 
     useEffect(() => {
         const fetchApplications = async () => {
@@ -23,6 +24,29 @@ const FeedingApplicationView = () => {
 
         fetchApplications()
     },[]);
+
+
+    const handleUpdateStatus = async (status) => {
+
+        try {
+            const response = await axios.patch(`http://localhost:5000/admin/form/status_update/${applicant.application_id}`,
+                { status }
+            );
+
+            setApplicant(prev => ({ ...prev, status }));   
+            console.log('Update successfull, status is now ', status);
+
+            if (status === 'Accepted') {
+                setStatusMessage(`${applicant.firstname} ${applicant.lastname}'s application is accepted. Update successfull!`);
+            } else if (status === 'Rejected') {
+                setStatusMessage(`${applicant.firstname} ${applicant.lastname}'s application is rejected. Update successfull!`);
+            }
+
+        } catch (err) {
+            console.error('Update failed:', err.response?.data || err.message);
+        }
+
+    }
 
 
     console.log('Application form: ', applicant.application_form)
@@ -54,28 +78,27 @@ const FeedingApplicationView = () => {
                                     </div>
                                 </div>
 
-                                <div className='flex gap-3 items-center' >
-                                    <button className='bg-[#B5C04A] text-[#FFF] p-2 pl-4 pr-4 rounded-[15px] cursor-pointer active:bg-[#E3E697] active:text-[#2F2F2F]'>Accept</button>
-                                    <button className='bg-[#DC8801] text-[#FFF] p-2 pl-4 pr-4 rounded-[15px] cursor-pointer active:bg-[#977655]'>Reject</button>
-                                </div>
+                                {!statusMessage ? (
+                                    <div className='flex gap-2 items-center' >
+                                        <button onClick={() => handleUpdateStatus('Accepted')} className='bg-[#B5C04A] text-[#FFF] p-2 pl-4 pr-4 rounded-[15px] cursor-pointer active:bg-[#E3E697] active:text-[#2F2F2F]'>Accept</button>
+                                        <button onClick={() => handleUpdateStatus('Rejected')} className='bg-[#DC8801] text-[#FFF] p-2 pl-4 pr-4 rounded-[15px] cursor-pointer active:bg-[#977655]'>Reject</button>
+                                    </div>
+                                ) : <label className={
+                                    applicant.status === 'Accepted' ? 'bg-[#FDF5D8] rounded-[10px] p-2 text-[#8D9634]' 
+                                    : 'bg-[#FDF5D8] rounded-[10px] p-2 text-[#DC8801]'
+                                }> {statusMessage} </label>}
                             </div>
-
-                            {/* <object data={`http://localhost:5000/FileUploads/${applicant.application_form}`} type="application/pdf" width="100%" height="600">
-                                alt : <a href={`http://localhost:5000/FileUploads/${applicant.application_form}`}>test.pdf</a>
-                            </object> */}
 
                             {applicant.application_form && (
                                 <object
                                     data={`http://localhost:5000/FileUploads/${applicant.application_form}`}
                                     type="application/pdf"
                                     width="100%"
-                                    height="600px"
-                                >
-                                    <p>
-                                    Your browser does not support embedded PDFs.
-                                    <a href={`http://localhost:5000/FileUploads/${applicant.application_form}`} target="_blank" rel="noopener noreferrer">
-                                        Click here to download the PDF.
-                                    </a>
+                                    height="600px" >
+                                    <p> Your browser does not support embedded PDFs.
+                                        <a href={`http://localhost:5000/FileUploads/${applicant.application_form}`} target="_blank" rel="noopener noreferrer">
+                                            Click here to download the PDF.
+                                        </a>
                                     </p>
                                 </object>
                             )}

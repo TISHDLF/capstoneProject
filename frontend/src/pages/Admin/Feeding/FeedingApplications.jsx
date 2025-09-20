@@ -72,9 +72,14 @@ const FeedingApplications = () => {
                           {application.application_form}
                         </Link>
                       </td>
-                      <td className='bg-[#B5C04A] text-[#FFF] font-bold p-2 pl-4 pr-4 rounded-[10px]'>Pending</td>
+                      <td className={application.status == 'Accepted' 
+                        ? 'bg-[#B5C04A] text-[#FFF] font-bold p-2 pl-4 pr-4 rounded-[10px]' 
+                        : application.status == 'Rejected'
+                          ? 'bg-[#977655] text-[#FFF] font-bold p-2 pl-4 pr-4 rounded-[10px]'
+                          : 'bg-[#595959] text-[#FFF] font-bold p-2 pl-4 pr-4 rounded-[10px]'
+                          }>{application.status}
+                      </td>
                     </tr>
-
                   ))}
                 </tbody>
               </table>
