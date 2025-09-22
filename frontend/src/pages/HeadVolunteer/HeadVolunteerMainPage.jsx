@@ -191,7 +191,7 @@ const HeadVolunteerMainPage = () => {
                 </tbody>
                 {isModalOpen && (
                   <div className="fixed inset-0 bg-black/50 bg-opacity-50 flex justify-center items-center z-50">
-                    <div className="bg-white rounded-2xl shadow-lg max-w-2xl w-full p-6 relative">
+                    <div className="bg-white rounded-2xl shadow-lg max-w-2xl w-full p-6 relative h-auto z-50">
                       <button
                         onClick={closeModal}
                         className="absolute top-3 right-3 text-gray-600 hover:text-black text-xl"

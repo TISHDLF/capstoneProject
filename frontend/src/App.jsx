@@ -64,13 +64,13 @@ import HeadVolunteerMainPage from "./pages/HeadVolunteer/HeadVolunteerMainPage";
 import HeadVolunteerProfile from "./pages/HeadVolunteer/HeadVolunteerProfile";
 import AdoptionApplication from "./pages/HeadVolunteer/AdoptionApplication";
 import FeederApplication from "./pages/HeadVolunteer/FeederApplication";
+import ReportandAnalytics from "./pages/HeadVolunteer/ReportandAnalytics";
 
 const App = () => {
   const router = createBrowserRouter(
     createRoutesFromElements(
       <Route path="/" element={<RootLayout />}>
         <Route index element={<Home />} />
-
         {/* Public Routes */}
         <Route path="home" element={<Home />} />
         <Route path="aboutus" element={<AboutUs />} />
@@ -83,18 +83,15 @@ const App = () => {
           <Route path="items" element={<Items />} />
           <Route path="others" element={<Others />} />
         </Route>
-
         <Route path="catadoption" element={<CatAdoption />} />
         <Route path="catprofile/:cat_id" element={<CatProfile />} />
         <Route path="adopteeform/:cat_id" element={<AdopteeForm />} />
         <Route path="feeding" element={<Feeding />} />
         <Route path="communityguide" element={<CommunityGuide />} />
-
         {/* Auth */}
         <Route path="login" element={<Login />} />
         <Route path="adminlogin" element={<AdminLogin />} />
         <Route path="signup" element={<SignUp />} />
-
         {/* Admin Routes */}
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="profile" element={<Profile />} />
@@ -105,16 +102,13 @@ const App = () => {
         />
         <Route path="catprofilecreate" element={<CatProfileCreate />} />
         <Route path="adoptersandvisitors" element={<AdoptersAndVisitors />} />
-
         <Route path="adopterslist" element={<AdoptersList />} />
         <Route path="adopterslist/adopterview" element={<AdopterView />} />
-
         <Route path="adopterapplication" element={<AdopterApplication />} />
         <Route
           path="adopterapplication/adopterapplicationview"
           element={<AdopterApplicationView />}
         />
-
         <Route path="volunteers" element={<Volunteers />} />
         <Route path="feedingvolunteers" element={<FeedingVolunteers />} />
         <Route path="feedingapplications" element={<FeedingApplications />} />
@@ -123,7 +117,6 @@ const App = () => {
           element={<FeedingApplicationView />}
         />
         <Route path="donationadmin" element={<Donation />} />
-
         <Route path="manage" element={<Manage />} />
         <Route path="adminlist" element={<AdminList />}>
           <Route path="update/:user_id" element={<UpdateRole />} />
@@ -131,13 +124,13 @@ const App = () => {
         </Route>
         <Route path="allusers" element={<AllUsers />} />
         <Route path="userprofile/:user_id" element={<UserProfile />} />
-
         {/* Head Volunteer */}
         <Route path="hvdashboard" element={<HeadVolunteerDashboard />} />
         <Route path="headvolunteerpage" element={<HeadVolunteerMainPage />} />
         <Route path="adoptionapplication" element={<AdoptionApplication />} />
         <Route path="headvolunteerprofile" element={<HeadVolunteerProfile />} />
         <Route path="feederapplication" element={<FeederApplication />} />
+        <Route path="reportandanalytics" element={<ReportandAnalytics />} />
       </Route>
     )
   );
