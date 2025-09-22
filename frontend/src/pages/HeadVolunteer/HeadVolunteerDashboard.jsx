@@ -3,16 +3,23 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import CatBot from "../../components/CatBot";
 import NavigationBar from "../../components/NavigationBar";
+import SideNavigation from "../../components/SideNavigation";
+import Footer from "../../components/Footer";
 import Cookies from 'js-cookie'
+
+import { useSession } from "../../context/SessionContext";
+import HeadVolunteerSideBar from "../../components/HeadVolunteerSideBar";
 
 
 const HeadVolunteerDashboard = () => {
 
-        const navigate = useNavigate();
+    const navigate = useNavigate();
     const [apps, setApps] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [page, setPage] = useState(1);
+
+    const { user } = useSession();
 
     const itemsPerPage = 3;
     const totalPages = Math.ceil(apps.length / itemsPerPage);
@@ -52,18 +59,18 @@ const HeadVolunteerDashboard = () => {
     const startIndex = (page - 1) * itemsPerPage;
     const currentApps = apps.slice(startIndex, startIndex + itemsPerPage);
 
-    if (loading)
-        return (
-        <div className="flex justify-center items-center h-screen">
-            Loading...
-        </div>
-        );
-    if (error)
-        return (
-        <div className="flex justify-center items-center h-screen text-red-600">
-            Error: {error}
-        </div>
-        );
+    // if (loading)
+    //     return (
+    //     <div className="flex justify-center items-center h-screen">
+    //         Loading...
+    //     </div>
+    //     );
+    // if (error)
+    //     return (
+    //     <div className="flex justify-center items-center h-screen text-red-600">
+    //         Error: {error}
+    //     </div>
+    //     );
 
     console.log("Rendering HeadVolunteerMainPage");
     
@@ -165,7 +172,13 @@ const HeadVolunteerDashboard = () => {
                 </div>
             </div>
             <div className="overflow-y-auto max-h-screen">
+             
+            {user?.role === "head_volunteer" && "admin" ? (
+                <HeadVolunteerSideBar />
+            ) : (
                 <SideNavigation />
+            )}
+
             </div>
             </div>
             <Footer />

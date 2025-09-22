@@ -1,47 +1,52 @@
 import axios from "axios";
 import React, { useState, useEffect } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import Cookies from "js-cookie";
+import { Link, useLocation } from "react-router-dom";
+import PopLogout from "../modal/PopLogout.jsx";
+import { useSession } from "../context/SessionContext.jsx";
+import { useWhiskerMeter } from "../context/WhiskerMeterContext.jsx";
 
 const HeadVolunteerSideBar = () => {
   const location = useLocation();
+  const { user, logout } = useSession();
+  const { resetWhiskerMeter } = useWhiskerMeter();
 
-  const [user, setUser] = useState({ firstname: "", lastname: "", role: "" });
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState("");
+  const [profileImage, setProfileImage] = useState({ profile_image: "" });
+
+  const [isVisible, setIsVisible] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  const [isOpen, setIsOpen] = useState(true); // 👈 controls sidebar links
 
   useEffect(() => {
-    const fetchUser = async () => {
-      const loggedUser = sessionStorage.getItem("user"); // ✅ from sessionStorage
-      if (!loggedUser) {
-        console.log("No logged in user yet!");
-        setUser({ firstname: "", lastname: "", role: "" }); // reset user
-        setLoading(false);
-        return;
-      }
+    const fetchProfileImage = async () => {
+      try {
+        const profilImage = await axios.get(
+          `http://localhost:5000/user/profile`,
+          { withCredentials: true }
+        );
 
-      const parsedUser = JSON.parse(loggedUser);
-      setUser(parsedUser); // we already have firstname/lastname from login
-      setLoading(false);
+        setProfileImage(profilImage.data);
+        setLoading(false);
+      } catch (err) {
+        console.error("Error fetching image:", err);
+        setError(err.response?.data?.error || "Failed to fetch image");
+      }
     };
 
-    fetchUser();
+    fetchProfileImage();
   }, []);
 
-  const [isVisible, setIsvisible] = useState(false);
-  const toggleProfileMenu = () => {
-    setIsvisible(!isVisible);
-  };
+  const toggleProfileMenu = () => setIsVisible(!isVisible);
+  const toggleSidebar = () => setIsOpen(!isOpen); // 👈 toggle button
 
   const isLoggedIn = user.firstname && user.lastname;
-  const isAdminOrHeadVolunteer =
-    user.role === "admin" || user.role === "head_volunteer";
-  const dashboardPath =
-    user.role === "admin" ? "/dashboard" : "/testhvhomepage";
 
   const handleLogout = () => {
     sessionStorage.removeItem("user");
-    setUser({ firstname: "", lastname: "", role: "" });
+    logout(); // ✅ sets actualUser to null
+    resetWhiskerMeter(); // optional, will reset points immediately
     window.location.href = "/home";
   };
 
@@ -51,17 +56,26 @@ const HeadVolunteerSideBar = () => {
     "relative flex items-center justify-start gap-4 min-w-[200px] w-full h-auto rounded-tl-[50px] rounded-bl-[50px] box-border pl-3 pr-6 pt-2 pb-2 cursor-pointer bg-white border-2 drop-shadow-md border-[#DC8801] text-[#DC8801]";
 
   return (
-    <div className=" flex flex-col gap-4 min-w-[200px] h-auto">
+    <div className="flex flex-col gap-4 min-w-[200px] h-auto pt-10 fixed -right-5 top-20">
+      {/* Profile Section */}
       <div
         className={
-          location.pathname === "/profile"
+          location.pathname === "/headvolunteerprofile"
             ? sideItemStyleCurrent
             : sideItemStyle
         }
       >
         <div className="flex flex-row items-center gap-2">
-          <div className="flex justify-center items-center w-[40px] h-auto">
-            <img src="/src/assets/icons/account.png" alt="account" />
+          <div className="flex justify-center items-center w-[40px] h-[40px] rounded-[25px] overflow-hidden">
+            <img
+              src={
+                profileImage.profile_image
+                  ? `http://localhost:5000/FileUploads/${profileImage.profile_image}`
+                  : "/src/assets/icons/account.png"
+              }
+              alt="account"
+              className="w-full h-full object-cover"
+            />
           </div>
           <label className="cursor-pointer">
             {loading
@@ -77,132 +91,112 @@ const HeadVolunteerSideBar = () => {
             <img src="/src/assets/icons/down-arrow-orange.png" alt="" />
           </button>
         </div>
-        {/* Dropdown for */}
       </div>
 
-      <div
-        className="absolute right-18 top-12 w-40 box-border bg-[#FFF] shadow-md rounded-[15px] rounded-tr-[0px] overflow-hidden z-[9999]"
-        style={{ minHeight: "fit-content" }}
-      >
-        {isLoggedIn ? (
-          <div
-            className={
-              isVisible ? "grid place-items-center gap-1 p-2" : "hidden"
-            }
-          >
-            <Link
-              to="/profile"
-              className="text-[#000] p-3 pl-6 pr-6 w-full bg-[#fef8e2] hover:bg-[#f9e394] active:bg-[#feaf31] active:text-[#FFF] rounded-[10px]"
-            >
-              My Profile
-            </Link>
-            {isAdminOrHeadVolunteer && (
+      {/* Profile Dropdown */}
+      {isVisible && (
+        <div className="absolute right-[80px] top-[90px] w-40 bg-[#FFF] shadow-md rounded-[15px] rounded-tr-[0px] z-[9999]">
+          {isLoggedIn ? (
+            <div className="grid place-items-center gap-1 p-2">
               <Link
-                to={dashboardPath}
+                to="/profile"
                 className="text-[#000] p-3 pl-6 pr-6 w-full bg-[#fef8e2] hover:bg-[#f9e394] active:bg-[#feaf31] active:text-[#FFF] rounded-[10px]"
               >
-                Dashboard
+                My Profile
               </Link>
-            )}
-            <Link
-              to="/home"
-              className="text-[#000] p-3 pl-6 bg-[#fef8e2] pr-6 w-full hover:bg-[#f9e394] active:bg-[#feaf31] active:text-[#FFF] rounded-[10px]"
-              onClick={handleLogout}
-              replace
-            >
-              Log out
-            </Link>
-          </div>
-        ) : (
-          <div
-            className={
-              isVisible ? "grid place-items-center gap-1 p-2" : "hidden"
-            }
-          >
-            <Link
-              to="/login"
-              className="text-[#000] p-3 pl-6 pr-6 w-full bg-[#fef8e2] hover:bg-[#f9e394] active:bg-[#feaf31] active:text-[#FFF] rounded-[10px]"
-            >
-              Log in
-            </Link>
-          </div>
-        )}
-      </div>
+              <button
+                onClick={() => {
+                  setShowLogoutModal(true);
+                  setIsVisible(false);
+                }}
+                className="text-[#000] p-3 pl-6 pr-6 w-full bg-[#fef8e2] hover:bg-[#f9e394] active:bg-[#feaf31] active:text-[#FFF] rounded-[10px]"
+              >
+                Log out
+              </button>
+            </div>
+          ) : (
+            <div className="grid place-items-center gap-1 p-2">
+              <Link
+                to="/login"
+                className="text-[#000] p-3 pl-6 pr-6 w-full bg-[#fef8e2] hover:bg-[#f9e394] active:bg-[#feaf31] active:text-[#FFF] rounded-[10px]"
+              >
+                Log in
+              </Link>
+            </div>
+          )}
+        </div>
+      )}
 
+      {/* Sidebar Toggle */}
       <div className="flex flex-col justify-center gap-4 pl-8">
-        {/* Donate */}
-        <Link
-          to="/headvolunteerpage"
-          className={
-            location.pathname === "/headvolunteerpage"
-              ? sideItemStyleCurrent
-              : sideItemStyle
-          }
+        <button
+          onClick={toggleSidebar}
+          className="bg-white shadow-2xl text-black px-4 py-2 rounded-lg hover:bg-[#b96a01]"
         >
-          <div className="flex justify-center items-center w-[40px] h-auto">
-            <img src="/src/assets/icons/donation.png" alt="donation" />
-          </div>
-          <label className="cursor-pointer">
-            {" "}
-            In-Kind Donation Applications{" "}
-          </label>
-        </Link>
+          {isOpen ? "Close" : "Open"}
+        </button>
 
-        <Link
-          to="/AdoptionApplications"
-          className={
-            location.pathname === "/AdoptionApplications"
-              ? sideItemStyleCurrent
-              : sideItemStyle
-          }
-        >
-          <div className="flex justify-center items-center w-[40px] h-auto">
-            <img src="/src/assets/icons/donation.png" alt="donation" />
-          </div>
-          <label className="cursor-pointer"> Adoption Applications </label>
-        </Link>
+        {/* Sidebar Links (toggle with isOpen) */}
+        {isOpen && (
+          <>
+            <Link
+              to="/headvolunteerpage"
+              className={
+                location.pathname === "/headvolunteerpage"
+                  ? sideItemStyleCurrent
+                  : sideItemStyle
+              }
+            >
+              <div className="flex justify-center items-center w-[40px] h-auto">
+                <img src="/src/assets/icons/donationHV.png" alt="donation" />
+              </div>
+              <label className="cursor-pointer"> Donation Applications </label>
+            </Link>
 
-        <Link
-          to="/FeederApplications"
-          className={
-            location.pathname === "/FeederApplications"
-              ? sideItemStyleCurrent
-              : sideItemStyle
-          }
-        >
-          <div className="flex justify-center items-center w-[40px] h-auto">
-            <img src="/src/assets/icons/donation.png" alt="donation" />
-          </div>
-          <label className="cursor-pointer"> Feeder Applications</label>
-        </Link>
-        <Link
-          to="/ReportandAnalytics"
-          className={
-            location.pathname === "/ReportandAnalytics"
-              ? sideItemStyleCurrent
-              : sideItemStyle
-          }
-        >
-          <div className="flex justify-center items-center w-[40px] h-auto">
-            <img src="/src/assets/icons/donation.png" alt="donation" />
-          </div>
-          <label className="cursor-pointer"> Report and Analytics</label>
-        </Link>
-        <Link
-          to="/CreateNewCatProfile"
-          className={
-            location.pathname === "/CreateNewCatProfile"
-              ? sideItemStyleCurrent
-              : sideItemStyle
-          }
-        >
-          <div className="flex justify-center items-center w-[40px] h-auto">
-            <img src="/src/assets/icons/donation.png" alt="donation" />
-          </div>
-          <label className="cursor-pointer"> Create New Cat Profile</label>
-        </Link>
+            <Link
+              to="/adoptionapplication"
+              className={
+                location.pathname === "/adoptionapplication"
+                  ? sideItemStyleCurrent
+                  : sideItemStyle
+              }
+            >
+              <div className="flex justify-center items-center w-[40px] h-auto">
+                <img src="/src/assets/icons/adoptionHV.png" alt="adoption" />
+              </div>
+              <label className="cursor-pointer"> Adoption Applications </label>
+            </Link>
 
-        {/* Donate */}
+            <Link
+              to="/feederapplication"
+              className={
+                location.pathname === "/feederapplication"
+                  ? sideItemStyleCurrent
+                  : sideItemStyle
+              }
+            >
+              <div className="flex justify-center items-center w-[40px] h-auto">
+                <img src="/src/assets/icons/feederHV.png" alt="feeder" />
+              </div>
+              <label className="cursor-pointer"> Feeder Applications </label>
+            </Link>
+
+            <Link
+              to="/ReportandAnalytics"
+              className={
+                location.pathname === "/ReportandAnalytics"
+                  ? sideItemStyleCurrent
+                  : sideItemStyle
+              }
+            >
+              <div className="flex justify-center items-center w-[40px] h-auto">
+                <img src="/src/assets/icons/analyticsHV.png" alt="analytics" />
+              </div>
+              <label className="cursor-pointer"> Report and Analytics </label>
+            </Link>
+          </>
+        )}
+        {/* Public Links */}
         <Link
           to="/Donate"
           className={
@@ -216,7 +210,6 @@ const HeadVolunteerSideBar = () => {
           </div>
           <label className="cursor-pointer"> Donation</label>
         </Link>
-        {/* Cat Adoption */}
         <Link
           to="/catadoption"
           className={
@@ -230,8 +223,6 @@ const HeadVolunteerSideBar = () => {
           </div>
           <label className="cursor-pointer"> Cat Adoption </label>
         </Link>
-
-        {/* Feeding */}
         <Link
           to="/feeding"
           className={
@@ -245,8 +236,6 @@ const HeadVolunteerSideBar = () => {
           </div>
           <label className="cursor-pointer"> Feeding </label>
         </Link>
-
-        {/* Community Guidelines */}
         <Link
           to="/communityguide"
           className={
@@ -256,11 +245,19 @@ const HeadVolunteerSideBar = () => {
           }
         >
           <div className="flex justify-center items-center w-[40px] h-auto">
-            <img src="/src/assets/icons/information.png" alt="information" />
+            <img src="/src/assets/icons/information.png" alt="info" />
           </div>
           <label className="cursor-pointer"> Community Guidelines </label>
         </Link>
       </div>
+
+      {/* Logout Modal */}
+      {showLogoutModal && (
+        <PopLogout
+          onCancel={() => setShowLogoutModal(false)}
+          onConfirm={handleLogout}
+        />
+      )}
     </div>
   );
 };

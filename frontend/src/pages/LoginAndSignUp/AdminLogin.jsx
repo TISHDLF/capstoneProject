@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import  axios  from 'axios';
 import Cookies from 'js-cookie'
+import Login from './Login';
+import { useSession } from '../../context/SessionContext';
 
 // TODO: Automatic validator for Head_volunteer/Admin
 // Remove Dropdown selection: Head_volunteer => Email, Admin => Username
@@ -12,47 +14,83 @@ const AdminLogin = () => {
 
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
-    const [role, setRole] = useState('');
     const [error, setError] = useState('');
 
-    function handeAdminLogin(event) {
+    // function handleAdminLogin(event) {
+    //     event.preventDefault();
+
+    //     axios.post('http://localhost:5000/user/adminlogin',
+    //         {username, password},
+    //         {withCredentials: true,}
+    //     )
+        
+    //         .then(response => {
+    //             let user = null;
+    //             user = response.data.user;
+
+    //             if (!user) {
+    //                 setError('Invalid Credentials');
+    //                 return;
+    //             } 
+
+
+    //             console.log(user)
+
+    //             if (user.role === 'admin') {
+    //                 Login(user) // This is causing me to not navigate to dashboard
+    //                 navigate('/dashboard');
+    //             } else {
+    //                 setError('Account invalid! Only admins can access this page.');
+    //             }
+                
+    //         })
+    //         .catch((err) => {
+    //             const errorMessage =
+    //             err.response?.data?.error || 
+    //             err.response?.data?.message || 
+    //             'Login Failed: Incorrect Username or Password';
+    //             setError(errorMessage);
+    //             console.error('Login error:', errorMessage);
+    //         });
+    // }
+
+    const { login, refreshSession } = useSession(); // Add refreshSession
+
+    const handleAdminLogin = async (event) => {
         event.preventDefault();
+        try {
+        const response = await axios.post(
+            'http://localhost:5000/user/adminlogin',
+            { username, password },
+            { withCredentials: true }
+        );
+        const userData = response.data.user;
 
-        axios.post('http://localhost:5000/user/adminlogin', {username, password})
-            .then(response => {
-                const user = response.data.user;
+        if (!userData) {
+            setError('Invalid Credentials');
+            return;
+        }
 
-                if (!user) {
-                    setError('Invalid Credentials');
-                    return;
-                } 
+        console.log('Login response:', userData);
 
-
-                console.log(user)
-                
-                // const dashboardPath = user.role === 'admin' ? '/dashboard' : '/hvdashboard';
-                // navigate(dashboardPath);
-
-                if (user.role == 'admin') {
-                    Cookies.set('user', JSON.stringify(user), { expires: 30 }); 
-                    navigate('/dashboard');
-                } else if (user.role == 'head_volunteer') {
-                    Cookies.set('user', JSON.stringify(user), { expires: 30 }); 
-                    navigate('/hvdashboard');
-                } else {
-                    setError('Your account is invalid!');
-                }
-                
-            })
-            .catch((err) => {
-                const errorMessage =
-                err.response?.data?.error || 
-                err.response?.data?.message || 
-                'Login Failed: Incorrect Username or Password';
-                setError(errorMessage);
-                console.error('Login error:', errorMessage);
-            });
-    }
+        if (userData.role === 'admin') {
+            login(userData); // Set user in session context
+            await refreshSession(); // Refresh session to sync with backend
+            navigate('/dashboard');
+        } else {
+            setError('Account invalid! Only admins can access this page.');
+        }
+        } catch (err) {
+        const errorMessage =
+            err.response?.data?.error ||
+            err.response?.data?.message ||
+            'Login Failed: Incorrect Username or Password';
+        setError(errorMessage);
+        console.error('Login error:', errorMessage);
+        }
+    };
+    
+    
 
     return (
         <div className='grid grid-cols-[60%_40%] place-items-center h-screen overflow-hidden'>
@@ -63,13 +101,9 @@ const AdminLogin = () => {
                 <div className='max-w-[250px]'>
                     <img src="src/assets/whiskerwatchlogo-vertical.png" alt="" />
                 </div>
-                <form onSubmit={handeAdminLogin} className='flex flex-col items-center gap-8'>
+                <form onSubmit={handleAdminLogin} className='flex flex-col items-center gap-8'>
+                    <label className='text-[#2F2F2F] text-[24px] font-bold'> Admin Login </label>
                     <input type="text" placeholder='Username' value={username} onChange={(event) => setUsername(event.target.value)} className='border-b-2 border-b-[#977655] p-2' />
-                    {/* <select value={role} onChange={(event) => setRole(event.target.value)} className='border-b-2 border-b-[#977655] w-full p-2'>
-                        <option value="" disabled hidden>Select a role</option>
-                        <option value="admin"> Admin </option>
-                        <option value="head_volunteer" > Head Volunteer </option>
-                    </select> */}
                     <input type="password" placeholder='Password' value={password} onChange={(event) => setPassword(event.target.value)} className='border-b-2 border-b-[#977655] p-2' />
 
                     <div className='flex gap-2'>
@@ -83,7 +117,7 @@ const AdminLogin = () => {
                     </div>
                     )}
             </div>
-        </div>
+        </div> 
     )
 }
 

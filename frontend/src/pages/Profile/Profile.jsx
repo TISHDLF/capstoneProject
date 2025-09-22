@@ -8,6 +8,11 @@ import { useLocation, useParams } from 'react-router-dom'
 import NavigationBar from '../../components/NavigationBar'
 import Footer from '../../components/Footer'
 import SideNavigation from '../../components/SideNavigation'
+import HeadVolunteerSideBar from '../../components/HeadVolunteerSideBar';
+
+import WhiskerMeter from '../../components/WhiskerMeter'
+import { useWhiskerMeter } from '../../context/WhiskerMeterContext'
+import { useSession } from '../../context/SessionContext'
 
 
 // TODO: Add certificate view 
@@ -18,6 +23,10 @@ const Profile = () => {
     const [profile, setProfile] = useState([]);
     const [updateProfile, setUpdateProfile] = useState(false);
     const [originalProfile, setOriginalProfile] = useState({});
+    const [error, setError] = useState('');
+
+    const { user } = useSession();
+    const { points } = useWhiskerMeter();
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -54,6 +63,7 @@ const Profile = () => {
     };
 
     const handleSave = async () => {
+
 
         try {
             const formData = new FormData();
@@ -93,28 +103,42 @@ const Profile = () => {
 
         } catch (err) {
             console.error("Failed to update profile", err);
+            setError(err.response?.data?.error || 'Failed to update profile');
         }
     };
 
+    // const profileUpdateWindow = () => {
+    //     if (updateProfile) {
+    //         // User is canceling the edit
+    //         setProfile(originalProfile); // Restore the original
+    //     } else {
+    //         // User is starting the edit
+    //         setOriginalProfile(profile); // Save current state before editing
+    //     }
+    //     setUpdateProfile(prev => !prev);
+    // }
+
     const profileUpdateWindow = () => {
         if (updateProfile) {
-            // User is canceling the edit
-            setProfile(originalProfile); // Restore the original
-        } else {
-            // User is starting the edit
-            setOriginalProfile(profile); // Save current state before editing
+            setProfile(originalProfile); // Restore original profile
+            if (profile.profile_image?.startsWith('blob:')) {
+                URL.revokeObjectURL(profile.profile_image); // Clean up blob URL
         }
-        setUpdateProfile(prev => !prev);
-    }
+        } else {
+            setOriginalProfile(profile); // Save current state
+        }
+        setUpdateProfile((prev) => !prev);
+        setError(''); // Clear error on cancel or edit
+    };
 
 
     useEffect(() => {
         return () => {
-            if (profile.profile_image?.startsWith('blob:')) {
-                URL.revokeObjectURL(profile.profile_image);
-            }
+        if (profile.profile_image?.startsWith('blob:')) {
+            URL.revokeObjectURL(profile.profile_image);
+        }
         };
-    }, []);
+    }, [profile.profile_image]);
 
 
     
@@ -123,6 +147,8 @@ const Profile = () => {
         <div className='flex flex-col min-h-screen pb-10'>
             <NavigationBar />
 
+
+            <WhiskerMeter user={{ points }} />
             <div className='grid grid-cols-[80%_20%] h-full'>
                 <div className='flex flex-col pl-50 p-10'>
                     {/* ALL CONTENTS HERE */}
@@ -308,7 +334,12 @@ const Profile = () => {
                         </div>
                     </div>
                 </div>
-                <SideNavigation />
+
+                {user?.role === "head_volunteer" ? (
+                    <HeadVolunteerSideBar />
+                ) : (
+                    <SideNavigation />
+                )}
             </div>
             <Footer />
         </div>

@@ -3,17 +3,30 @@ import { Link } from 'react-router-dom'
 import NavigationBar from '../components/NavigationBar'
 import Footer from '../components/Footer'
 import SideNavigation from '../components/SideNavigation'
+import HeadVolunteerSideBar from "../components/HeadVolunteerSideBar";
 import CatBot from '../components/CatBot'
+
+import WhiskerMeter from '../components/WhiskerMeter'
+import { useWhiskerMeter } from '../context/WhiskerMeterContext'
+import { useSession } from '../context/SessionContext'
+
 
 const handleGoBack = () => {
   window.history.back()
 }
 
 const CommunityGuide = () => {
+
+  const { user } = useSession();
+  const { points } = useWhiskerMeter();
+
   return (
     <div className='flex flex-col min-h-screen pb-10'>
       <CatBot />
       <NavigationBar />
+
+      <WhiskerMeter user={{ points }} />
+
       <div className='grid grid-cols-[80%_20%] h-full'>
         <div className='flex flex-col pl-50 p-10'>
           <div className='flex flex-col h-full w-auto'>
@@ -78,7 +91,13 @@ const CommunityGuide = () => {
             </div>
           </div>
         </div>
-        <SideNavigation />
+
+        {user?.role === "head_volunteer" ? (
+          <HeadVolunteerSideBar />
+        ) : (
+          <SideNavigation />
+        )}
+
       </div>
       <Footer />
 

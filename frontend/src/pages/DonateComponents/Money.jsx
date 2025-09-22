@@ -43,8 +43,6 @@ const Money = () => {
                     </div>
                 </div>
             </div>
-
-            <button className='self-end bg-[#B5C04A] active:bg-[#E3E697] p-1 pl-4 pr-4 rounded-[10px] text-[#FFF] cursor-pointer'>Submit</button>
         </form>
     )
 }

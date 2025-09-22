@@ -1,8 +1,5 @@
 import React from 'react'
-import { Outlet, ScrollRestoration, Navigate } from 'react-router-dom'
-
-import CatBot from '../components/CatBot'
-
+import { Outlet, ScrollRestoration } from 'react-router-dom'
 
 const RootLayout = () => {
   return (
