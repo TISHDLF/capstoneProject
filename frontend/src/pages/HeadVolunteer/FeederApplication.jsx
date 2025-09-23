@@ -13,7 +13,7 @@ const FeederApplication = () => {
   const [error, setError] = useState("");
   const [page, setPage] = useState(1);
 
-  const itemsPerPage = 3;
+  const itemsPerPage = 9;
   const totalPages = Math.ceil(apps.length / itemsPerPage);
 
   useEffect(() => {
@@ -95,7 +95,7 @@ const FeederApplication = () => {
       <NavigationBar />
       <div className="grid grid-cols-[80%_20%] h-full pb-30 pt-10">
         <div className="p-10">
-          <div className="overflow-x-auto rounded-2xl shadow-lg bg-white">
+          <div className="overflow-x-auto rounded-2xl shadow-lg bg-white h-250">
             <table className="min-w-full text-sm text-left border-collapse">
               <thead>
                 <tr className="bg-[#DC8801] text-white text-sm">

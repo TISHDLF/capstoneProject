@@ -36,7 +36,7 @@ const WhiskerMeter = () => {
           <header>
             <div
               className={
-                "bg-yellow-50 rounded-r-[40px] shadow-lg h-full transition-all overflow-hidden duration-300 border-2 border-[#DC8801] " +
+                "bg-yellow-50 rounded-r-[40px] shadow-lg h-full transition-all overflow-hidden duration-300  " +
                 (expanded ? "w-70" : "w-26 ")
               }
             >

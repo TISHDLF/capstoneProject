@@ -15,16 +15,18 @@ const ReportandAnalytics = () => {
   const { user } = useSession();
   const { points } = useWhiskerMeter();
 
-  // Example data
-  const labels = ["Session 1", "Session 2", "Session 3", "Session 4"];
-  const dataSet = [5, 8, 3, 7];
-
   return (
     <div className="flex flex-col min-h-screen pb-10">
       <CatBot />
       <NavigationBar />
       <WhiskerMeter user={{ points }} />
-      <main className="p-20 pl-40 flex justify-start ">
+
+      <main className="p-20 pl-40 flex justify-start flex-col ">
+        <div className="pl-190">
+          <div className="bg-[#B5C04A] text-white w-60 justify-end rounded-t-2xl p-4">
+            <div className="flex">Reports and Analytics</div>
+          </div>
+        </div>
         <div className="w-250 h-300 bg-white p-20 shadow-lg flex-col justify-center rounded-tl-2xl rounded-bl-2xl rounded-br-2xl">
           <div className="w-full h-100 bg-white rounded-3xl p-10 flex flex-col justify-center shadow-xl">
             <p className="text-center">Average Cat per Feeding Session</p>

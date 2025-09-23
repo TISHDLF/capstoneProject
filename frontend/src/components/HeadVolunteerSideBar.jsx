@@ -129,13 +129,6 @@ const HeadVolunteerSideBar = () => {
 
       {/* Sidebar Toggle */}
       <div className="flex flex-col justify-center gap-4 pl-8">
-        <button
-          onClick={toggleSidebar}
-          className="bg-white shadow-2xl text-black px-4 py-2 rounded-lg hover:bg-[#b96a01]"
-        >
-          {isOpen ? "Close" : "Open"}
-        </button>
-
         {/* Sidebar Links (toggle with isOpen) */}
         {isOpen && (
           <>
