@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import CatBot from "../../components/CatBot";
 import NavigationBar from "../../components/NavigationBar";
 import SideNavigation from "../../components/SideNavigation";
@@ -11,10 +11,25 @@ import HeadVolunteerSideBar from "../../components/HeadVolunteerSideBar";
 import BarChart from "../../components/DivBarChart";
 import DonationGauge from "../../components/DonationGauge"; // <-- new chart component
 import AdoptionData from "../../components/AdoptionData";
+import axios from "axios";
 const ReportandAnalytics = () => {
   const { user } = useSession();
   const { points } = useWhiskerMeter();
+  const [totalAmount, setTotalAmount] = useState(0);
 
+  useEffect(() => {
+    const fetchTotal = async () => {
+      try {
+        const res = await axios.get(
+          "http://localhost:5000/donate/api/donations/total"
+        );
+        setTotalAmount(res.data.totalAmount);
+      } catch (err) {
+        console.error("Failed to fetch donation total:", err);
+      }
+    };
+    fetchTotal();
+  }, []);
   return (
     <div className="flex flex-col min-h-screen pb-10">
       <CatBot />
@@ -69,7 +84,7 @@ const ReportandAnalytics = () => {
           <br />
           <div className="w-full bg-white p-10 flex shadow-2xl rounded-3xl">
             <div className="pr-10">
-              <DonationGauge />
+              <DonationGauge currentAmount={totalAmount} targetAmount={10000} />
             </div>
             <div>
               <AdoptionData />

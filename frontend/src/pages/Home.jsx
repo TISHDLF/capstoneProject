@@ -13,6 +13,7 @@ import news1 from "../assets/SampleNewsPic.png";
 import news2 from "../assets/news2.png";
 import news3 from "../assets/news3.png";
 
+import WhiskerMeterGuide from "../components/WhiskerMeterGuide";
 import WhiskerMeter from "../components/WhiskerMeter";
 import { useWhiskerMeter } from "../context/WhiskerMeterContext";
 import { useSession } from "../context/SessionContext";
@@ -148,7 +149,7 @@ const Home = () => {
             <div></div>
           </div>
         </div>
-
+        <WhiskerMeterGuide />
         <Footer />
       </div>
     </div>

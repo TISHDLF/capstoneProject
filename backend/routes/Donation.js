@@ -76,31 +76,6 @@ const upload = multer({
   },
 });
 
-// ---------------- DONATIONS ---------------- //
-// DonationRoute.get("/api/donations", async (req, res) => {
-//   const db = connectDB();
-//   try {
-//     const [rows] = await db.query(`
-//       SELECT
-//           ik.ikDonationID AS applicationNo,
-//           u.user_id AS userId,
-//           CONCAT(u.firstname, ' ', u.lastname) AS name,
-//           ik.donationType AS type,
-//           DATE_FORMAT(ik.dateSubmitted, '%m-%d-%y') AS date,
-//           ik.status
-//       FROM InKindDonation ik
-//       JOIN users u ON ik.user_id = u.user_id
-//       ORDER BY ik.dateSubmitted DESC
-//     `);
-
-//     res.json(rows);
-//   } catch (err) {
-
-//     console.error('Login error:', err);
-//     res.status(500).json({ err: 'Internal server error' });
-//   }
-// });
-
 DonationRoute.get("/api/donations", async (req, res) => {
   const db = getDB();
   try {
@@ -335,7 +310,7 @@ DonationRoute.get("/api/adoption", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch adoptions" });
   }
 });
-
+// adoption pdf (id)
 DonationRoute.get("/api/adoption/:id/pdf", async (req, res) => {
   const db = getDB();
   try {
@@ -352,6 +327,20 @@ DonationRoute.get("/api/adoption/:id/pdf", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to fetch PDF" });
+  }
+});
+// Get total donated amount
+DonationRoute.get("/api/donations/total", async (req, res) => {
+  const db = getDB();
+  try {
+    const [rows] = await db.query(
+      "SELECT IFNULL(SUM(amount), 0) AS totalAmount FROM monetarydonation"
+    );
+
+    res.json({ totalAmount: rows[0].totalAmount });
+  } catch (err) {
+    console.error("Error fetching total donations:", err);
+    res.status(500).json({ error: "Failed to fetch total donations" });
   }
 });
 
