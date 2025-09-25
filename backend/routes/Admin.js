@@ -314,29 +314,20 @@ AdminRoute.patch("/form/status_update/:application_id", async (req, res) => {
   const application_id = req.params.application_id;
   const { status } = req.body;
 
-  console.log("Incoming PATCH request");
-  console.log("Application ID:", application_id);
-  console.log("Status:", status);
-
   try {
+    // 1. Update application status
     const [statusupdate] = await db.query(
-      `
-            UPDATE volunteer_application SET
-                status = ? 
-            WHERE application_id = ?
-        `,
+      `UPDATE volunteer_application SET status = ? WHERE application_id = ?`,
       [status, application_id]
     );
 
+    // 2. If Accepted, insert into volunteer
     if (status === "Accepted") {
-      // 2.1 Get user info linked to this application
       const [userData] = await db.query(
-        `
-                SELECT va.user_id, u.firstname, u.lastname, va.application_date
-                FROM volunteer_application va
-                JOIN users u ON va.user_id = u.user_id
-                WHERE va.application_id = ?
-            `,
+        `SELECT va.user_id, u.firstname, u.lastname, va.application_date
+         FROM volunteer_application va
+         JOIN users u ON va.user_id = u.user_id
+         WHERE va.application_id = ?`,
         [application_id]
       );
 
@@ -349,28 +340,25 @@ AdminRoute.patch("/form/status_update/:application_id", async (req, res) => {
       const { user_id, firstname, lastname, application_date } = userData[0];
       const fullName = `${firstname} ${lastname}`;
 
-      // 2.2 Insert into volunteer table
-      await db.query(
-        `
-                INSERT INTO volunteer (feeder_id, name, feeding_date, application_date, status)
-                VALUES (?, ?, NOW(), ?, 'Approved')
-            `,
-        [user_id, fullName, application_date]
+      // Avoid duplicates
+      const [existingVolunteer] = await db.query(
+        `SELECT * FROM volunteer WHERE feeder_id = ?`,
+        [user_id]
       );
 
-      console.log("Volunteer record created for user_id:", user_id);
-      console.log("User Info:", {
-        user_id,
-        firstname,
-        lastname,
-        application_date,
-      });
+      if (existingVolunteer.length === 0) {
+        await db.query(
+          `INSERT INTO volunteer (feeder_id, name, feeding_date, application_date, status)
+           VALUES (?, ?, NOW(), ?, 'Approved')`,
+          [user_id, fullName, application_date]
+        );
+      }
     }
 
-    console.log("Status received:", status);
-    return res.json({ success: true, result: statusupdate });
+    res.json({ success: true, result: statusupdate });
   } catch (err) {
-    return res.status(500).json({ err: "Failed to update status!" });
+    console.error("Error updating application status:", err);
+    res.status(500).json({ err: "Failed to update status!" });
   }
 });
 

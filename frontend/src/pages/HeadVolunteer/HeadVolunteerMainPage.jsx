@@ -31,7 +31,7 @@ const HeadVolunteerMainPage = () => {
   const handleApprove = async (donationId) => {
     try {
       const res = await axios.post(
-        `http://localhost:5000/donateapi/donations/${donationId}/approve`,
+        `http://localhost:5000/donate/api/donations/${donationId}/approve`,
         {},
         { withCredentials: true }
       );

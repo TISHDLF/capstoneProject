@@ -30,7 +30,6 @@ const volunteerPdf = multer.diskStorage({
     callback(null, Date.now() + path.extname(file.originalname));
   },
 });
-
 const uploadVolunteer = multer({
   storage: volunteerPdf,
   fileFilter: (req, file, callback) => {
@@ -142,6 +141,68 @@ FeederRoute.get("/application/:id/form", async (req, res) => {
   } catch (err) {
     console.error("❌ Error fetching form:", err);
     res.status(500).json({ message: "Server error while fetching form" });
+  }
+});
+
+FeederRoute.post("/api/application/:id/approve", async (req, res) => {
+  const db = await getDB(); // 👈 make sure to await
+  try {
+    const feederId = req.params.id;
+    const { feeding_date } = req.body;
+
+    // Step 1: Fetch applicant
+    const [rows] = await db.query(
+      `SELECT va.user_id, va.application_date, u.firstname, u.lastname
+       FROM volunteer_application va
+       JOIN users u ON va.user_id = u.user_id
+       WHERE va.application_id = ?`,
+      [feederId]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "application not found" });
+    }
+
+    const userId = rows[0].user_id;
+    const fullName = `${rows[0].firstname} ${rows[0].lastname}`;
+    const application_date = rows[0].application_date;
+
+    // Step 2: Insert into volunteer table
+    await db.query(
+      `INSERT INTO volunteer (feeder_id, name, feeding_date, application_date, status)
+       VALUES (?, ?, ?, ?, 'Approved')`,
+      [userId, fullName, feeding_date || new Date(), application_date]
+    );
+
+    // Step 3: Update volunteer_application status → Accepted
+    await db.query(
+      "UPDATE volunteer_application SET status = 'Accepted' WHERE application_id = ?",
+      [feederId]
+    );
+
+    // Step 4: Reward points
+    const rewardPoints = 40;
+    const [meter] = await db.query(
+      "SELECT * FROM whiskermeter WHERE user_id = ?",
+      [userId]
+    );
+
+    if (meter.length === 0) {
+      await db.query(
+        "INSERT INTO whiskermeter (user_id, points) VALUES (?, ?)",
+        [userId, rewardPoints]
+      );
+    } else {
+      await db.query(
+        "UPDATE whiskermeter SET points = points + ? WHERE user_id = ?",
+        [rewardPoints, userId]
+      );
+    }
+
+    res.json({ message: "Application approved and points rewarded!" });
+  } catch (err) {
+    console.error("❌ Error approving application:", err);
+    res.status(500).json({ error: "Failed to approve application" });
   }
 });
 

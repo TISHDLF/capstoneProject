@@ -57,23 +57,24 @@ const FeederApplication = () => {
     }
   };
 
-  const handleProcess = async (applicationId) => {
+  const handleApprove = async (feederId) => {
     try {
-      await axios.post(
-        `http://localhost:5000/api/feeder/application/${applicationId}/approve`,
+      const res = await axios.post(
+        `http://localhost:5000/feeder/api/application/${feederId}/approve`,
         {},
         { withCredentials: true }
       );
+
+      alert(res.data.message);
+
       setApps((prev) =>
         prev.map((app) =>
-          app.application_id === applicationId
-            ? { ...app, status: "Accepted" }
-            : app
+          app.feederId === feederId ? { ...app, status: "Approved" } : app
         )
       );
     } catch (err) {
-      console.error(err);
-      alert("Failed to process application");
+      console.error("❌ Approval error:", err.response?.data || err.message);
+      alert("Failed to approve donation");
     }
   };
 
@@ -138,7 +139,7 @@ const FeederApplication = () => {
                       <td className="px-6 py-3">
                         {app.status === "Pending" ? (
                           <button
-                            onClick={() => handleProcess(app.application_id)}
+                            onClick={() => handleApprove(app.application_id)}
                             className="px-4 py-1 rounded-lg text-white bg-lime-500 hover:bg-lime-600"
                           >
                             Process

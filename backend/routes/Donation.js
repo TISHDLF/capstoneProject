@@ -1,28 +1,26 @@
 import express from "express";
 import { Router } from "express";
 
-import { getDB } from "../database.js"
+import { getDB } from "../database.js";
 
-import multer from 'multer';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import multer from "multer";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-
 const DonationRoute = Router();
 DonationRoute.use(express.json());
 
-
 const storage = multer.diskStorage({
   destination: function (req, file, callback) {
-    const dir = path.join(process.cwd(), "FileUploads/cats")
+    const dir = path.join(process.cwd(), "FileUploads/cats");
 
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
-    } 
+    }
     callback(null, dir);
   },
 
@@ -60,13 +58,13 @@ const uploadProof = multer({
 
 const upload = multer({
   storage,
-  fileFilter: function(req, file, callback) {
+  fileFilter: function (req, file, callback) {
     if (
-      file.mimetype === 'image/jpeg' ||
-      file.mimetype === 'image/png' ||
-      file.mimetype === 'application/pdf' 
+      file.mimetype === "image/jpeg" ||
+      file.mimetype === "image/png" ||
+      file.mimetype === "application/pdf"
     ) {
-      callback(null, true)
+      callback(null, true);
     } else {
       // req.err = 'File is invalid!'
       // callback(null, false)
@@ -74,17 +72,16 @@ const upload = multer({
       if (!req.invalidFiles) req.invalidFiles = [];
       req.invalidFiles.push(file.originalname);
       callback(null, false);
-    };
+    }
   },
 });
-
 
 // ---------------- DONATIONS ---------------- //
 // DonationRoute.get("/api/donations", async (req, res) => {
 //   const db = connectDB();
 //   try {
 //     const [rows] = await db.query(`
-//       SELECT 
+//       SELECT
 //           ik.ikDonationID AS applicationNo,
 //           u.user_id AS userId,
 //           CONCAT(u.firstname, ' ', u.lastname) AS name,
@@ -105,36 +102,39 @@ const upload = multer({
 // });
 
 DonationRoute.get("/api/donations", async (req, res) => {
-    const db = getDB();
-    try {
-        const [rows] = await db.query(
-        `SELECT d.donation_id AS donationId, u.user_id AS userId, CONCAT(u.firstname, ' ', u.lastname) AS name, 
+  const db = getDB();
+  try {
+    const [rows] = await db.query(
+      `SELECT d.donation_id AS donationId, u.user_id AS userId, CONCAT(u.firstname, ' ', u.lastname) AS name, 
                 d.donation_type AS type, DATE_FORMAT(d.date_donated, '%m-%d-%y') AS date, 
                 d.description, d.status, d.proofimage
         FROM donation d 
         JOIN users u ON d.donator_id = u.user_id 
         ORDER BY d.date_donated DESC`
-        );
+    );
 
-        const formatted = rows.map((r) => ({
-        ...r,
-        type: r.type ? r.type.split(",") : [],
-        status: r.status || "Pending",
-        proofUrl: r.proofimage
-            ? `data:image/png;base64,${r.proofimage.toString("base64")}`
-            : null,
-        }));
+    const formatted = rows.map((r) => ({
+      ...r,
+      type: r.type ? r.type.split(",") : [],
+      status: r.status || "Pending",
+      proofUrl: r.proofimage
+        ? `data:image/png;base64,${r.proofimage.toString("base64")}`
+        : null,
+    }));
 
-        res.json(formatted);
-    } catch (err) {
-        console.error("Error fetching donations:", err.message);
-        res.status(500).json({ error: "Failed to fetch donations" });
-    }
+    res.json(formatted);
+  } catch (err) {
+    console.error("Error fetching donations:", err.message);
+    res.status(500).json({ error: "Failed to fetch donations" });
+  }
 });
 
 // ---------------- DONATIONS ---------------- //
 
-DonationRoute.post("/api/donations", uploadProof.single("proofImage"), async (req, res) => {
+DonationRoute.post(
+  "/api/donations",
+  uploadProof.single("proofImage"),
+  async (req, res) => {
     const db = getDB();
     try {
       if (!req.session.user) {
@@ -202,46 +202,47 @@ DonationRoute.post("/api/donations", uploadProof.single("proofImage"), async (re
 
 // Approve donation + reward user points
 DonationRoute.post("/api/donations/:id/approve", async (req, res) => {
-    const db = getDB();
-    try {
-        const donationId = req.params.id;
-        const [donation] = await db.query(
-            "SELECT * FROM donation WHERE donation_id = ?",
-            [donationId]
-        );
-        if (donation.length === 0) {
-            return res.status(404).json({ error: "Donation not found" });
-        }
-        const userId = donation[0].donator_id;
-            await db.query(
-            "UPDATE donation SET status = 'Approved' WHERE donation_id = ?",
-            [donationId]
-        );
-        const rewardPoints = 20;
-        const [meter] = await db.query(
-            "SELECT * FROM whiskermeter WHERE user_id = ?",
-            [userId]
-        );
-        if (meter.length === 0) {
-        await db.query(
-            "INSERT INTO whiskermeter (user_id, points) VALUES (?, ?)",
-            [userId, rewardPoints]
-        );
-        } else {
-        await db.query(
-            "UPDATE whiskermeter SET points = points + ? WHERE user_id = ?",
-            [rewardPoints, userId]
-        );
-        }
-        res.json({ message: "Donation approved and points rewarded!" });
-    } catch (err) {
-        console.error("Error approving donation:", err);
-        res.status(500).json({ error: "Failed to approve donation" });
+  const db = getDB();
+  try {
+    const donationId = req.params.id;
+    const [donation] = await db.query(
+      "SELECT * FROM donation WHERE donation_id = ?",
+      [donationId]
+    );
+    if (donation.length === 0) {
+      return res.status(404).json({ error: "Donation not found" });
     }
+    const userId = donation[0].donator_id;
+    await db.query(
+      "UPDATE donation SET status = 'Approved' WHERE donation_id = ?",
+      [donationId]
+    );
+    const rewardPoints = 20;
+    const [meter] = await db.query(
+      "SELECT * FROM whiskermeter WHERE user_id = ?",
+      [userId]
+    );
+    if (meter.length === 0) {
+      await db.query(
+        "INSERT INTO whiskermeter (user_id, points) VALUES (?, ?)",
+        [userId, rewardPoints]
+      );
+    } else {
+      await db.query(
+        "UPDATE whiskermeter SET points = points + ? WHERE user_id = ?",
+        [rewardPoints, userId]
+      );
+    }
+    res.json({ message: "Donation approved and points rewarded!" });
+  } catch (err) {
+    console.error("Error approving donation:", err);
+    res.status(500).json({ error: "Failed to approve donation" });
+  }
 });
 
 // ADOPTION
-DonationRoute.post("/api/adoption",
+DonationRoute.post(
+  "/api/adoption",
   upload.fields([
     { name: "certificate", maxCount: 1 },
     { name: "id_image", maxCount: 1 },
@@ -301,47 +302,45 @@ DonationRoute.post("/api/adoption",
 
 // Get all adoptions
 DonationRoute.get("/api/adoption", async (req, res) => {
-    const db = getDB();
-    try {
-        const [rows] = await pool.query(
-            `SELECT * FROM Adoption ORDER BY date_created DESC`
-        );
-        // Map DB columns to frontend-friendly names
-        const formatted = rows.map((r) => ({
-            applicationNo: r.adoption_id,
-            user_id: r.adopter_id,
-            name: r.adopter,
-            type: r.cat_name,
-            date: r.date_created.toISOString().split("T")[0], // format as yyyy-mm-dd
-            status: r.status || "Pending",
-        }));
+  const db = getDB();
+  try {
+    const [rows] = await pool.query(
+      `SELECT * FROM Adoption ORDER BY date_created DESC`
+    );
+    // Map DB columns to frontend-friendly names
+    const formatted = rows.map((r) => ({
+      applicationNo: r.adoption_id,
+      user_id: r.adopter_id,
+      name: r.adopter,
+      type: r.cat_name,
+      date: r.date_created.toISOString().split("T")[0], // format as yyyy-mm-dd
+      status: r.status || "Pending",
+    }));
 
-        res.json(formatted);
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: "Failed to fetch adoptions" });
-    }
+    res.json(formatted);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch adoptions" });
+  }
 });
 
 DonationRoute.get("/api/adoption/:id/pdf", async (req, res) => {
-    const db = getDB();
-    try {
-        const [rows] = await pool.query(
-            "SELECT certificate FROM Adoption WHERE adoption_id = ?",
-            [req.params.id]
-        );
+  const db = getDB();
+  try {
+    const [rows] = await pool.query(
+      "SELECT certificate FROM Adoption WHERE adoption_id = ?",
+      [req.params.id]
+    );
 
-        if (rows.length === 0) return res.status(404).json({ error: "Not found" });
-        const pdfBuffer = rows[0].certificate;
+    if (rows.length === 0) return res.status(404).json({ error: "Not found" });
+    const pdfBuffer = rows[0].certificate;
 
-        res.setHeader("Content-Type", "application/pdf");
-        res.send(pdfBuffer);
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: "Failed to fetch PDF" });
-    }
+    res.setHeader("Content-Type", "application/pdf");
+    res.send(pdfBuffer);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch PDF" });
+  }
 });
-
-
 
 export default DonationRoute;

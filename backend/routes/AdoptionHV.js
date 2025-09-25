@@ -70,10 +70,11 @@ HVAdoptionRoute.post(
 
       // Save to DB
       const [result] = await db.query(
-        `INSERT INTO Adoption 
-        (adopter, adopter_id, adoptedcat_id, cat_name, contactnumber, certificate, id_image, status, date_created) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, 'Pending', NOW())`,
+        `INSERT INTO adoption 
+        (adoption_id,adopter, adopter_id, adoptedcat_id, cat_name, contactnumber, certificate, id_image, status, date_created) 
+        VALUES (?,?, ?, ?, ?, ?, ?, ?, 'Pending', NOW())`,
         [
+          adoption_id,
           adopter,
           adopter_id || null,
           adoptedcat_id,
@@ -148,6 +149,53 @@ HVAdoptionRoute.get("/api/adoption/:id/pdf", async (req, res) => {
   } catch (err) {
     console.error("❌ Error fetching certificate:", err);
     res.status(500).json({ error: "Failed to fetch certificate" });
+  }
+});
+//approve adoption + reward points to the user
+HVAdoptionRoute.post("/api/adoption/:id/approve", async (req, res) => {
+  const db = getDB();
+  try {
+    const adoptionId = req.params.id;
+    const [adoption] = await db.query(
+      "SELECT * FROM adoption WHERE adoption_id = ?",
+      [adoptionId]
+    );
+
+    if (adoption.length === 0) {
+      return res.status(404).json({ error: "Adoption not found" });
+    }
+
+    const userId = adoption[0].adopter_id; // ✅ fixed
+
+    // Update adoption status
+    await db.query(
+      "UPDATE adoption SET status = 'Approved' WHERE adoption_id = ?",
+      [adoptionId]
+    );
+
+    // Reward points
+    const rewardPoints = 40;
+    const [meter] = await db.query(
+      "SELECT * FROM whiskermeter WHERE user_id = ?",
+      [userId]
+    );
+
+    if (meter.length === 0) {
+      await db.query(
+        "INSERT INTO whiskermeter (user_id, points) VALUES (?, ?)",
+        [userId, rewardPoints]
+      );
+    } else {
+      await db.query(
+        "UPDATE whiskermeter SET points = points + ? WHERE user_id = ?",
+        [rewardPoints, userId]
+      );
+    }
+
+    res.json({ message: "Adoption approved and points rewarded!" });
+  } catch (err) {
+    console.error("❌ Error approving adoption:", err);
+    res.status(500).json({ error: "Failed to approve adoption" });
   }
 });
 

@@ -67,14 +67,12 @@ const AdoptionApplications = () => {
       );
       setApps((prev) =>
         prev.map((app) =>
-          app.applicationNo === adoptionId
-            ? { ...app, status: "Approved" }
-            : app
+          app.application_id === feederId ? { ...app, status: "Accepted" } : app
         )
       );
     } catch (err) {
       console.error(err);
-      alert("Failed to process adoption");
+      alert("Failed to process application");
     }
   };
 
