@@ -9,6 +9,8 @@ import fs, { stat } from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 
+import nodemailer from "nodemailer";
+
 const AdminRoute = Router();
 AdminRoute.use(express.json());
 
@@ -23,10 +25,42 @@ AdminRoute.use(
 
 AdminRoute.use(
   cors({
-    origin: [/http:\/\/localhost:\d+$/], // allow any localhost:port
-    // credentials: true,
+    origin: [/http:\/\/localhost:\d+$/],
   })
 );
+
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL,
+    pass: process.env.MAILPASS,
+  },
+});
+
+AdminRoute.post("/feeders/send-email", async (req, res) => {
+  const { email, firstname, lastname, feedingDate } = req.body;
+
+  if (!email) return res.status(400).json({ error: "Email is required" });
+
+  try {
+    const mailOptions = {
+      from: '"Cat Shelter Admin" <whiskerwatch100@gmail.com>',
+      to: email,
+      subject: "Your Feeding Volunteer Schedule",
+      text: `Hello ${firstname} ${lastname},\n\nYour assigned feeding schedule is: ${feedingDate}\n\nThank you for volunteering!`,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log("✅ Email sent:", info.response);
+
+    res.json({ success: true, message: "Email sent successfully!" });
+  } catch (err) {
+    console.error("❌ Error sending email:", err);
+    res
+      .status(500)
+      .json({ error: "Failed to send email", details: err.message });
+  }
+});
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -400,11 +434,11 @@ AdminRoute.get("/feeders", async (req, res) => {
 
   try {
     const [volunteers] = await db.query(`
-            SELECT v.feeder_id, u.firstname, u.lastname, u.contactnumber, 
-                DATE_FORMAT(v.feeding_date, '%Y-%m-%d') AS feeding_date, v.status
-            FROM volunteer v
-            JOIN users u ON v.feeder_id = u.user_id
-            WHERE v.status = 'Approved';
+           SELECT v.feeder_id, u.firstname, u.lastname, u.contactnumber, u.email,
+       DATE_FORMAT(v.feeding_date, '%Y-%m-%d %H:%i') AS feeding_date, v.status
+FROM volunteer v
+JOIN users u ON v.feeder_id = u.user_id
+WHERE v.status = 'Approved';
         `);
 
     return res.json(volunteers);
