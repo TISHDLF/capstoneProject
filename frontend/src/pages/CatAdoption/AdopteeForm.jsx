@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, Navigate, useNavigate } from "react-router-dom";
 import { useSession } from "../../context/SessionContext";
 import NavigationBar from "../../components/NavigationBar";
 import Footer from "../../components/Footer";
@@ -22,6 +22,8 @@ const AdopteeForm = () => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [selectedImageFile, setSelectedImageFile] = useState(null);
   const [imageSrc, setImageSrc] = useState("src/assets/icons/id-card.png");
+
+  const navigate = useNavigate();
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -64,10 +66,12 @@ const AdopteeForm = () => {
         pdf.addImage(imgData, "JPEG", 0, -i * pageHeight, pageWidth, imgHeight);
       }
 
+      // ✅ Convert PDF to Blob
       const pdfBlob = pdf.output("blob");
 
+      // ✅ Create FormData before appending
       const formData = new FormData();
-      formData.append("certificate", pdfBlob, `${cat.name}_adoption.pdf`);
+
       formData.append("adoptedcat_id", cat.cat_id);
       formData.append("adopter_id", loggedInUser.user_id);
       formData.append("cat_name", cat.name);
@@ -84,7 +88,10 @@ const AdopteeForm = () => {
         formData.append(key, value);
       });
 
-      // ✅ Attach uploaded ID image
+      // ✅ Attach generated PDF
+      formData.append("id_image", pdfBlob, `${cat.name}_adoption.pdf`);
+
+      // ✅ Attach uploaded ID image (if any)
       if (selectedImageFile) {
         formData.append("id_image", selectedImageFile, selectedImageFile.name);
       }
@@ -99,6 +106,7 @@ const AdopteeForm = () => {
 
       if (response.status === 201) {
         alert("✅ Adoption form submitted successfully!");
+        navigate("/home");
       }
     } catch (err) {
       console.error(

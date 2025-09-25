@@ -64,8 +64,6 @@ const Donate = () => {
     }
 
     try {
-      console.log("📦 Submitting donation payload:", formData);
-
       const data = new FormData();
       Object.entries(formData).forEach(([key, value]) => {
         if (Array.isArray(value)) {
@@ -76,11 +74,14 @@ const Donate = () => {
       });
 
       if (proofImage) {
-        data.append("proofImage", proofImage); // ✅ send proof of payment
+        data.append("proofImage", proofImage);
       }
 
+      // 👉 Attach user_id to the form
+      data.append("donator_id", user.user_id);
+
       const res = await axios.post(
-        "http://localhost:5000/api/donations",
+        "http://localhost:5000/donate/api/donations",
         data,
         {
           withCredentials: true,
@@ -333,7 +334,6 @@ const Donate = () => {
         ) : (
           <SideNavigation />
         )}
-        
       </div>
       <Footer />
     </div>

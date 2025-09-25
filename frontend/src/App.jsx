@@ -106,9 +106,10 @@ const App = () => {
         <Route path="adopterslist/adopterview" element={<AdopterView />} />
         <Route path="adopterapplication" element={<AdopterApplication />} />
         <Route
-          path="adopterapplication/adopterapplicationview"
+          path="adopterapplication/:applicationId/view"
           element={<AdopterApplicationView />}
         />
+
         <Route path="volunteers" element={<Volunteers />} />
         <Route path="feedingvolunteers" element={<FeedingVolunteers />} />
         <Route path="feedingapplications" element={<FeedingApplications />} />

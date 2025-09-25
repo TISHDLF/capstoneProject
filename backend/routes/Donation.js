@@ -137,11 +137,11 @@ DonationRoute.post(
   async (req, res) => {
     const db = getDB();
     try {
-      if (!req.session.user) {
-        return res.status(401).json({ error: "Unauthorized" });
-      }
+      const donator_id = req.body.donator_id;
 
-      const donator_id = req.session.user.user_id;
+      if (!donator_id) {
+        return res.status(400).json({ error: "Donator ID is required" });
+      }
       let {
         donationType,
         amount,
@@ -174,6 +174,7 @@ DonationRoute.post(
         fs.unlinkSync(req.file.path); // delete temp file
       }
 
+      // Get donator full name
       const [user] = await db.query(
         "SELECT firstname, lastname FROM users WHERE user_id = ?",
         [donator_id]
@@ -183,15 +184,26 @@ DonationRoute.post(
       }
       const donatorName = `${user[0].firstname} ${user[0].lastname}`;
 
+      // Insert into Donation
       const [result] = await db.query(
         `INSERT INTO donation (donator_id, donator, donation_type, description, proofimage) 
-       VALUES (?, ?, ?, ?, ?)`,
+         VALUES (?, ?, ?, ?, ?)`,
         [donator_id, donatorName, donationType, description, proofBuffer]
       );
 
+      const donationId = result.insertId;
+
+      // ✅ If donation type includes "Money", insert into MonetaryDonation
+      if (donationType.includes("Money") && amount) {
+        await db.query(
+          `INSERT INTO monetarydonation (donation_id, amount, currency) VALUES (?, ?, ?)`,
+          [donationId, parseFloat(amount), "PHP"]
+        );
+      }
+
       res.status(201).json({
         message: "Donation submitted successfully!",
-        donation_id: result.insertId,
+        donation_id: donationId,
       });
     } catch (err) {
       console.error("Error inserting donation:", err);

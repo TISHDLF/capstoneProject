@@ -48,10 +48,7 @@ const upload = multer({
 // ----------------- APPLY ROUTE -----------------
 HVAdoptionRoute.post(
   "/apply",
-  upload.fields([
-    { name: "certificate", maxCount: 1 }, // adoption form PDF
-    { name: "id_image", maxCount: 1 }, // uploaded ID photo
-  ]),
+  upload.array("id_image", 5), // handle both adoption form PDF + ID photo
   async (req, res) => {
     try {
       const db = getDB();
@@ -59,29 +56,27 @@ HVAdoptionRoute.post(
       const { adopter, adopter_id, adoptedcat_id, cat_name, contactnumber } =
         req.body;
 
-      // Uploaded files
-      const certificateFile = req.files["certificate"]
-        ? req.files["certificate"][0].filename
-        : null;
+      // Uploaded files (both PDF + image(s))
+      const idImageFiles = req.files || [];
+      const storedFiles = idImageFiles.map((f) => f.filename);
 
-      const idImageFile = req.files["id_image"]
-        ? req.files["id_image"][0].filename
-        : null;
+      // Save as JSON string (can store multiple files cleanly)
+      const idImageFile =
+        storedFiles.length > 0 ? JSON.stringify(storedFiles) : null;
 
-      // Save to DB
+      // Save to DB (certificate stays NULL until admin uploads later)
       const [result] = await db.query(
         `INSERT INTO adoption 
-        (adoption_id,adopter, adopter_id, adoptedcat_id, cat_name, contactnumber, certificate, id_image, status, date_created) 
-        VALUES (?,?, ?, ?, ?, ?, ?, ?, 'Pending', NOW())`,
+         (adopter, adopter_id, adoptedcat_id, cat_name, contactnumber, certificate, id_image, status, date_created) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, 'Pending', NOW())`,
         [
-          adoption_id,
           adopter,
           adopter_id || null,
           adoptedcat_id,
           cat_name,
           contactnumber,
-          certificateFile,
-          idImageFile,
+          null, // certificate = NULL for now
+          idImageFile, // JSON with both adoption PDF + ID photo
         ]
       );
 
@@ -101,7 +96,7 @@ HVAdoptionRoute.get("/api/adoption", async (req, res) => {
   const db = getDB();
   try {
     const [rows] = await db.query(
-      `SELECT * FROM Adoption ORDER BY date_created DESC`
+      `SELECT * FROM adoption ORDER BY date_created DESC`
     );
 
     const formatted = rows.map((r) => ({
@@ -119,39 +114,66 @@ HVAdoptionRoute.get("/api/adoption", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch adoptions" });
   }
 });
+HVAdoptionRoute.get("/api/adoption/:id", async (req, res) => {
+  const db = getDB();
+  try {
+    const [rows] = await db.query(
+      "SELECT * FROM adoption WHERE adoption_id = ?",
+      [req.params.id]
+    );
 
-// ----------------- GET ADOPTION CERTIFICATE (PDF/IMG) -----------------
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Application not found" });
+    }
+
+    const r = rows[0];
+    res.json({
+      applicationNo: r.adoption_id,
+      user_id: r.adopter_id,
+      name: r.adopter,
+      catName: r.cat_name,
+      date: r.date_created ? r.date_created.toISOString().split("T")[0] : null,
+      status: r.status,
+      certificate: r.certificate,
+    });
+  } catch (err) {
+    console.error("❌ Error fetching adoption:", err);
+    res.status(500).json({ error: "Failed to fetch adoption" });
+  }
+});
+
+// ----------------- GET ADOPTION FORM (PDF) -----------------
 HVAdoptionRoute.get("/api/adoption/:id/pdf", async (req, res) => {
   const db = getDB();
   try {
     const [rows] = await db.query(
-      "SELECT certificate FROM Adoption WHERE adoption_id = ?",
+      "SELECT id_image FROM adoption WHERE adoption_id = ?",
       [req.params.id]
     );
+
     if (rows.length === 0) {
-      return res.status(404).json({ error: "Not found" });
+      return res.status(404).json({ error: "Application not found" });
     }
 
-    const certificateFile = rows[0].certificate;
-    if (!certificateFile) {
-      return res.status(404).json({ error: "Certificate not uploaded" });
+    const files = JSON.parse(rows[0].id_image || "[]");
+    // Find the first file that’s a PDF
+    const pdfFile = files.find((f) => f.toLowerCase().endsWith(".pdf"));
+
+    if (!pdfFile) {
+      return res
+        .status(404)
+        .json({ error: "No PDF form found for this application" });
     }
 
-    // build absolute path
-    const filePath = path.join(
-      process.cwd(),
-      "FileUploads/cats",
-      certificateFile
-    );
-
-    // send actual file to frontend
-    res.sendFile(filePath);
+    const filePath = path.join(process.cwd(), "FileUploads/cats", pdfFile);
+    res.sendFile(path.resolve(filePath));
   } catch (err) {
-    console.error("❌ Error fetching certificate:", err);
-    res.status(500).json({ error: "Failed to fetch certificate" });
+    console.error("❌ Error fetching adoption PDF:", err);
+    res.status(500).json({ error: "Failed to fetch PDF" });
   }
 });
-//approve adoption + reward points to the user
+
+//approve adoption + reward points to the user + update cat status
 HVAdoptionRoute.post("/api/adoption/:id/approve", async (req, res) => {
   const db = getDB();
   try {
@@ -165,12 +187,19 @@ HVAdoptionRoute.post("/api/adoption/:id/approve", async (req, res) => {
       return res.status(404).json({ error: "Adoption not found" });
     }
 
-    const userId = adoption[0].adopter_id; // ✅ fixed
+    const userId = adoption[0].adopter_id;
+    const catId = adoption[0].adoptedcat_id;
 
     // Update adoption status
     await db.query(
       "UPDATE adoption SET status = 'Approved' WHERE adoption_id = ?",
       [adoptionId]
+    );
+
+    // Update cat adoption_status
+    await db.query(
+      "UPDATE cat SET adoption_status = 'Adopted', date_updated = NOW() WHERE cat_id = ?",
+      [catId]
     );
 
     // Reward points
@@ -192,10 +221,64 @@ HVAdoptionRoute.post("/api/adoption/:id/approve", async (req, res) => {
       );
     }
 
-    res.json({ message: "Adoption approved and points rewarded!" });
+    res.json({
+      message: "Adoption approved, cat marked as Adopted, and points rewarded!",
+    });
   } catch (err) {
     console.error("❌ Error approving adoption:", err);
     res.status(500).json({ error: "Failed to approve adoption" });
+  }
+});
+
+// ----------------- REJECT ADOPTION -----------------
+HVAdoptionRoute.post("/api/adoption/:id/reject", async (req, res) => {
+  const db = getDB();
+  try {
+    const adoptionId = req.params.id;
+    const [adoption] = await db.query(
+      "SELECT * FROM adoption WHERE adoption_id = ?",
+      [adoptionId]
+    );
+
+    if (adoption.length === 0) {
+      return res.status(404).json({ error: "Adoption not found" });
+    }
+
+    const userId = adoption[0].adopter_id;
+    const catId = adoption[0].adoptedcat_id;
+    const prevStatus = adoption[0].status;
+
+    // Update adoption status
+    await db.query(
+      "UPDATE adoption SET status = 'Rejected' WHERE adoption_id = ?",
+      [adoptionId]
+    );
+
+    // If it was previously approved, revert the cat status
+    if (prevStatus === "Approved") {
+      await db.query(
+        "UPDATE cat SET adoption_status = 'Available', date_updated = NOW() WHERE cat_id = ?",
+        [catId]
+      );
+
+      // Optionally: remove points if they were rewarded
+      const rewardPoints = 40;
+      await db.query(
+        "UPDATE whiskermeter SET points = GREATEST(points - ?, 0) WHERE user_id = ?",
+        [rewardPoints, userId]
+      );
+    }
+
+    res.json({
+      message:
+        "Adoption rejected successfully" +
+        (prevStatus === "Approved"
+          ? ", cat marked Available and points adjusted."
+          : "."),
+    });
+  } catch (err) {
+    console.error("❌ Error rejecting adoption:", err);
+    res.status(500).json({ error: "Failed to reject adoption" });
   }
 });
 

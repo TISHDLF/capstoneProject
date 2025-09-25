@@ -160,7 +160,6 @@ const HeadVolunteerMainPage = () => {
                         </td>
 
                         <td className="px-6 py-3 flex items-center gap-2">
-                          {/* if backend doesn’t return status, default to Pending */}
                           <span
                             className={
                               app.status === "Approved"
@@ -172,16 +171,18 @@ const HeadVolunteerMainPage = () => {
                           >
                             {app.status || "Pending"}
                           </span>
-                          {!app.status || app.status === "Pending" ? (
+
+                          {app.status === "Approved" ||
+                          app.status === "Rejected" ? (
+                            <button className="px-4 py-1 rounded-lg text-white bg-blue-500 hover:bg-blue-600">
+                              View
+                            </button>
+                          ) : (
                             <button
                               onClick={() => handleApprove(app.donationId)}
                               className="px-4 py-1 rounded-lg text-white bg-lime-500 hover:bg-lime-600"
                             >
                               Process
-                            </button>
-                          ) : (
-                            <button className="px-4 py-1 rounded-lg text-white bg-blue-500 hover:bg-blue-600">
-                              View
                             </button>
                           )}
                         </td>

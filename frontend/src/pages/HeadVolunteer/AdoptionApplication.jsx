@@ -16,6 +16,8 @@ const AdoptionApplications = () => {
   const itemsPerPage = 9;
   const totalPages = Math.ceil(apps.length / itemsPerPage);
 
+  const startIndex = (page - 1) * itemsPerPage;
+  const currentApps = apps.slice(startIndex, startIndex + itemsPerPage);
   useEffect(() => {
     if (!loading) {
       if (!user || user.role !== "head_volunteer") {
@@ -38,10 +40,6 @@ const AdoptionApplications = () => {
       fetchAdoptions();
     }
   }, [user, loading, navigate]);
-
-  const startIndex = (page - 1) * itemsPerPage;
-  const currentApps = apps.slice(startIndex, startIndex + itemsPerPage);
-
   const handleViewPDF = async (adoptionId) => {
     try {
       const response = await axios.get(
