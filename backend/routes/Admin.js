@@ -362,109 +362,38 @@ AdminRoute.patch("/form/status_update/:application_id", async (req, res) => {
   }
 });
 
-// AdminRoute.patch('/form/status_update/:application_id', async (req, res) => {
-//     const db = getDB();
-//     const application_id = req.params.application_id;
-//     const { status } = req.body;
+AdminRoute.get("/api/dashboard", async (req, res) => {
+  const db = getDB();
+  try {
+    const [rows] = await db.query(
+      `SELECT
+  (SELECT COUNT(*) FROM users) AS totalUsers,
+  (SELECT COUNT(*) FROM cat) AS totalCats,
+  (SELECT IFNULL(SUM(m.amount), 0) + 0.0
+ FROM monetarydonation m
+ JOIN donation d ON m.donation_id = d.donation_id) AS totalDonations,
 
-//     console.log('Incoming PATCH request');
-//     console.log('Application ID:', application_id);
-//     console.log('Status:', status);
+  (SELECT COUNT(*) FROM users 
+     WHERE MONTH(created_at) = MONTH(CURRENT_DATE()) 
+       AND YEAR(created_at) = YEAR(CURRENT_DATE())) AS newUsers,
 
-//     try {
-//         // 1. Update status
-//         const [statusupdate] = await db.query(`
-//             UPDATE volunteer_application SET
-//                 status = ?
-//             WHERE application_id = ?
-//         `, [status, application_id]);
+  (SELECT COUNT(*) 
+   FROM cat 
+   WHERE adoption_status = 'Adopted') AS catsAdopted,
 
-//         // 2. Get user data regardless of status
-//         const [userData] = await db.query(`
-//             SELECT va.user_id, u.firstname, u.lastname, va.application_date
-//             FROM volunteer_application va
-//             JOIN users u ON va.user_id = u.user_id
-//             WHERE va.application_id = ?
-//         `, [application_id]);
+  (SELECT IFNULL(SUM(m.amount), 0) + 0.0
+ FROM monetarydonation m
+ JOIN donation d ON m.donation_id = d.donation_id
+ WHERE MONTH(d.date_donated) = MONTH(CURRENT_DATE()) 
+   AND YEAR(d.date_donated) = YEAR(CURRENT_DATE())) AS monthlyDonations`
+    );
 
-//         if (userData.length === 0) {
-//             return res.status(404).json({ error: 'User not found for this application' });
-//         }
-
-//         const { user_id, firstname, lastname, application_date } = userData[0];
-//         const fullName = `${firstname} ${lastname}`;
-
-//         // 3. Avoid inserting duplicates
-//         const [existingVolunteer] = await db.query(`
-//             SELECT * FROM volunteer WHERE feeder_id = ?
-//         `, [user_id]);
-
-//         if (existingVolunteer.length === 0) {
-//             // Insert with status 'Approved' or 'Rejected'
-//             const volunteerStatus = status === 'Accepted' ? 'Approved' : 'Rejected';
-
-//             await db.query(`
-//                 INSERT INTO volunteer (feeder_id, name, feeding_date, application_date, status)
-//                 VALUES (?, ?, NOW(), ?, ?)
-//             `, [user_id, fullName, application_date, volunteerStatus]);
-
-//             console.log(`Volunteer record created with status "${volunteerStatus}" for user_id: ${user_id}`);
-//         } else {
-//             console.log('Volunteer already exists. Skipping insert.');
-//         }
-
-//         return res.json({ success: true, result: statusupdate });
-
-//     } catch (err) {
-//         console.error('Error updating application status or inserting volunteer:', err);
-//         return res.status(500).json({ err: 'Failed to update status!' });
-//     }
-// });
-
-// AdminRoute.patch('/form/status_update/:application_id', async (req, res) => {
-//     const db = getDB();
-//     const application_id = req.params.application_id;
-//     const { status } = req.body;
-
-//     try {
-//         const [statusupdate] = await db.query(`
-//             UPDATE volunteer_application SET
-//                 status = ?
-//             WHERE application_id = ?
-//         `, [status, application_id]);
-
-//         if (status === 'Accepted') {
-//             // ✅ Get user info based on application ID
-//             const [userData] = await db.query(`
-//                 SELECT va.user_id, u.firstname, u.lastname, va.application_date
-//                 FROM volunteer_application va
-//                 JOIN users u ON va.user_id = u.user_id
-//                 WHERE va.application_id = ?
-//             `, [application_id]);
-
-//             if (userData.length === 0) {
-//                 return res.status(404).json({ error: 'User not found for this application' });
-//             }
-
-//             const { user_id, firstname, lastname, application_date } = userData[0];
-//             const fullName = `${firstname} ${lastname}`;
-
-//             // ❗ No condition to check duplicates — allow insert for each accepted application
-//             await db.query(`
-//                 INSERT INTO volunteer (feeder_id, name, feeding_date, application_date, status)
-//                 VALUES (?, ?, NOW(), ?, 'Approved')
-//             `, [user_id, fullName, application_date]);
-
-//         } else if (status === 'Rejected') {
-//             // Optional: handle Rejected if needed (e.g. insert or just update status)
-//         }
-
-//         return res.json({ success: true, result: statusupdate });
-//     } catch (err) {
-//         console.error('Error updating application status:', err);
-//         return res.status(500).json({ err: 'Failed to update status!' });
-//     }
-// });
+    res.json(rows[0]);
+  } catch (err) {
+    console.error("Dashboard fetch error:", err);
+    res.status(500).json({ error: "Failed to fetch dashboard data" });
+  }
+});
 
 AdminRoute.get("/feeders", async (req, res) => {
   const db = getDB();
