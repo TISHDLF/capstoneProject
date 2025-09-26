@@ -7,8 +7,8 @@ import meterPhoto1 from "/src/assets/paw2.png";
 const WhiskerMeter = () => {
   const [expanded, setExpanded] = useState(false);
   const circleCount = 5;
+  const { points, badge } = useWhiskerMeter(); // ✅ get badge
 
-  const { points } = useWhiskerMeter();
   const maxPoints = 200;
   const progressValue = Math.min(
     Math.ceil((points / maxPoints) * circleCount),
@@ -17,9 +17,9 @@ const WhiskerMeter = () => {
 
   const labels = [
     "The Catnip Captain",
-    "Meowntain Mover",
+    "Meowtain Mover",
     "Furmidable Friend",
-    "Snuggle Scout",
+    "Snuggle",
     "Toe Bean Trainee",
   ];
 
@@ -105,16 +105,23 @@ const WhiskerMeter = () => {
                   {/* Labels */}
                   <div
                     className={`flex flex-col justify-between h-full text-sm text-nowrap font-medium text-[#2F2F2F]
-                                transition-all duration-700 ease-in-out overflow-hidden
-                                ${
-                                  expanded
-                                    ? "max-w-[200px] opacity-100 translate-x-0"
-                                    : "max-w-0 opacity-0 -translate-x-10"
-                                }
-                                `}
+              transition-all duration-700 ease-in-out overflow-hidden
+              ${
+                expanded
+                  ? "max-w-[200px] opacity-100 translate-x-0"
+                  : "max-w-0 opacity-0 -translate-x-10"
+              }
+            `}
                   >
                     {labels.map((label, i) => (
-                      <span key={i}>{label.toUpperCase()}</span>
+                      <span
+                        key={i}
+                        className={
+                          label === badge ? "text-yellow-600 font-bold" : ""
+                        }
+                      >
+                        {label.toUpperCase()}
+                      </span>
                     ))}
                   </div>
                 </div>
