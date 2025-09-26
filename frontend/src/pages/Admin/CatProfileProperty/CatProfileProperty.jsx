@@ -5,6 +5,8 @@ import axios from "axios";
 
 const CatProfileProperty = () => {
   const location = useLocation();
+  const [adoptionHistory, setAdoptionHistory] = useState([]);
+
   const [catprofile, setCatprofile] = useState({
     cat_id: "",
     name: "",
@@ -24,6 +26,22 @@ const CatProfileProperty = () => {
   const [catImage, setCatImage] = useState([]);
   const [catImagePreview, setCatImagePreview] = useState([]);
   const [uploaderVisible, setUploaderVisible] = useState(false);
+  useEffect(() => {
+    if (!cat_id) return;
+
+    const fetchAdoptionHistory = async () => {
+      try {
+        const response = await axios.get(
+          `http://localhost:5000/adopt/api/adoptionhistory/${cat_id}`
+        );
+        setAdoptionHistory(response.data);
+      } catch (err) {
+        console.error("Error fetching adoption history:", err);
+      }
+    };
+
+    fetchAdoptionHistory();
+  }, [cat_id]);
 
   // Fetch data of cat profile and display
   useEffect(() => {
@@ -82,8 +100,27 @@ const CatProfileProperty = () => {
       console.error("Update failed:", err.response?.data || err.message);
     }
   };
+  const handleDeleteCat = async () => {
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete ${catprofile.name}? This action cannot be undone.`
+    );
 
-  // DISPLAYS AN IMAGE SELECTED
+    if (!confirmDelete) return;
+
+    try {
+      const response = await axios.delete(
+        `http://localhost:5000/cats/delete/${cat_id}`
+      );
+
+      alert(response.data.message);
+
+      // Redirect to cat list page after deletion
+      window.location.href = "/admincatprofile";
+    } catch (err) {
+      console.error("Failed to delete cat:", err.response?.data || err.message);
+      alert("Failed to delete cat. Please try again.");
+    }
+  };
   // NOT YET UPLOADED TO DATABASE UNLESS SAVE BUTTON IS CLICKED
   const handleImageChange = (event) => {
     const files = Array.from(event.target.files);
@@ -177,7 +214,15 @@ const CatProfileProperty = () => {
               {" "}
               CAT PROFILE{" "}
             </label>
-
+            <br />
+            <br />
+            {/*Delete Cat */}
+            <button
+              onClick={() => handleDeleteCat()}
+              className="  bg-[#DC8801] text-[#FFF] p-3 pl-5 pr-5 rounded-[15px] cursor-pointer active:bg-[#2F2F2F] hover:bg-[#eba12a]"
+            >
+              Delete
+            </button>
             <Link
               to="/catprofilecreate"
               className="flex flex-row items-center justify-center gap-3 p-3 pl-6 pr-6 bg-[#B5C04A] text-[#FFF] rounded-[15px] hover:bg-[#CFDA34] active:bg-[#B5C04A]"
@@ -312,24 +357,42 @@ const CatProfileProperty = () => {
                 <label className="text-[16px] text-[#595959]">
                   Adoption history
                 </label>
-                <div className="flex flex-row justify-between p-2 rounded-[10px] border-2 border-[#F2F2F2] bg-[#F2F2F2]">
-                  {/* <div className='flex flex-row gap-5'>
-                                        <label className='text-[#595959]'>Adopter: </label>
-                                        <label className='text-[#2F2F2F] font-bold'>Angelo M. Cabangal</label>
-                                    </div>
 
-                                    <div className='flex flex-row gap-5'>
-                                        <label className='text-[#595959]'>Date Adopted: </label>
-                                        <label className='text-[#2F2F2F] font-bold'>00/00/00</label>
-                                    </div>
+                {adoptionHistory.length === 0 ? (
+                  <div className="flex flex-row justify-between p-2 rounded-[10px] border-2 border-[#F2F2F2] bg-[#F2F2F2]">
+                    <label className="italic text-[#a3a3a3]">
+                      {catprofile.name} has no adoption history.
+                    </label>
+                  </div>
+                ) : (
+                  adoptionHistory.map((history) => (
+                    <div
+                      key={history.adoption_id}
+                      className="flex flex-row justify-between p-2 rounded-[10px] border-2 border-[#F2F2F2] bg-[#F2F2F2]"
+                    >
+                      <div className="flex flex-row gap-5">
+                        <label className="text-[#595959]">Adopter: </label>
+                        <label className="text-[#2F2F2F] font-bold">
+                          {history.adopter_name}
+                        </label>
+                      </div>
 
-                                    <div className='flex flex-row gap-5'>
-                                        <label className='text-[#595959]'>Contact #: </label>
-                                        <label className='text-[#2F2F2F] font-bold'>09084853419</label>
-                                    </div> */}
+                      <div className="flex flex-row gap-5">
+                        <label className="text-[#595959]">Date Adopted: </label>
+                        <label className="text-[#2F2F2F] font-bold">
+                          {history.date_adopted}
+                        </label>
+                      </div>
 
-                  <label className="italic text-[#a3a3a3]">{`${catprofile.name} have no adoption history.`}</label>
-                </div>
+                      <div className="flex flex-row gap-5">
+                        <label className="text-[#595959]">Contact #: </label>
+                        <label className="text-[#2F2F2F] font-bold">
+                          {history.contact_number}
+                        </label>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
 
               {/* CAT DESCRIPTION */}

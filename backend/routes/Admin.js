@@ -13,7 +13,33 @@ import nodemailer from "nodemailer";
 
 const AdminRoute = Router();
 AdminRoute.use(express.json());
+const dir = path.join(process.cwd(), "FileUploads/certificates");
+if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 
+// In Admin.js (or wherever AdminRoute is defined)
+const certificateStorage = multer.diskStorage({
+  destination: function (req, file, callback) {
+    const dir = path.join(process.cwd(), "FileUploads/certificates");
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    callback(null, dir);
+  },
+  filename: function (req, file, callback) {
+    callback(null, Date.now() + path.extname(file.originalname));
+  },
+});
+
+const certificateUpload = multer({
+  storage: certificateStorage,
+  fileFilter: (req, file, callback) => {
+    if (file.mimetype === "application/pdf") {
+      callback(null, true);
+    } else {
+      if (!req.invalidFiles) req.invalidFiles = [];
+      req.invalidFiles.push(file.originalname);
+      callback(null, false);
+    }
+  },
+});
 AdminRoute.use(
   cors({
     origin: "http://localhost:5173",
@@ -35,6 +61,58 @@ const transporter = nodemailer.createTransport({
     user: process.env.EMAIL,
     pass: process.env.MAILPASS,
   },
+});
+AdminRoute.get("/approved", async (req, res) => {
+  try {
+    const db = await getDB();
+    const [rows] = await db.query(`
+      SELECT a.adoption_id, a.adopter, a.contactnumber, a.adoption_date, a.cat_name, a.certificate, u.email
+      FROM adoption a
+      LEFT JOIN users u ON u.user_id = a.adopter_id
+      WHERE a.status = 'Approved'
+      ORDER BY a.adoption_date DESC
+    `);
+    res.json(rows);
+  } catch (err) {
+    console.error("Error fetching approved adoptions:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+AdminRoute.post("/adoptions/send-email", async (req, res) => {
+  const { email, adopter, catName, adoptionDate, certificate } = req.body;
+
+  if (!email) return res.status(400).json({ error: "Email is required" });
+
+  try {
+    const mailOptions = {
+      from: '"Cat Shelter Admin" <whiskerwatch100@gmail.com>',
+      to: email,
+      subject: "Your Cat Adoption Certificate",
+      text: `Hello ${adopter},\n\nCongratulations on adopting ${catName} on ${adoptionDate}!\n\nPlease find your adoption certificate attached.\n\nThank you for adopting!`,
+      attachments: certificate
+        ? [
+            {
+              filename: certificate, // original filename or stored name
+              path: path.join(
+                process.cwd(),
+                "FileUploads/certificates",
+                certificate
+              ),
+            },
+          ]
+        : [],
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log("✅ Email sent:", info.response);
+
+    res.json({ success: true, message: "Email sent successfully!" });
+  } catch (err) {
+    console.error("❌ Error sending email:", err);
+    res
+      .status(500)
+      .json({ error: "Failed to send email", details: err.message });
+  }
 });
 
 AdminRoute.post("/feeders/send-email", async (req, res) => {
@@ -446,5 +524,29 @@ WHERE v.status = 'Approved';
     return res.status(500).json({ err: "Failed to retrieve volunteers!" });
   }
 });
+
+AdminRoute.post(
+  "/adoptions/upload-certificate",
+  certificateUpload.single("certificate"),
+  async (req, res) => {
+    if (!req.file) return res.status(400).json({ error: "No file uploaded" });
+
+    const { adoption_id } = req.body;
+    if (!adoption_id)
+      return res.status(400).json({ error: "Missing adoption ID" });
+
+    try {
+      const db = await getDB();
+      await db.query(
+        "UPDATE adoption SET certificate = ? WHERE adoption_id = ?",
+        [req.file.filename, adoption_id]
+      );
+      res.json({ success: true, message: "Certificate uploaded!" });
+    } catch (err) {
+      console.error("Error saving certificate:", err);
+      res.status(500).json({ error: "Failed to save certificate" });
+    }
+  }
+);
 
 export default AdminRoute;

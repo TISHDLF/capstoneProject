@@ -141,6 +141,35 @@ HVAdoptionRoute.get("/api/adoption/:id", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch adoption" });
   }
 });
+// ----------------- GET ADOPTION HISTORY FOR A CAT -----------------
+HVAdoptionRoute.get("/api/adoptionhistory/:cat_id", async (req, res) => {
+  const db = getDB();
+  const { cat_id } = req.params;
+
+  try {
+    const [rows] = await db.query(
+      "SELECT * FROM adoption WHERE adoptedcat_id = ? ORDER BY date_created DESC",
+      [cat_id]
+    );
+
+    const formatted = rows.map((r) => ({
+      adoption_id: r.adoption_id,
+      adopter_name: r.adopter,
+      adopter_id: r.adopter_id,
+      contact_number: r.contactnumber,
+      date_adopted: r.date_created
+        ? r.date_created.toISOString().split("T")[0]
+        : null,
+      status: r.status,
+      certificate: r.certificate,
+    }));
+
+    res.json(formatted);
+  } catch (err) {
+    console.error("❌ Error fetching adoption history for cat:", err);
+    res.status(500).json({ error: "Failed to fetch adoption history" });
+  }
+});
 
 // ----------------- GET ADOPTION FORM (PDF) -----------------
 HVAdoptionRoute.get("/api/adoption/:id/pdf", async (req, res) => {

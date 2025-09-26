@@ -122,8 +122,9 @@ const Home = () => {
             <div className="justify-center w-270 rounded-br-4xl rounded-bl-4xl rounded-tr-4xl shadow-2xl hover:shadow-xl transition-shadow duration-300 p-5">
               <div className="w-full h-45">
                 {/* Cat Images */}
+                {/* Cat Images */}
                 <div className="flex justify-around gap-3 overflow-hidden">
-                  {catImages.map((img, index) => (
+                  {catImages.slice(0, 6).map((img, index) => (
                     <img
                       key={index}
                       src={img.url}

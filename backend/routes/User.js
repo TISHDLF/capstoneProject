@@ -12,8 +12,14 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { error } from "console";
 
+import nodemailer from "nodemailer";
+
 const UserRoute = Router();
 UserRoute.use(express.json());
+
+function generateOTP() {
+  return Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP
+}
 
 UserRoute.use(
   cors({
@@ -39,7 +45,7 @@ UserRoute.use(
     cookie: {
       httpOnly: true, // prevent JS access to cookie
       secure: false, // true if using HTTPS
-      sameSite: "lax", // allow session in cross-site (for dev)
+      sameSite: "lax",
       maxAge: 1000 * 60 * 60 * 24, // 1 day
     },
   })
@@ -53,20 +59,6 @@ UserRoute.use(
   "/FileUploads",
   express.static(path.join(__dirname, "FileUploads"))
 );
-
-// const storage = multer.diskStorage({
-//   destination: function(req, file, callback) {
-//     const dir = 'FileUploads';
-//     if(!fs.existsSync(dir)) {
-//       fs.mkdirSync(dir)
-//     }
-
-//     callback(null, dir);
-//   },
-//   filename: function(req, file, callback) {
-//     callback(null, Date.now() + path.extname(file.originalname))
-//   }
-// })
 
 const storage = multer.diskStorage({
   destination: function (req, file, callback) {
@@ -150,6 +142,66 @@ UserRoute.post("/signup", async (req, res) => {
   }
 });
 
+// OTP
+UserRoute.post("/send-otp", async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) return res.status(400).json({ error: "Email is required" });
+
+  const otp = generateOTP();
+
+  req.session.otp = otp;
+  req.session.otpEmail = email;
+  req.session.otpExpires = Date.now() + 5 * 60 * 1000;
+
+  try {
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL,
+        pass: process.env.MAILPASS,
+      },
+    });
+
+    const mailOptions = {
+      from: '"Cat Shelter Admin" <whiskerwatch100@gmail.com>',
+      to: email,
+      subject: "Your Email Verification Code",
+      text: `Your OTP is ${otp}. It will expire in 5 minutes.`,
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    res.json({ message: "OTP sent successfully!" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to send OTP" });
+  }
+});
+//Verify OTP
+UserRoute.post("/verify-otp", (req, res) => {
+  const { email, otp } = req.body;
+
+  if (!email || !otp) {
+    return res.status(400).json({ error: "Email and OTP are required" });
+  }
+
+  if (
+    req.session.otp !== otp ||
+    req.session.otpEmail !== email ||
+    Date.now() > req.session.otpExpires
+  ) {
+    return res.status(400).json({ error: "Invalid or expired OTP" });
+  }
+
+  // OTP is valid
+  req.session.otp = null;
+  req.session.otpEmail = null;
+  req.session.otpExpires = null;
+
+  res.json({ message: "OTP verified successfully!" });
+});
+
 UserRoute.post("/login", async (req, res) => {
   let db = getDB();
   try {
@@ -218,50 +270,12 @@ UserRoute.get("/logged", async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    return res.status(200).json(data[0]); // ✅ returns { id, firstname, lastname, role }
+    return res.status(200).json(data[0]);
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: "Server error" });
   }
 });
-
-// UserRoute.post('/adminlogin', async (req, res) => {
-//     try {
-//         let db = getDB();
-//         const { username, password } = req.body;
-
-//         if (!username || !password) {
-//             return res.status(400).json({ error: 'Username and password are required' });
-//         }
-
-//         const [users] = await db.query(
-//             'SELECT * FROM users WHERE username = ? and password = ?', [username, password]
-//         );
-
-//         if (users.length === 0) {
-//             return res.status(401).json({ error: 'Invalid credentials!' });
-//         }
-
-//         const user = users[0];
-//         req.session.user = {
-//             user_id: user.user_id,
-//             role: user.role,
-//             firstname: user.firstname,
-//             lastname: user.lastname,
-//         };
-
-//         res.status(200).json({
-//         message: 'Login successful',
-//         user: {
-//             user_id: user.user_id,
-//             role:user.role
-//         },
-//         });
-//     } catch (err) {
-//         console.error('Login error:', err);
-//         res.status(500).json({ err: 'Internal server error' });
-//     }
-// });
 
 UserRoute.post("/adminlogin", async (req, res) => {
   try {
@@ -319,21 +333,6 @@ UserRoute.post("/adminlogin", async (req, res) => {
 UserRoute.get("/profile", async (req, res) => {
   let db = getDB();
   try {
-    // Step 1: Get and decode the cookie
-    // const rawUserCookie = req.cookies.user;
-
-    // if (!rawUserCookie) {
-    //     return res.status(401).json({ error: 'User not authenticated (no cookie)' });
-    // }
-
-    // const decodedUserCookie = decodeURIComponent(rawUserCookie);
-    // const userData = JSON.parse(decodedUserCookie);
-
-    // // Step 2: Validate user ID from cookie
-    // if (!userData.user_id || isNaN(userData.user_id)) {
-    //     return res.status(400).json({ error: 'Invalid user ID in cookie' });
-    // }
-
     const sessionUser = req.session.user;
 
     if (!sessionUser || !sessionUser.user_id) {
@@ -393,35 +392,12 @@ UserRoute.patch(
       address = "",
       email = "",
       birthday = "",
-      profile_image = "", // assume this is the new filename
-      old_image = "", // send this from frontend when uploading new image
+      profile_image = "",
+      old_image = "",
     } = req.body;
 
     const newImage = req.file ? req.file.filename : null;
     try {
-      // const rawUserCookie = req.cookies.user;
-
-      // if (!rawUserCookie) {
-      //     return res.status(401).json({ error: 'User not authenticated (no cookie)' });
-      // }
-
-      // const decodedUserCookie = decodeURIComponent(rawUserCookie);
-      // const userData = JSON.parse(decodedUserCookie);
-
-      // if (!userData.user_id || isNaN(userData.user_id)) {
-      //     return res.status(400).json({ error: 'Invalid user ID in cookie' });
-      // }
-
-      // 1. Remove old image if new one is uploaded
-      // if (newImage && old_image && old_image !== newImage) {
-      //     const filePath = path.join(__dirname, 'FileUploads', old_image);
-      //     fs.unlink(filePath, (err) => {
-      //         if (err && err.code !== 'ENOENT') {
-      //         console.error(`Error deleting file: ${old_image}`, err);
-      //         }
-      //     });asd
-      // }
-
       const sessionUser = req.session.user;
 
       if (!sessionUser || !sessionUser.user_id) {

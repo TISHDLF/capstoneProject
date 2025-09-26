@@ -78,7 +78,7 @@ const FeedingVolunteers = () => {
               </div>
 
               <table className="flex flex-col gap-2 w-full">
-                <thead className="flex flex-col w-full gap-2">
+                <thead className="flex flex-col w-full gap-1">
                   <tr className="grid grid-cols-5 justify-items-start place-items-center w-full bg-[#DC8801] p-3 rounded-[15px] text-[#FFF]">
                     <th>User ID</th>
                     <th>Name</th>
@@ -113,10 +113,36 @@ const FeedingVolunteers = () => {
                         />
                       </td>
                       <td className="flex gap-1">
-                        <button className="bg-[#bbbbbb] p-1 pl-4 pr-4 text-[#2F2F2F] rounded-[15px] cursor-pointer active:bg-[#a3a3a3]">
+                        <br />
+                        <button
+                          className="bg-[#bbbbbb] p-1 pl-3 pr-3 text-[#2F2F2F] rounded-[15px] cursor-pointer active:bg-[#a3a3a3]"
+                          onClick={async () => {
+                            if (
+                              window.confirm(
+                                `Are you sure you want to remove ${feeder.firstname} ${feeder.lastname}?`
+                              )
+                            ) {
+                              try {
+                                await axios.delete(
+                                  `http://localhost:5000/admin/feeders/delete/${feeder.feeder_id}`
+                                );
+
+                                setFeeders((prev) =>
+                                  prev.filter(
+                                    (f) => f.feeder_id !== feeder.feeder_id
+                                  )
+                                );
+
+                                alert("Feeder removed successfully!");
+                              } catch (err) {
+                                console.error("Error removing feeder:", err);
+                                alert("Failed to remove feeder.");
+                              }
+                            }
+                          }}
+                        >
                           Remove
                         </button>
-
                         <button
                           className="bg-[#DC8801] p-1 pl-4 pr-4 text-white rounded-[15px] cursor-pointer hover:bg-[#b56a00]"
                           onClick={async () => {
@@ -124,7 +150,7 @@ const FeedingVolunteers = () => {
                               await axios.post(
                                 "http://localhost:5000/admin/feeders/send-email",
                                 {
-                                  email: feeder.email, // make sure your query includes feeder.email
+                                  email: feeder.email,
                                   firstname: feeder.firstname,
                                   lastname: feeder.lastname,
                                   feedingDate: feedingDates[feeder.feeder_id],

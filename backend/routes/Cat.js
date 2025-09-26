@@ -110,6 +110,50 @@ CatRoute.post("/create", async (req, res) => {
     res.status(500).json({ err: "Internal server error" });
   }
 });
+//Delete Cat
+CatRoute.delete("/delete/:cat_id", async (req, res) => {
+  const db = getDB();
+  const { cat_id } = req.params;
+
+  try {
+    // Delete associated adoption records
+    await db.query("DELETE FROM adoption WHERE adoptedcat_id = ?", [cat_id]);
+
+    // Delete associated images from server
+    const [images] = await db.query(
+      "SELECT image_filename FROM cat_images WHERE cat_id = ?",
+      [cat_id]
+    );
+
+    images.forEach((img) => {
+      const filePath = path.join(
+        __dirname,
+        "FileUploads/cats",
+        img.image_filename
+      );
+      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    });
+
+    // Delete images from DB
+    await db.query("DELETE FROM cat_images WHERE cat_id = ?", [cat_id]);
+
+    // Delete cat profile
+    const [result] = await db.query("DELETE FROM cat WHERE cat_id = ?", [
+      cat_id,
+    ]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "Cat not found" });
+    }
+
+    res
+      .status(200)
+      .json({ message: "Cat profile and related data deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting cat:", err);
+    res.status(500).json({ error: "Failed to delete cat" });
+  }
+});
 
 CatRoute.get("/list", async (req, res) => {
   try {

@@ -143,6 +143,27 @@ FeederRoute.get("/application/:id/form", async (req, res) => {
     res.status(500).json({ message: "Server error while fetching form" });
   }
 });
+// DELETE a volunteer (feeder)
+FeederRoute.delete("/delete/:feeder_id", async (req, res) => {
+  const db = await getDB();
+  const { feeder_id } = req.params;
+
+  try {
+    const [result] = await db.query(
+      "DELETE FROM volunteer WHERE feeder_id = ?",
+      [feeder_id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "Feeder not found" });
+    }
+
+    res.json({ message: "Feeder removed successfully" });
+  } catch (err) {
+    console.error("Error deleting feeder:", err);
+    res.status(500).json({ error: "Failed to delete feeder" });
+  }
+});
 
 FeederRoute.post("/api/application/:id/approve", async (req, res) => {
   const db = await getDB(); // 👈 make sure to await
