@@ -17,6 +17,15 @@ const SideNavigation = () => {
   const menuRef = useRef(null);
 
   const isLoggedIn = !!user;
+  const isAdmin = user?.role === "admin" || user?.role === "head_volunteer"; // ✅ safe check
+
+  // Choose dashboard path based on role
+  const dashboardPath =
+    user?.role === "admin"
+      ? "/adminlist"
+      : user?.role === "head_volunteer"
+      ? "/headvolunteer-dashboard"
+      : null;
 
   // Fetch profile image
   useEffect(() => {
@@ -127,15 +136,16 @@ const SideNavigation = () => {
               My Profile
             </Link>
 
-            {/* Uncomment this if you want dashboard navigation by role */}
-            {/* {isAdminOrHeadVolunteer && (
+            {/* Show Dashboard link if user is admin/head_volunteer */}
+            {isAdmin && dashboardPath && (
               <Link
                 to={dashboardPath}
                 className="text-[#000] p-3 pl-6 pr-6 w-full bg-[#fef8e2] hover:bg-[#f9e394] active:bg-[#feaf31] active:text-[#FFF] rounded-[10px]"
+                onClick={() => setIsVisible(false)}
               >
                 Dashboard
               </Link>
-            )} */}
+            )}
 
             <button
               className="text-[#000] text-center p-3 pl-6 bg-[#fef8e2] pr-6 w-full hover:bg-[#f9e394] active:bg-[#feaf31] active:text-[#FFF] rounded-[10px]"

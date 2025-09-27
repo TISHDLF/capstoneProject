@@ -65,6 +65,7 @@ import HeadVolunteerProfile from "./pages/HeadVolunteer/HeadVolunteerProfile";
 import AdoptionApplication from "./pages/HeadVolunteer/AdoptionApplication";
 import FeederApplication from "./pages/HeadVolunteer/FeederApplication";
 import ReportandAnalytics from "./pages/HeadVolunteer/ReportandAnalytics";
+import VerificationPage from "./pages/LoginAndSignUp/VerificationPage";
 
 const App = () => {
   const router = createBrowserRouter(
@@ -92,6 +93,7 @@ const App = () => {
         <Route path="login" element={<Login />} />
         <Route path="adminlogin" element={<AdminLogin />} />
         <Route path="signup" element={<SignUp />} />
+        <Route path="verify" element={<VerificationPage />} />
         {/* Admin Routes */}
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="profile" element={<Profile />} />

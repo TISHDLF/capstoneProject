@@ -40,7 +40,7 @@ const Login = () => {
       } else if (user.role === "head_volunteer") {
         navigate("/headvolunteerpage");
       } else if (user.role === "admin") {
-        navigate("/adminlist");
+        navigate("/home");
       }
     } catch (err) {
       const errorMessage =
@@ -105,13 +105,6 @@ const Login = () => {
                 Sign Up
               </Link>
             </div>
-
-            <Link
-              to="/adminlogin"
-              className="pt-4 active:text-[#977655] hover:underline"
-            >
-              Log in as Admin
-            </Link>
           </div>
         </form>
       </div>

@@ -73,12 +73,13 @@ const Home = () => {
           </div>
         </div>
 
+        <br />
         <div className="flex p-10 pl-0 pr-0">
           <div className="flex justify-center p-10 gap-10">
             <div className="w-13"></div>
             <div className="justify-center w-270 rounded-br-4xl rounded-bl-4xl rounded-tr-4xl shadow-2xl hover:shadow-xl transition-shadow duration-300 p-3">
               <div>
-                <div className="bg-yellow-600 w-50 p-4 text-white rounded-tr-4xl rounded-tl-4xl absolute top-227 left-33 hover: transition-shadow duration-300 z-0">
+                <div className="bg-yellow-600 w-50 p-4 text-white rounded-tr-4xl rounded-tl-4xl absolute top-240 left-33 hover: transition-shadow duration-300 z-0">
                   Be part of our mission
                 </div>
                 {}
@@ -100,10 +101,10 @@ const Home = () => {
                   </div>
                   <div className="flex justify-end">
                     <Link
-                      to="/aboutus"
+                      to="/"
                       className="pl-5 pr-5 p-2 bg-yellow-600 active:bg-yellow-500 text-white rounded-2xl"
                     >
-                      More info!
+                      Join Now
                     </Link>
                   </div>
                 </div>

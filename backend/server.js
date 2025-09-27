@@ -39,6 +39,7 @@ app.use(
   "/uploads/cats",
   express.static(path.join(process.cwd(), "FileUploads/cats"))
 );
+app.use("/static", express.static(path.join(process.cwd(), "public")));
 
 await connectDB();
 app.use("/cats", CatRoute);

@@ -12,14 +12,18 @@ const ProgressBar = () => {
   );
 
   const labels = [
-    "The Catnip Captain",
-    "Meowntain Mover",
-    "Furmidable Friend",
-    "Snuggle Scout",
     "Toe Bean Trainee",
+    "Snuggle Scout",
+    "Furmidable Friend",
+    "Meowntain Mover",
+    "The Catnip Captain",
   ];
+  // "The Catnip Captain",
+  //   "Meowntain Mover",
+  //   "Furmidable Friend",
+  //   "Snuggle Scout",
+  //   "Toe Bean Trainee",
 
-  // Track which circle is selected (clicked)
   const [activeCircle, setActiveCircle] = useState(null);
 
   const handleCircleClick = (index) => {

@@ -85,7 +85,7 @@ AdminRoute.post("/adoptions/send-email", async (req, res) => {
 
   try {
     const mailOptions = {
-      from: '"Cat Shelter Admin" <whiskerwatch100@gmail.com>',
+      from: '"Whiskerwatch Admin" <whiskerwatch100@gmail.com>',
       to: email,
       subject: "Your Cat Adoption Certificate",
       text: `Hello ${adopter},\n\nCongratulations on adopting ${catName} on ${adoptionDate}!\n\nPlease find your adoption certificate attached.\n\nThank you for adopting!`,
@@ -122,7 +122,7 @@ AdminRoute.post("/feeders/send-email", async (req, res) => {
 
   try {
     const mailOptions = {
-      from: '"Cat Shelter Admin" <whiskerwatch100@gmail.com>',
+      from: '"Whiskerwatch Admin" <whiskerwatch100@gmail.com>',
       to: email,
       subject: "Your Feeding Volunteer Schedule",
       text: `Hello ${firstname} ${lastname},\n\nYour assigned feeding schedule is: ${feedingDate}\n\nThank you for volunteering!`,

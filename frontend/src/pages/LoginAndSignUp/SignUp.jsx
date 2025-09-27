@@ -21,58 +21,16 @@ const SignUp = () => {
   const [isCodeSent, setIsCodeSent] = useState(false);
   const [otpVerified, setOtpVerified] = useState(false);
 
-  const sendCode = async () => {
-    if (!email) {
-      setError("Please enter your email first");
-      return;
-    }
-
-    try {
-      await axios.post(
-        "http://localhost:5000/user/send-otp",
-        { email },
-        { withCredentials: true }
-      );
-      alert("OTP sent to your email!");
-      setIsCodeSent(true);
-    } catch (err) {
-      console.error("Error sending OTP:", err);
-      setError("Failed to send OTP");
-    }
-  };
-
-  const verifyOtp = async () => {
-    try {
-      await axios.post(
-        "http://localhost:5000/user/verify-otp",
-        { email, otp },
-        { withCredentials: true }
-      );
-      alert("OTP verified successfully!");
-      setOtpVerified(true);
-    } catch (err) {
-      console.error("Error verifying OTP:", err);
-      setError("Invalid or expired OTP");
-    }
-  };
-
   const HandleSignUp = async (event) => {
     event.preventDefault();
     setError("");
     setLoading(true);
-    if (!otpVerified) {
-      setError("Please verify your email before signing up");
-      setLoading(false);
-      return;
-    }
 
     if (password !== confirmPassword) {
       setPasswordMatchError(true);
       setError("Passwords do not match!");
       setLoading(false);
       return;
-    } else {
-      setPasswordMatchError(false);
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -83,24 +41,33 @@ const SignUp = () => {
     }
 
     try {
-      const res = await axios.post("http://localhost:5000/user/signup", {
-        firstname,
-        lastname,
-        contactnumber,
-        birthday,
+      // 🔹 Ask backend to check for duplicates AND send OTP
+      await axios.post("http://localhost:5000/user/send-otp", {
         email,
         username,
-        address,
-        password,
+        contactnumber,
       });
 
-      if (res.status === 201 || res.status === 200) {
-        navigate("/login");
+      // ✅ If successful → navigate to verify page
+      navigate("/verify", {
+        state: {
+          firstname,
+          lastname,
+          contactnumber,
+          birthday,
+          email,
+          username,
+          address,
+          password,
+        },
+      });
+    } catch (err) {
+      if (err.response && err.response.status === 409) {
+        // backend duplicate check failed
+        setError(err.response.data.error);
+      } else {
+        setError("Something went wrong. Please try again.");
       }
-    } catch (error) {
-      setError(
-        error.response?.data?.error || "An error occurred during signup"
-      );
     } finally {
       setLoading(false);
     }
@@ -204,40 +171,9 @@ const SignUp = () => {
                 : "border-b-2 border-b-[#A8784F] p-2 grid-col placeholder-[#A3A3A3] text-[#d23f07]"
             }
           />
-          <div className="flex flex-col gap-2 col-span-2">
-            <div className="flex gap-2 items-center">
-              <input
-                type="text"
-                placeholder="Code"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value)}
-                className="border-b-2 border-b-[#A8784F] p-2 w-40"
-              />
-              {!isCodeSent ? (
-                <button
-                  type="button"
-                  onClick={sendCode}
-                  className="bg-[#A8784F] text-white rounded-2xl p-2"
-                >
-                  Send Code
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={verifyOtp}
-                  className="bg-[#B5C04A] text-white rounded-2xl p-2"
-                >
-                  Verify Code
-                </button>
-              )}
-            </div>
-            {otpVerified && (
-              <span className="text-green-600">OTP Verified </span>
-            )}
-          </div>
 
           <div className="flex flex-col items-center gap-3 col-span-2">
-            <label>{error}</label>
+            <label className="text-red-600">{error}</label>
             <button
               type="submit"
               disabled={loading}
@@ -245,6 +181,7 @@ const SignUp = () => {
             >
               {loading ? "Signing Up..." : "Sign Up"}
             </button>
+
             <label>
               Already a member of WhiskerWatch?
               <Link

@@ -112,10 +112,28 @@ UserRoute.post("/signup", async (req, res) => {
       password,
     } = req.body;
 
+    // Check for existing email, username, or contact number
+    const [existing] = await db.query(
+      `SELECT * FROM users WHERE email = ? OR username = ? `,
+      [email, username]
+    );
+
+    if (existing.length > 0) {
+      const conflicts = [];
+      if (existing.some((u) => u.email === email)) conflicts.push("Email");
+      if (existing.some((u) => u.username === username))
+        conflicts.push("Username");
+
+      return res.status(409).json({
+        error: `${conflicts.join(", ")} already in use. Please choose another.`,
+      });
+    }
+
+    // Insert new user
     const [result] = await db.query(
       `INSERT INTO users 
-            (firstname, lastname, contactnumber, birthday, email, username, address, password) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ? )`,
+        (firstname, lastname, contactnumber, birthday, email, username, address, password) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ? )`,
       [
         firstname,
         lastname,
@@ -137,47 +155,44 @@ UserRoute.post("/signup", async (req, res) => {
       },
     });
   } catch (err) {
-    console.error("Login error:", err);
+    console.error("Signup error:", err);
     res.status(500).json({ err: "Internal server error" });
   }
 });
 
 // OTP
 UserRoute.post("/send-otp", async (req, res) => {
-  const { email } = req.body;
+  const { email, username } = req.body;
+  const db = getDB();
 
   if (!email) return res.status(400).json({ error: "Email is required" });
 
-  const otp = generateOTP();
+  // 🔹 Check for duplicates
+  const [existing] = await db.query(
+    "SELECT * FROM users WHERE email = ? OR username = ? ",
+    [email, username]
+  );
 
+  if (existing.length > 0) {
+    const conflicts = [];
+    if (existing.some((u) => u.email === email)) conflicts.push("Email");
+    if (existing.some((u) => u.username === username))
+      conflicts.push("Username");
+
+    return res.status(409).json({
+      error: `${conflicts.join(", ")} already in use. Please choose another.`,
+    });
+  }
+
+  // ✅ If no duplicates → continue with OTP generation
+  const otp = generateOTP();
   req.session.otp = otp;
   req.session.otpEmail = email;
   req.session.otpExpires = Date.now() + 5 * 60 * 1000;
 
-  try {
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL,
-        pass: process.env.MAILPASS,
-      },
-    });
-
-    const mailOptions = {
-      from: '"Cat Shelter Admin" <whiskerwatch100@gmail.com>',
-      to: email,
-      subject: "Your Email Verification Code",
-      text: `Your OTP is ${otp}. It will expire in 5 minutes.`,
-    };
-
-    await transporter.sendMail(mailOptions);
-
-    res.json({ message: "OTP sent successfully!" });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to send OTP" });
-  }
+  // send email...
 });
+
 //Verify OTP
 UserRoute.post("/verify-otp", (req, res) => {
   const { email, otp } = req.body;
