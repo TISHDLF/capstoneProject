@@ -93,7 +93,7 @@ const SideNavigation = () => {
   return (
     <div
       ref={menuRef}
-      className="flex flex-col gap-4 min-w-[200px] h-auto pt-10 absolute -right-5 top-20 z-10"
+      className="flex flex-col gap-4 min-w-[200px] h-auto pt-10 absolute right-0 top-20 z-10"
     >
       {/* Profile Section */}
       <div

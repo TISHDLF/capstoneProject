@@ -58,7 +58,7 @@ const Feeding = () => {
           window.location.href = `/feedinginfo/${res.data.application_id}`;
         } else if (res.data.status === "pending") {
           setSubmitMessage(
-            "You already have a pending application. Please wait for approval."
+            "You already have a pending application. Please wait for approval. We will notify you as soon as its approved through your email "
           );
         }
         // else status === "none" → they stay on /feeding to apply
