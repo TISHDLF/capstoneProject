@@ -5,6 +5,7 @@ import axios from "axios";
 import PopLogout from "../modal/PopLogout.jsx";
 import { useWhiskerMeter } from "../context/WhiskerMeterContext.jsx";
 import { useSession } from "../context/SessionContext.jsx";
+import LoginFirstModal from "../modal/LoginFirstModal.jsx";
 
 const SideNavigation = () => {
   const location = useLocation();
@@ -12,7 +13,11 @@ const SideNavigation = () => {
   const { resetWhiskerMeter } = useWhiskerMeter();
 
   const [profileImage, setProfileImage] = useState(null);
+
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  const [modalOpen, setModalOpen] = useState(false);
+
   const [isVisible, setIsVisible] = useState(false);
   const menuRef = useRef(null);
 
@@ -22,7 +27,7 @@ const SideNavigation = () => {
   // Choose dashboard path based on role
   const dashboardPath =
     user?.role === "admin"
-      ? "/adminlist"
+      ? "/dashboard"
       : user?.role === "head_volunteer"
       ? "/headvolunteer-dashboard"
       : null;
@@ -46,7 +51,6 @@ const SideNavigation = () => {
     fetchProfileImage();
   }, [user]);
 
-  // Close dropdown if click outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
@@ -64,13 +68,21 @@ const SideNavigation = () => {
   }, [isVisible]);
 
   const handleLogout = () => {
-    logout(); // Clear session context
-    resetWhiskerMeter(); // Reset whisker meter
-    window.location.href = "/home"; // Navigate to home
+    logout();
+    resetWhiskerMeter();
+    window.location.href = "/home";
   };
 
   const toggleProfileMenu = () => {
     setIsVisible((prev) => !prev);
+  };
+
+  const handleProtectedNav = (path) => {
+    if (!isLoggedIn) {
+      setModalOpen(true);
+    } else {
+      window.location.href = path;
+    }
   };
 
   const sideItemStyle =
@@ -81,7 +93,7 @@ const SideNavigation = () => {
   return (
     <div
       ref={menuRef}
-      className="flex flex-col gap-4 min-w-[200px] h-auto pt-10 absolute -right-5 top-20 z-0"
+      className="flex flex-col gap-4 min-w-[200px] h-auto pt-10 absolute -right-5 top-20 z-10"
     >
       {/* Profile Section */}
       <div
@@ -176,8 +188,9 @@ const SideNavigation = () => {
 
       {/* Navigation Links */}
       <div className="flex flex-col justify-center gap-4 pl-12">
-        <Link
-          to="/donate"
+        {/* Donate */}
+        <div
+          onClick={() => handleProtectedNav("/donate")}
           className={
             location.pathname === "/donate"
               ? sideItemStyleCurrent
@@ -188,7 +201,7 @@ const SideNavigation = () => {
             <img src="/src/assets/icons/donation.png" alt="donation" />
           </div>
           <label className="cursor-pointer">Donate</label>
-        </Link>
+        </div>
 
         <Link
           to="/catadoption"
@@ -204,8 +217,9 @@ const SideNavigation = () => {
           <label className="cursor-pointer">Cat Adoption</label>
         </Link>
 
-        <Link
-          to="/feeding"
+        {/* Feeding */}
+        <div
+          onClick={() => handleProtectedNav("/feeding")}
           className={
             location.pathname === "/feeding"
               ? sideItemStyleCurrent
@@ -216,7 +230,7 @@ const SideNavigation = () => {
             <img src="/src/assets/icons/pet-food.png" alt="feeding" />
           </div>
           <label className="cursor-pointer">Feeding</label>
-        </Link>
+        </div>
 
         <Link
           to="/communityguide"
@@ -236,6 +250,12 @@ const SideNavigation = () => {
       {/* Logout Confirmation Modal */}
       {showLogoutModal && (
         <PopLogout
+          onCancel={() => setShowLogoutModal(false)}
+          onConfirm={handleLogout}
+        />
+      )}
+      {modalOpen && (
+        <LoginFirstModal
           onCancel={() => setShowLogoutModal(false)}
           onConfirm={handleLogout}
         />

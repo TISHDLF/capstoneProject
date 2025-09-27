@@ -66,6 +66,7 @@ import AdoptionApplication from "./pages/HeadVolunteer/AdoptionApplication";
 import FeederApplication from "./pages/HeadVolunteer/FeederApplication";
 import ReportandAnalytics from "./pages/HeadVolunteer/ReportandAnalytics";
 import VerificationPage from "./pages/LoginAndSignUp/VerificationPage";
+import FeedingInfo from "./pages/Feeder/FeedingInfo";
 
 const App = () => {
   const router = createBrowserRouter(
@@ -88,6 +89,8 @@ const App = () => {
         <Route path="catprofile/:cat_id" element={<CatProfile />} />
         <Route path="adopteeform/:cat_id" element={<AdopteeForm />} />
         <Route path="feeding" element={<Feeding />} />
+        <Route path="feedinginfo/:application_id" element={<FeedingInfo />} />
+
         <Route path="communityguide" element={<CommunityGuide />} />
         {/* Auth */}
         <Route path="login" element={<Login />} />

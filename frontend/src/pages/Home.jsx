@@ -7,14 +7,14 @@ import SideNavigation from "../components/SideNavigation";
 import HeadVolunteerSideBar from "../components/HeadVolunteerSideBar";
 import Footer from "../components/Footer";
 import CatBot from "../components/CatBot";
+import WhiskerMeterGuide from "../components/WhiskerMeterGuide";
+import WhiskerMeter from "../components/WhiskerMeter";
 
 import pic from "../assets/CatNewsModel.png";
 import news1 from "../assets/SampleNewsPic.png";
 import news2 from "../assets/news2.png";
 import news3 from "../assets/news3.png";
 
-import WhiskerMeterGuide from "../components/WhiskerMeterGuide";
-import WhiskerMeter from "../components/WhiskerMeter";
 import { useWhiskerMeter } from "../context/WhiskerMeterContext";
 import { useSession } from "../context/SessionContext";
 
@@ -58,16 +58,12 @@ const Home = () => {
         <SideNavigation />
       )}
       {/* Cat Community News Section */}
-      <div className="h-full w-full">
+      <div className="h-full w-full ">
         <div className="flex p-10 pl-0 pr-0">
           <div className="flex justify-center p-10 gap-10">
             <div className="w-13"></div>
             <div className="justify-center w-270 rounded-br-4xl rounded-bl-4xl rounded-tl-4xl shadow-2xl hover:shadow-xl transition-shadow duration-300 p-3">
               <img src={pic} alt="" className="w-full" />
-              <p className="absolute top-150 left-50 text-white font-bold text-[50px]">
-                Stray Today,
-                <br /> Safe Tomorrow
-              </p>
             </div>
             <div></div>
           </div>
@@ -76,10 +72,10 @@ const Home = () => {
         <br />
         <div className="flex p-10 pl-0 pr-0">
           <div className="flex justify-center p-10 gap-10">
-            <div className="w-13"></div>
-            <div className="justify-center w-270 rounded-br-4xl rounded-bl-4xl rounded-tr-4xl shadow-2xl hover:shadow-xl transition-shadow duration-300 p-3">
-              <div>
-                <div className="bg-yellow-600 w-50 p-4 text-white rounded-tr-4xl rounded-tl-4xl absolute top-240 left-33 hover: transition-shadow duration-300 z-0">
+            <div className="w-10"></div>
+            <div className="justify-center w-270 rounded-br-4xl rounded-bl-4xl rounded-tl-4xl shadow-2xl hover:shadow-xl transition-shadow duration-300 p-3">
+              <div className="">
+                <div className="bg-yellow-600 w-50 p-4 text-white rounded-tr-4xl rounded-tl-4xl absolute top-233 right-78 hover: transition-shadow duration-300 z-0">
                   Be part of our mission
                 </div>
                 {}
@@ -117,10 +113,10 @@ const Home = () => {
         <div className="flex p-10 pl-0 pr-0">
           <div className="flex justify-center p-10 gap-10">
             <div className="w-13"></div>
-            <div className="bg-yellow-600 w-50 p-4 text-white rounded-tr-4xl rounded-tl-4xl absolute top-374 left-33 hover: transition-shadow duration-300 z-0">
+            <div className="bg-yellow-600 w-50 p-4 text-white rounded-tr-4xl rounded-tl-4xl absolute top-380 right-78 hover: transition-shadow duration-300 z-0">
               Adopt a cat
             </div>
-            <div className="justify-center w-270 rounded-br-4xl rounded-bl-4xl rounded-tr-4xl shadow-2xl hover:shadow-xl transition-shadow duration-300 p-5">
+            <div className="justify-center w-270 rounded-br-4xl rounded-bl-4xl rounded-tl-4xl shadow-2xl hover:shadow-xl transition-shadow duration-300 p-5">
               <div className="w-full h-45">
                 {/* Cat Images */}
                 {/* Cat Images */}
@@ -151,6 +147,7 @@ const Home = () => {
             <div></div>
           </div>
         </div>
+
         <WhiskerMeterGuide />
         <Footer />
       </div>

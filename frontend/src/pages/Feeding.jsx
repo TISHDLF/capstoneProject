@@ -43,16 +43,32 @@ const Feeding = () => {
 
   const printRef = React.useRef(null);
 
-  // const fetchUser = async () => {
-  //   try {
-  //     const response = await axios.get(`http://localhost:5000/user/logged?user_id=${userParsed.user_id}`)
-  //     console.log(response.data);
+  useEffect(() => {
+    const checkApplication = async () => {
+      if (!userData?.user_id) return;
 
-  //     return response.data
-  //   } catch (err) {
-  //     console.error('Failed to fetch user data: ', err);
-  //   }
-  // }
+      try {
+        const res = await axios.get(
+          `http://localhost:5000/feeder/status/${userData.user_id}`
+        );
+        console.log("Application status:", res.data);
+
+        if (res.data.status === "approved") {
+          // redirect to feedinginfo/:id
+          window.location.href = `/feedinginfo/${res.data.application_id}`;
+        } else if (res.data.status === "pending") {
+          setSubmitMessage(
+            "You already have a pending application. Please wait for approval."
+          );
+        }
+        // else status === "none" → they stay on /feeding to apply
+      } catch (err) {
+        console.error("Failed to check application:", err);
+      }
+    };
+
+    checkApplication();
+  }, [userData]);
 
   useEffect(() => {
     const fetchUser = async () => {

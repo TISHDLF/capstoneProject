@@ -143,6 +143,40 @@ FeederRoute.get("/application/:id/form", async (req, res) => {
     res.status(500).json({ message: "Server error while fetching form" });
   }
 });
+// Check application status by user_id
+FeederRoute.get("/status/:user_id", async (req, res) => {
+  const { user_id } = req.params;
+  try {
+    const db = await getDB();
+
+    const [apps] = await db.query(
+      "SELECT application_id, status FROM volunteer_application WHERE user_id = ? ORDER BY application_date DESC LIMIT 1",
+      [user_id]
+    );
+
+    if (apps.length === 0) {
+      return res.json({ status: "none" }); // no application yet
+    }
+
+    const application = apps[0];
+
+    if (application.status === "Accepted") {
+      return res.json({
+        status: "approved",
+        application_id: application.application_id,
+      });
+    }
+
+    return res.json({
+      status: "pending",
+      application_id: application.application_id,
+    });
+  } catch (err) {
+    console.error("❌ Error fetching application status:", err);
+    res.status(500).json({ error: "Failed to fetch status" });
+  }
+});
+
 // DELETE a volunteer (feeder)
 FeederRoute.delete("/delete/:feeder_id", async (req, res) => {
   const db = await getDB();

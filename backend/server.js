@@ -13,6 +13,7 @@ import WhiskerMeterRoute from "./routes/WhiskerMeter.js";
 import DonationRoute from "./routes/Donation.js";
 import HVAdoptionRoute from "./routes/AdoptionHV.js";
 import FeederRoute from "./routes/Feeder.js";
+import ReportRoute from "./routes/reports.js";
 import multer from "multer";
 import fs from "fs";
 import path from "path";
@@ -34,7 +35,19 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
-
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || "your_secret_key",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+      maxAge: 1000 * 60 * 60 * 24,
+    },
+  })
+);
 app.use(
   "/uploads/cats",
   express.static(path.join(process.cwd(), "FileUploads/cats"))
@@ -49,6 +62,7 @@ app.use("/whisker", WhiskerMeterRoute);
 app.use("/donate", DonationRoute);
 app.use("/adopt", HVAdoptionRoute);
 app.use("/feeder", FeederRoute);
+app.use("/report", ReportRoute);
 
 app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());
@@ -61,20 +75,6 @@ app.use(
   })
 );
 app.use(express.json());
-
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET || "your_secret_key",
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      httpOnly: true, // prevent JS access to cookie
-      secure: false, // true if using HTTPS
-      sameSite: "lax", // allow session in cross-site (for dev)
-      maxAge: 1000 * 60 * 60 * 24, // 1 day
-    },
-  })
-);
 
 const port = process.env.PORT || 5000;
 
@@ -215,10 +215,6 @@ function listRoutes(app) {
     }
   });
 }
-
-const db = getDB();
-const [rows] = await db.query("SHOW TABLES"); // ✅ safe query
-console.log("📌 Tables:", rows);
 
 // Global error handler
 app.use((err, req, res, next) => {
