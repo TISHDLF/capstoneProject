@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React from "react";
 import logo from "../assets/whiskerwatchlogo.png";
 import { Link, useLocation } from "react-router-dom";
+import NotificationBell from "./NotificationBell";
 
 const pageStyling =
   "flex items-center justify-center box-content h-full w-auto px-[10px] py-[6px] rounded-[10px] hover:bg-[#DC8801] hover:text-[#FFF] hover:cursor-pointer active:bg-[#FFF] active:text-[#DC8801] active:cursor-pointer";
@@ -58,17 +59,8 @@ const NavigationBar = () => {
       </div>
 
       <div className="flex items-center justify-center w-auto h-[100px] box-border">
-        <button
-          onClick={() => setModalOpen(true)}
-          className="flex items-center justify-center w-[40px] p-[8px] h-auto bg-[#FFFFFF] rounded-[10px] drop-shadow-lg
-        active:scale-100 active:border-2 border-[#DC8801] border-solid"
-        >
-          <img
-            className="max-w-full max-h-full object-contain"
-            src="/src/assets/icons/notification-bell.png"
-            alt="notification bell"
-          />
-        </button>
+        {/* Use the optimized NotificationBell component directly */}
+        <NotificationBell />
       </div>
     </div>
   );

@@ -12,7 +12,41 @@ HVAdoptionRoute.use(express.json());
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+// Create notification helper function
+const createNotification = async (userId, message, type = "adoption") => {
+  const db = getDB();
+  try {
+    await db.query(
+      `INSERT INTO notifications (user_id, message, type, created_at, is_read) 
+       VALUES (?, ?, ?, NOW(), 0)`,
+      [userId, message, type]
+    );
+    console.log(`✅ Notification created for user ${userId}: ${message}`);
+  } catch (err) {
+    console.error("❌ Failed to create notification:", err);
+  }
+};
 
+// Notify all regular users when a new cat becomes available
+const notifyNewCatAvailable = async (catName, catId) => {
+  const db = getDB();
+  try {
+    // Get all regular users
+    const [users] = await db.query(
+      `SELECT user_id FROM users WHERE role = 'regular'`
+    );
+
+    const message = `🐱 Great news! "${catName}" is now available for adoption! Visit our cat profiles to learn more about this adorable cat.`;
+
+    for (const user of users) {
+      await createNotification(user.user_id, message, "cat_available");
+    }
+
+    console.log(`✅ Notified ${users.length} users about new cat: ${catName}`);
+  } catch (err) {
+    console.error("❌ Failed to notify users about new cat:", err);
+  }
+};
 // ----------------- MULTER STORAGE -----------------
 const storage = multer.diskStorage({
   destination: function (req, file, callback) {
@@ -45,10 +79,10 @@ const upload = multer({
   },
 });
 
-// ----------------- APPLY ROUTE -----------------
+// ----------------- APPLY ROUTE WITH NOTIFICATIONS -----------------
 HVAdoptionRoute.post(
   "/apply",
-  upload.array("id_image", 5), // handle both adoption form PDF + ID photo
+  upload.array("id_image", 5),
   async (req, res) => {
     try {
       const db = getDB();
@@ -78,6 +112,14 @@ HVAdoptionRoute.post(
           null, // certificate = NULL for now
           idImageFile, // JSON with both adoption PDF + ID photo
         ]
+      );
+
+      // 🔔 CREATE NOTIFICATION FOR USER
+      const adoptionMessage = `Thank you for your adoption application for "${cat_name}"! Your application (ID: ${result.insertId}) is currently under review. We'll notify you once a decision has been made.`;
+      await createNotification(
+        adopter_id,
+        adoptionMessage,
+        "adoption_submitted"
       );
 
       res.status(201).json({
@@ -218,6 +260,7 @@ HVAdoptionRoute.post("/api/adoption/:id/approve", async (req, res) => {
 
     const userId = adoption[0].adopter_id;
     const catId = adoption[0].adoptedcat_id;
+    const catName = adoption[0].cat_name;
 
     // Update adoption status
     await db.query(
@@ -250,6 +293,10 @@ HVAdoptionRoute.post("/api/adoption/:id/approve", async (req, res) => {
       );
     }
 
+    // 🔔 CREATE APPROVAL NOTIFICATION
+    const approvalMessage = `🎉 Congratulations! Your adoption application for "${catName}" (Application ID: ${adoptionId}) has been approved! You've earned ${rewardPoints} whisker points. Please contact us to arrange the adoption process.`;
+    await createNotification(userId, approvalMessage, "adoption_approved");
+
     res.json({
       message: "Adoption approved, cat marked as Adopted, and points rewarded!",
     });
@@ -258,12 +305,13 @@ HVAdoptionRoute.post("/api/adoption/:id/approve", async (req, res) => {
     res.status(500).json({ error: "Failed to approve adoption" });
   }
 });
-
 // ----------------- REJECT ADOPTION -----------------
 HVAdoptionRoute.post("/api/adoption/:id/reject", async (req, res) => {
   const db = getDB();
   try {
     const adoptionId = req.params.id;
+    const { reason } = req.body;
+
     const [adoption] = await db.query(
       "SELECT * FROM adoption WHERE adoption_id = ?",
       [adoptionId]
@@ -275,6 +323,7 @@ HVAdoptionRoute.post("/api/adoption/:id/reject", async (req, res) => {
 
     const userId = adoption[0].adopter_id;
     const catId = adoption[0].adoptedcat_id;
+    const catName = adoption[0].cat_name;
     const prevStatus = adoption[0].status;
 
     // Update adoption status
@@ -298,6 +347,12 @@ HVAdoptionRoute.post("/api/adoption/:id/reject", async (req, res) => {
       );
     }
 
+    // 🔔 CREATE REJECTION NOTIFICATION
+    const rejectionMessage = `We're sorry, but your adoption application for "${catName}" (Application ID: ${adoptionId}) could not be approved. ${
+      reason ? `Reason: ${reason}` : "Please contact us for more details."
+    } Thank you for your interest in giving a cat a loving home!`;
+    await createNotification(userId, rejectionMessage, "adoption_rejected");
+
     res.json({
       message:
         "Adoption rejected successfully" +
@@ -311,4 +366,5 @@ HVAdoptionRoute.post("/api/adoption/:id/reject", async (req, res) => {
   }
 });
 
+export { createNotification, notifyNewCatAvailable };
 export default HVAdoptionRoute;

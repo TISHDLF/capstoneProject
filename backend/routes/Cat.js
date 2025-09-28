@@ -12,6 +12,40 @@ CatRoute.use(express.json());
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+// Create notification helper function
+const createNotification = async (userId, message, type = "general") => {
+  const db = getDB();
+  try {
+    await db.query(
+      `INSERT INTO notifications (user_id, message, type, created_at, is_read) 
+       VALUES (?, ?, ?, NOW(), 0)`,
+      [userId, message, type]
+    );
+    console.log(`✅ Notification created for user ${userId}: ${message}`);
+  } catch (err) {
+    console.error("❌ Failed to create notification:", err);
+  }
+};
+// Notify all regular users when a new cat becomes available
+const notifyNewCatAvailable = async (catName, catId) => {
+  const db = getDB();
+  try {
+    // Get all regular users
+    const [users] = await db.query(
+      `SELECT user_id FROM users WHERE role = 'regular'`
+    );
+
+    const message = `🐱 Great news! "${catName}" is now available for adoption! Visit our cat profiles to learn more about this adorable cat.`;
+
+    for (const user of users) {
+      await createNotification(user.user_id, message, "cat_available");
+    }
+
+    console.log(`✅ Notified ${users.length} users about new cat: ${catName}`);
+  } catch (err) {
+    console.error("❌ Failed to notify users about new cat:", err);
+  }
+};
 
 // ---------------- MULTER STORAGE ---------------- //
 
@@ -51,53 +85,20 @@ const upload = multer({
   },
 });
 
-// const storage = multer.diskStorage({
-//   destination: function(req, file, callback) {
-//     const dir = 'FileUploads';
-//     if(!fs.existsSync(dir)) {
-//       fs.mkdirSync(dir)
-//     }
-
-//     callback(null, dir);
-//   },
-//   filename: function(req, file, callback) {
-//     callback(null, Date.now() + path.extname(file.originalname))
-//   }
-// })
-
-// const fileFilter = function(req, file, callback) {
-//   if (file.mimetype == 'application/pdf') {
-//     callback(null, true)
-//   } else {
-//     req.err = 'File is invalid!'
-//     callback(null, false)
-//   }
-// }
-
-// const uploadImages = multer({
-//   storage,
-//   fileFilter: function(req, file, callback) {
-//     if (file.mimetype == 'image/jpeg' || file.mimetype == 'image/png') {
-//       callback(null, true)
-//     } else {
-//       !req.invalidFiles ? req.invalidFiles = [file.originalname] : req.invalidFiles.push(file.originalname)
-//       callback(null, false)
-//     }
-//   }
-// });
-
-// const upload = multer({ storage, fileFilter });
-
+// CREATE CAT WITH NOTIFICATIONS
 CatRoute.post("/create", async (req, res) => {
   try {
     const db = getDB();
     const { name, age, gender, sterilization_status, description } = req.body;
 
     const [profile] = await db.query(
-      `INSERT INTO cat (name, age, gender, sterilization_status, description) 
-      VALUES ( ?, ?, ?, ?, ?)`,
+      `INSERT INTO cat (name, age, gender, sterilization_status, description, adoption_status) 
+      VALUES ( ?, ?, ?, ?, ?, 'Available')`,
       [name, age, gender, sterilization_status, description]
     );
+
+    // 🔔 NOTIFY USERS ABOUT NEW CAT AVAILABLE
+    await notifyNewCatAvailable(name, profile.insertId);
 
     res.status(200).json({
       message: "Cat profile created!",
@@ -110,48 +111,75 @@ CatRoute.post("/create", async (req, res) => {
     res.status(500).json({ err: "Internal server error" });
   }
 });
-//Delete Cat
-CatRoute.delete("/delete/:cat_id", async (req, res) => {
+// UPDATE CAT WITH NOTIFICATIONS FOR STATUS CHANGES
+CatRoute.patch("/update/:cat_id", async (req, res) => {
   const db = getDB();
-  const { cat_id } = req.params;
+  const cat_id = req.params.cat_id;
+  const {
+    name = "",
+    gender = "",
+    age = "",
+    adoption_status = "",
+    sterilization_status = "",
+    description = "",
+  } = req.body;
+
+  console.log("REQ.BODY:", req.body);
+  console.log("REQ.PARAMS:", req.params);
 
   try {
-    // Delete associated adoption records
-    await db.query("DELETE FROM adoption WHERE adoptedcat_id = ?", [cat_id]);
-
-    // Delete associated images from server
-    const [images] = await db.query(
-      "SELECT image_filename FROM cat_images WHERE cat_id = ?",
+    // Get the current cat data to compare status changes
+    const [currentCat] = await db.query(
+      `SELECT name, adoption_status FROM cat WHERE cat_id = ?`,
       [cat_id]
     );
 
-    images.forEach((img) => {
-      const filePath = path.join(
-        __dirname,
-        "FileUploads/cats",
-        img.image_filename
-      );
-      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-    });
+    if (currentCat.length === 0) {
+      return res.status(404).json({ message: "Cat not found" });
+    }
 
-    // Delete images from DB
-    await db.query("DELETE FROM cat_images WHERE cat_id = ?", [cat_id]);
+    const previousStatus = currentCat[0].adoption_status;
+    const catName = currentCat[0].name;
 
-    // Delete cat profile
-    const [result] = await db.query("DELETE FROM cat WHERE cat_id = ?", [
-      cat_id,
-    ]);
+    // Update the cat
+    const [result] = await db.query(
+      `UPDATE cat SET
+                name = ?,
+                gender = ?,
+                age = ?,
+                adoption_status = ?,
+                sterilization_status = ?,
+                description = ?,
+                date_updated = CURRENT_TIMESTAMP
+            WHERE cat_id = ?`,
+      [
+        name,
+        gender,
+        age,
+        adoption_status,
+        sterilization_status,
+        description,
+        cat_id,
+      ]
+    );
 
     if (result.affectedRows === 0) {
       return res.status(404).json({ message: "Cat not found" });
     }
 
-    res
-      .status(200)
-      .json({ message: "Cat profile and related data deleted successfully" });
+    if (!name || !gender || !age || !adoption_status || !sterilization_status) {
+      return res.status(400).json({ error: "All fields must be filled out" });
+    }
+
+    // 🔔 CHECK IF CAT STATUS CHANGED TO AVAILABLE AND NOTIFY USERS
+    if (previousStatus !== "Available" && adoption_status === "Available") {
+      await notifyNewCatAvailable(name || catName, cat_id);
+    }
+
+    res.status(200).json({ message: "Cat updated successfully" });
   } catch (err) {
-    console.error("Error deleting cat:", err);
-    res.status(500).json({ error: "Failed to delete cat" });
+    console.error("Update error:", err);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 

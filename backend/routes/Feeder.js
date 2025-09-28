@@ -13,14 +13,30 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const volunteerDir = path.join(process.cwd(), "FileUploads/volunteer");
 
+// Create notification helper function
+const createNotification = async (userId, message, type = "volunteer") => {
+  const db = await getDB();
+  try {
+    await db.query(
+      `INSERT INTO notifications (user_id, message, type, created_at, is_read) 
+       VALUES (?, ?, ?, NOW(), 0)`,
+      [userId, message, type]
+    );
+    console.log(`✅ Notification created for user ${userId}: ${message}`);
+  } catch (err) {
+    console.error("❌ Failed to create notification:", err);
+  }
+};
+
 if (!fs.existsSync(volunteerDir)) {
   fs.mkdirSync(volunteerDir, { recursive: true });
   console.log("Created folder:", volunteerDir);
 }
+
 // Storage for volunteer application form uploads
 const volunteerPdf = multer.diskStorage({
   destination: function (req, file, callback) {
-    const dir = path.join(process.cwd(), "FileUploads/volunteer"); // 👈 not cats
+    const dir = path.join(process.cwd(), "FileUploads/volunteer");
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
@@ -30,6 +46,7 @@ const volunteerPdf = multer.diskStorage({
     callback(null, Date.now() + path.extname(file.originalname));
   },
 });
+
 const uploadVolunteer = multer({
   storage: volunteerPdf,
   fileFilter: (req, file, callback) => {
@@ -47,7 +64,7 @@ const uploadVolunteer = multer({
   },
 });
 
-// ✅ POST route: submit volunteer application
+// POST route: submit volunteer application WITH NOTIFICATIONS
 FeederRoute.post(
   "/apply",
   uploadVolunteer.single("application_form"),
@@ -69,6 +86,14 @@ FeederRoute.post(
         [user_id, filePath]
       );
 
+      // 🔔 CREATE NOTIFICATION FOR USER
+      const applicationMessage = `Thank you for your volunteer application! Your application (ID: ${result.insertId}) has been submitted successfully and is currently under review. We'll notify you once a decision has been made.`;
+      await createNotification(
+        user_id,
+        applicationMessage,
+        "volunteer_submitted"
+      );
+
       res.json({
         message: "Application submitted successfully",
         application_id: result.insertId,
@@ -80,7 +105,7 @@ FeederRoute.post(
   }
 );
 
-// ✅ GET route: fetch all volunteer applications
+// GET route: fetch all volunteer applications
 FeederRoute.get("/applications", async (req, res) => {
   try {
     const db = await getDB();
@@ -104,12 +129,12 @@ FeederRoute.get("/applications", async (req, res) => {
   }
 });
 
-// ✅ Serve application form (PDF/image)
+// Serve application form (PDF/image)
 FeederRoute.get("/application/:id/form", async (req, res) => {
   const { id } = req.params;
 
   try {
-    const db = await getDB(); // 👈 must await
+    const db = await getDB();
     const [rows] = await db.query(
       "SELECT application_form FROM volunteer_application WHERE application_id = ?",
       [id]
@@ -143,6 +168,7 @@ FeederRoute.get("/application/:id/form", async (req, res) => {
     res.status(500).json({ message: "Server error while fetching form" });
   }
 });
+
 // Check application status by user_id
 FeederRoute.get("/status/:user_id", async (req, res) => {
   const { user_id } = req.params;
@@ -155,7 +181,7 @@ FeederRoute.get("/status/:user_id", async (req, res) => {
     );
 
     if (apps.length === 0) {
-      return res.json({ status: "none" }); // no application yet
+      return res.json({ status: "none" });
     }
 
     const application = apps[0];
@@ -199,8 +225,9 @@ FeederRoute.delete("/delete/:feeder_id", async (req, res) => {
   }
 });
 
+// APPROVE VOLUNTEER APPLICATION WITH NOTIFICATIONS
 FeederRoute.post("/api/application/:id/approve", async (req, res) => {
-  const db = await getDB(); // 👈 make sure to await
+  const db = await getDB();
   try {
     const feederId = req.params.id;
     const { feeding_date } = req.body;
@@ -254,10 +281,58 @@ FeederRoute.post("/api/application/:id/approve", async (req, res) => {
       );
     }
 
+    // 🔔 CREATE APPROVAL NOTIFICATION
+    const approvalMessage = `🎉 Congratulations! Your volunteer application (ID: ${feederId}) has been approved! You've earned ${rewardPoints} whisker points and are now part of our amazing volunteer team. Thank you for wanting to help our cats!`;
+    await createNotification(userId, approvalMessage, "volunteer_approved");
+
     res.json({ message: "Application approved and points rewarded!" });
   } catch (err) {
     console.error("❌ Error approving application:", err);
     res.status(500).json({ error: "Failed to approve application" });
+  }
+});
+
+// REJECT VOLUNTEER APPLICATION WITH NOTIFICATIONS
+FeederRoute.post("/api/application/:id/reject", async (req, res) => {
+  const db = await getDB();
+  try {
+    const feederId = req.params.id;
+    const { reason } = req.body;
+
+    // Step 1: Fetch applicant info
+    const [rows] = await db.query(
+      `SELECT va.user_id, u.firstname, u.lastname
+       FROM volunteer_application va
+       JOIN users u ON va.user_id = u.user_id
+       WHERE va.application_id = ?`,
+      [feederId]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Application not found" });
+    }
+
+    const userId = rows[0].user_id;
+    const fullName = `${rows[0].firstname} ${rows[0].lastname}`;
+
+    // Step 2: Update volunteer_application status → Rejected
+    await db.query(
+      "UPDATE volunteer_application SET status = 'Rejected' WHERE application_id = ?",
+      [feederId]
+    );
+
+    // 🔔 CREATE REJECTION NOTIFICATION
+    const rejectionMessage = `We appreciate your interest in volunteering with us! Unfortunately, your volunteer application (ID: ${feederId}) could not be approved at this time. ${
+      reason
+        ? `Reason: ${reason}`
+        : "Please feel free to apply again in the future or contact us for more information."
+    } Thank you for wanting to help our cats!`;
+    await createNotification(userId, rejectionMessage, "volunteer_rejected");
+
+    res.json({ message: "Application rejected and user notified." });
+  } catch (err) {
+    console.error("❌ Error rejecting application:", err);
+    res.status(500).json({ error: "Failed to reject application" });
   }
 });
 

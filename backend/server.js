@@ -14,6 +14,7 @@ import DonationRoute from "./routes/Donation.js";
 import HVAdoptionRoute from "./routes/AdoptionHV.js";
 import FeederRoute from "./routes/Feeder.js";
 import ReportRoute from "./routes/reports.js";
+import NotificationRoute from "./routes/notification.js";
 import multer from "multer";
 import fs from "fs";
 import path from "path";
@@ -63,6 +64,7 @@ app.use("/donate", DonationRoute);
 app.use("/adopt", HVAdoptionRoute);
 app.use("/feeder", FeederRoute);
 app.use("/report", ReportRoute);
+app.use("/user", NotificationRoute);
 
 app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());

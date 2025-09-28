@@ -28,7 +28,19 @@ const storage = multer.diskStorage({
     callback(null, Date.now() + path.extname(file.originalname));
   },
 });
-
+const createNotification = async (userId, message, type = "donation") => {
+  const db = getDB();
+  try {
+    await db.query(
+      `INSERT INTO notifications (user_id, message, type, created_at, is_read) 
+       VALUES (?, ?, ?, NOW(), 0)`,
+      [userId, message, type]
+    );
+    console.log(`✅ Notification created for user ${userId}: ${message}`);
+  } catch (err) {
+    console.error("❌ Failed to create notification:", err);
+  }
+};
 const proofStorage = multer.diskStorage({
   destination: function (req, file, callback) {
     const dir = path.join(process.cwd(), "FileUploads/proofs");
@@ -105,7 +117,7 @@ DonationRoute.get("/api/donations", async (req, res) => {
 });
 
 // ---------------- DONATIONS ---------------- //
-
+// UPDATED DONATION SUBMISSION WITH NOTIFICATIONS
 DonationRoute.post(
   "/api/donations",
   uploadProof.single("proofImage"),
@@ -117,6 +129,7 @@ DonationRoute.post(
       if (!donator_id) {
         return res.status(400).json({ error: "Donator ID is required" });
       }
+
       let {
         donationType,
         amount,
@@ -130,6 +143,7 @@ DonationRoute.post(
       if (!donationType || donationType.length === 0) {
         return res.status(400).json({ error: "Donation type is required" });
       }
+
       if (Array.isArray(donationType)) {
         donationType = donationType.join(",");
       }
@@ -161,20 +175,36 @@ DonationRoute.post(
 
       // Insert into Donation
       const [result] = await db.query(
-        `INSERT INTO donation (donator_id, donator, donation_type, description, proofimage) 
-         VALUES (?, ?, ?, ?, ?)`,
+        `INSERT INTO donation (donator_id, donator, donation_type, description, proofimage, status) 
+         VALUES (?, ?, ?, ?, ?, 'Pending')`,
         [donator_id, donatorName, donationType, description, proofBuffer]
       );
 
       const donationId = result.insertId;
 
-      // ✅ If donation type includes "Money", insert into MonetaryDonation
+      // If donation type includes "Money", insert into MonetaryDonation
       if (donationType.includes("Money") && amount) {
         await db.query(
           `INSERT INTO monetarydonation (donation_id, amount, currency) VALUES (?, ?, ?)`,
           [donationId, parseFloat(amount), "PHP"]
         );
       }
+
+      // 🔔 CREATE NOTIFICATION FOR USER
+      const donationTypesList = donationType.split(",").join(", ");
+      let notificationMessage = `Thank you for your ${donationTypesList} donation! `;
+
+      if (amount) {
+        notificationMessage += `Amount: ₱${amount}. `;
+      }
+
+      notificationMessage += `Your donation (ID: ${donationId}) is currently under review. We'll notify you once it's approved.`;
+
+      await createNotification(
+        donator_id,
+        notificationMessage,
+        "donation_submitted"
+      );
 
       res.status(201).json({
         message: "Donation submitted successfully!",
@@ -187,7 +217,7 @@ DonationRoute.post(
   }
 );
 
-// Approve donation + reward user points
+// UPDATED APPROVE DONATION WITH ADDITIONAL NOTIFICATIONS
 DonationRoute.post("/api/donations/:id/approve", async (req, res) => {
   const db = getDB();
   try {
@@ -196,19 +226,27 @@ DonationRoute.post("/api/donations/:id/approve", async (req, res) => {
       "SELECT * FROM donation WHERE donation_id = ?",
       [donationId]
     );
+
     if (donation.length === 0) {
       return res.status(404).json({ error: "Donation not found" });
     }
+
     const userId = donation[0].donator_id;
+    const donationType = donation[0].donation_type;
+
+    // Update donation status
     await db.query(
       "UPDATE donation SET status = 'Approved' WHERE donation_id = ?",
       [donationId]
     );
+
+    // Award points
     const rewardPoints = 20;
     const [meter] = await db.query(
       "SELECT * FROM whiskermeter WHERE user_id = ?",
       [userId]
     );
+
     if (meter.length === 0) {
       await db.query(
         "INSERT INTO whiskermeter (user_id, points) VALUES (?, ?)",
@@ -220,10 +258,51 @@ DonationRoute.post("/api/donations/:id/approve", async (req, res) => {
         [rewardPoints, userId]
       );
     }
+
+    // 🔔 CREATE APPROVAL NOTIFICATION
+    const approvalMessage = `🎉 Great news! Your ${donationType} donation (ID: ${donationId}) has been approved! You've earned ${rewardPoints} whisker points as a thank you for your generosity.`;
+    await createNotification(userId, approvalMessage, "donation_approved");
+
     res.json({ message: "Donation approved and points rewarded!" });
   } catch (err) {
     console.error("Error approving donation:", err);
     res.status(500).json({ error: "Failed to approve donation" });
+  }
+});
+DonationRoute.post("/api/donations/:id/reject", async (req, res) => {
+  const db = getDB();
+  try {
+    const donationId = req.params.id;
+    const { reason } = req.body;
+
+    const [donation] = await db.query(
+      "SELECT * FROM donation WHERE donation_id = ?",
+      [donationId]
+    );
+
+    if (donation.length === 0) {
+      return res.status(404).json({ error: "Donation not found" });
+    }
+
+    const userId = donation[0].donator_id;
+    const donationType = donation[0].donation_type;
+
+    // Update donation status
+    await db.query(
+      "UPDATE donation SET status = 'Rejected' WHERE donation_id = ?",
+      [donationId]
+    );
+
+    // 🔔 CREATE REJECTION NOTIFICATION
+    const rejectionMessage = `We're sorry, but your ${donationType} donation (ID: ${donationId}) could not be approved. ${
+      reason ? `Reason: ${reason}` : "Please contact us for more details."
+    } Thank you for your interest in helping our cats!`;
+    await createNotification(userId, rejectionMessage, "donation_rejected");
+
+    res.json({ message: "Donation rejected and user notified." });
+  } catch (err) {
+    console.error("Error rejecting donation:", err);
+    res.status(500).json({ error: "Failed to reject donation" });
   }
 });
 
