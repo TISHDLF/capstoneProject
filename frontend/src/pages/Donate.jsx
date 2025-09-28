@@ -107,15 +107,15 @@ const Donate = () => {
       <CatBot />
       <NavigationBar />
       <div className="grid grid-cols-[80%_20%] h-full">
-        <div className="flex flex-col pl-50 p-10">
+        <div className="flex  pl-50 p-10">
           <form
             onSubmit={handleSubmit}
             className="relative flex flex-col gap-5 pt-5 bg-[#FFF] rounded-[25px] w-full h-auto"
           >
             {/* Donation Type */}
-            <div className="grid grid-cols-[20%_80%] place-items-center">
-              <div className="flex items-center gap-5 p-4 bg-[#FDF5D8] shadow-md rounded-tr-[15px] rounded-br-[15px] w-full">
-                <label className="flex flex-row font-bold text-[#DC8801]">
+            <div className="flex place-items-center pt-5 pl-5">
+              <div className="absolute -left-10 top-5 w-30 flex items-center gap-5 p-4 bg-[#FDF5D8] shadow-md rounded-2xl ">
+                <label className=" flex flex-row font-bold text-[#DC8801]">
                   Donation Form
                 </label>
                 <div className="w-[40px] h-auto">
@@ -126,7 +126,10 @@ const Donate = () => {
                   />
                 </div>
               </div>
-              <div className="flex flex-col justify-between">
+
+              {/* Money Donation */}
+
+              <div className="flex flex-col justify-end pt-20">
                 <label>What do you want to donate?*</label>
                 <div className="flex flex-row gap-3 w-full justify">
                   {["Money", "Food", "Items", "Others"].map((type) => (
@@ -145,75 +148,73 @@ const Donate = () => {
                   ))}
                 </div>
               </div>
-            </div>
-
-            {/* Money Donation */}
-            <div className="flex flex-col items-end pl-5 pr-5">
-              <div className="flex flex-row">
-                <label>
-                  if <strong>money</strong>, please specify the amount and scan
-                  the QR code:
-                </label>
-              </div>
-              <div className="flex flex-col items-center justify-end gap-3">
-                <div className="flex flex-row gap-3">
-                  <input
-                    type="text"
-                    name="amount"
-                    value={formData.amount}
-                    onChange={handleChange}
-                    placeholder="Add amount"
-                    className="flex flex-row gap-2 p-3 rounded-[10px] border-1 border-[#444] w-[150px]"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowQR(!showQR)}
-                    className="font-bold p-3 rounded-[10px] bg-[#DC8801] text-[#FFF] shadow-md hover:bg-[#ffb030] active:bg-[#DC8801]"
-                  >
-                    {showQR ? "Hide QR Code" : "Click here to view QR Code"}
-                  </button>
-                </div>
-
-                {showQR && (
-                  <div className="mt-3 p-3 border rounded-lg bg-white shadow-md">
-                    <QRCodeCanvas
-                      value={
-                        formData.amount
-                          ? `GCash Payment - Amount: ₱${formData.amount}`
-                          : "GCash Donation QR"
-                      }
-                      size={180}
-                      bgColor={"#ffffff"}
-                      fgColor={"#000000"}
-                      level={"H"}
-                      includeMargin={true}
-                    />
+              <div className="flex flex-col items-start pl-5 pr-5">
+                <div className="flex flex-col items-center justify-end gap-3">
+                  <div className="flex flex-row">
+                    <label className="">
+                      if <strong>money</strong>, please specify the amount and
+                      scan the QR code:
+                    </label>
                   </div>
-                )}
+                  <div className="flex flex-row gap-3">
+                    <input
+                      type="text"
+                      name="amount"
+                      value={formData.amount}
+                      onChange={handleChange}
+                      placeholder="Add amount"
+                      className="flex flex-row gap-2 p-3 rounded-[10px] border-1 border-[#444] w-[150px]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowQR(!showQR)}
+                      className="font-bold p-3 rounded-[10px] bg-[#DC8801] text-[#FFF] shadow-md hover:bg-[#ffb030] active:bg-[#DC8801]"
+                    >
+                      {showQR ? "Hide QR Code" : "Click here to view QR Code"}
+                    </button>
+                  </div>
 
-                {/* Proof of Payment Upload */}
-                <div className="flex flex-col items-center mt-3">
-                  <label className="font-semibold text-[#444] mb-2">
-                    Upload Proof of Payment:
-                  </label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    className="hidden"
-                    id="proofUpload"
-                  />
-                  <label
-                    htmlFor="proofUpload"
-                    className="cursor-pointer font-bold p-3 rounded-[10px] bg-[#4CAF50] text-[#FFF] shadow-md hover:bg-[#66bb6a] active:bg-[#4CAF50]"
-                  >
-                    {proofImage ? "Change Image" : "Add Image"}
-                  </label>
-                  {proofImage && (
-                    <p className="mt-2 text-sm text-gray-600">
-                      Selected: {proofImage.name}
-                    </p>
+                  {showQR && (
+                    <div className="mt-3 p-3 border rounded-lg bg-white shadow-md">
+                      <QRCodeCanvas
+                        value={
+                          formData.amount
+                            ? `GCash Payment - Amount: ₱${formData.amount}`
+                            : "GCash Donation QR"
+                        }
+                        size={180}
+                        bgColor={"#ffffff"}
+                        fgColor={"#000000"}
+                        level={"H"}
+                        includeMargin={true}
+                      />
+                    </div>
                   )}
+
+                  {/* Proof of Payment Upload */}
+                  <div className="flex flex-col items-center mt-3">
+                    <label className="font-semibold text-[#444] mb-2">
+                      Upload Proof of Payment:
+                    </label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="hidden"
+                      id="proofUpload"
+                    />
+                    <label
+                      htmlFor="proofUpload"
+                      className="cursor-pointer font-bold p-3 rounded-[10px] bg-[#4CAF50] text-[#FFF] shadow-md hover:bg-[#66bb6a] active:bg-[#4CAF50]"
+                    >
+                      {proofImage ? "Change Image" : "Add Image"}
+                    </label>
+                    {proofImage && (
+                      <p className="mt-2 text-sm text-gray-600">
+                        Selected: {proofImage.name}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

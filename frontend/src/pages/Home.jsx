@@ -97,7 +97,7 @@ const Home = () => {
                   </div>
                   <div className="flex justify-end">
                     <Link
-                      to="/"
+                      to="/login"
                       className="pl-5 pr-5 p-2 bg-yellow-600 active:bg-yellow-500 text-white rounded-2xl"
                     >
                       Join Now
@@ -113,7 +113,7 @@ const Home = () => {
         <div className="flex p-10 pl-0 pr-0">
           <div className="flex justify-center p-10 gap-10">
             <div className="w-13"></div>
-            <div className="bg-yellow-600 w-50 p-4 text-white rounded-tr-4xl rounded-tl-4xl absolute top-380 right-75 hover: transition-shadow duration-300 z-0">
+            <div className="bg-yellow-600 w-50 p-4 flex justify-center  text-white rounded-tr-4xl rounded-tl-4xl absolute top-380 right-75 hover: transition-shadow duration-300 z-0">
               Adopt a cat
             </div>
             <div className="justify-center w-270 rounded-br-4xl rounded-bl-4xl rounded-tl-4xl shadow-2xl hover:shadow-xl transition-shadow duration-300 p-5">

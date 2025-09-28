@@ -48,7 +48,6 @@ const FeedingInfo = () => {
         return;
       }
 
-      // Example: report for the first schedule entry
       const volunteerId = schedule[0].volunteer_id;
 
       await axios.post(
@@ -78,8 +77,8 @@ const FeedingInfo = () => {
         <SideNavigation />
       )}
 
-      <div className="relative p-10 pl-50 h-full">
-        <div className="relative flex flex-col gap-5 bg-[#FFF] rounded-[25px] w-240 h-auto">
+      <div className=" p-10 pl-50 h-full">
+        <div className="relative flex flex-col gap-5 bg-[#FFF] rounded-[25px] w-240 h-auto shadow-2xl">
           <div className="absolute -left-11.5 top-10 flex items-center gap-5 p-4 bg-[#ffffff] shadow-md rounded-[15px] w-40">
             <label className="flex flex-row font-bold text-[#DC8801]">
               Feeding Information
@@ -97,7 +96,6 @@ const FeedingInfo = () => {
             </p>
 
             <div className="h-full pt-5">
-              <h2 className="text-xl font-bold mb-4">Feeding Reports</h2>
               <div className="flex flex-col gap-3">
                 <div>
                   <h2>Your Feeding Schedule</h2>
@@ -119,10 +117,14 @@ const FeedingInfo = () => {
 
             {/* Animated report box */}
             <div
-              className={`transition-all duration-500 ease-out overflow-hidden pt-10 ${
+              className={`transition-all duration-500 ease-out overflow-hidden pt-5 ${
                 showReportBox ? "max-h-60 opacity-100" : "max-h-0 opacity-0"
               }`}
             >
+              <h2 className="text-xl font-bold  pt-4">
+                Let us know how the feeding session went below:
+              </h2>
+
               <textarea
                 type="text"
                 value={reportText}
@@ -137,7 +139,7 @@ const FeedingInfo = () => {
               {!showReportBox && (
                 <button
                   onClick={handleWriteReport}
-                  className="bg-[#DC8801] rounded-2xl p-3 pl-5 pr-5 transition-all duration-300 hover:scale-105"
+                  className="bg-[#DC8801] rounded-2xl p-3 pl-5 pr-5 transition-all duration-300 hover:scale-105 text-white"
                 >
                   Write Report
                 </button>
@@ -146,14 +148,14 @@ const FeedingInfo = () => {
               {showReportBox && (
                 <div className="flex gap-3 transition-all duration-500 ease-in-out">
                   <button
-                    className="bg-gray-400 rounded-2xl p-3 pl-5 pr-5 transition-all duration-300 hover:scale-105"
+                    className="bg-gray-400 rounded-2xl p-3 pl-5 pr-5 transition-all duration-300 hover:scale-105 text-white"
                     onClick={() => setShowReportBox(false)}
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleSubmitReport}
-                    className="bg-[#DC8801] rounded-2xl p-3 pl-5 pr-5 transition-all duration-300 hover:scale-105"
+                    className="bg-[#DC8801] rounded-2xl p-3 pl-5 pr-5 transition-all duration-300 hover:scale-105 text-white"
                   >
                     Submit Report
                   </button>

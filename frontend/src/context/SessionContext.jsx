@@ -43,7 +43,6 @@ export const SessionProvider = ({ children }) => {
         { withCredentials: true }
       );
       setNotifications(response.data || []);
-      console.log("Notifications fetched:", response.data);
     } catch (err) {
       console.error("Failed to fetch notifications:", err);
       // Set to empty array instead of leaving undefined

@@ -65,7 +65,9 @@ const AdoptionApplications = () => {
       );
       setApps((prev) =>
         prev.map((app) =>
-          app.application_id === feederId ? { ...app, status: "Accepted" } : app
+          app.applicationNo === adoptionId
+            ? { ...app, status: "Approved" }
+            : app
         )
       );
     } catch (err) {

@@ -548,5 +548,27 @@ AdminRoute.post(
     }
   }
 );
+// DELETE USER
+AdminRoute.delete("/manage/user/:user_id", async (req, res) => {
+  const db = getDB();
+  const { user_id } = req.params;
+
+  try {
+    const [result] = await db.query("DELETE FROM users WHERE user_id = ?", [
+      user_id,
+    ]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res
+      .status(200)
+      .json({ success: true, message: "User deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting user:", err);
+    res.status(500).json({ error: "Failed to delete user" });
+  }
+});
 
 export default AdminRoute;

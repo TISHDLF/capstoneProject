@@ -29,7 +29,6 @@ const Login = () => {
       );
 
       user = response.data.user;
-      console.log("Login response:", response.data);
 
       setUser(user); // from context
       // Cookies.set("user", JSON.stringify(user), { expires: 30 });
@@ -49,9 +48,6 @@ const Login = () => {
       setError(errorMessage);
       console.error("Login error:", errorMessage);
     }
-
-    console.log("email:", email);
-    console.log("password:", password);
   };
 
   return (

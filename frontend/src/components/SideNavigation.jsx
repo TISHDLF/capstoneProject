@@ -256,7 +256,7 @@ const SideNavigation = () => {
       )}
       {modalOpen && (
         <LoginFirstModal
-          onCancel={() => setShowLogoutModal(false)}
+          onCancel={() => setModalOpen(false)}
           onConfirm={handleLogout}
         />
       )}

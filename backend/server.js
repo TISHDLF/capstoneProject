@@ -24,9 +24,13 @@ dotenv.config();
 const app = express();
 
 // ---------------- PATH UTILS ---------------- //
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Enable JSON + form parsing before routes
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 app.use(
   cors({
@@ -36,6 +40,7 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+
 app.use(
   session({
     secret: process.env.SESSION_SECRET || "your_secret_key",
@@ -49,13 +54,18 @@ app.use(
     },
   })
 );
+
+// static
 app.use(
   "/uploads/cats",
   express.static(path.join(process.cwd(), "FileUploads/cats"))
 );
 app.use("/static", express.static(path.join(process.cwd(), "public")));
 
+// ✅ Connect DB before routes
 await connectDB();
+
+// ✅ Now mount routes
 app.use("/cats", CatRoute);
 app.use("/user", UserRoute);
 app.use("/admin", AdminRoute);
@@ -66,8 +76,6 @@ app.use("/feeder", FeederRoute);
 app.use("/report", ReportRoute);
 app.use("/user", NotificationRoute);
 
-app.use(express.json({ limit: "10mb" }));
-app.use(cookieParser());
 app.use("/FileUploads", express.static(path.join(__dirname, "FileUploads")));
 
 app.use(
