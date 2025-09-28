@@ -230,7 +230,7 @@ FeederRoute.post("/api/application/:id/approve", async (req, res) => {
   const db = await getDB();
   try {
     const feederId = req.params.id;
-    const { feeding_date } = req.body;
+    const reviewerId = req.session?.user?.user_id; // get logged-in head volunteer
 
     // Step 1: Fetch applicant
     const [rows] = await db.query(
@@ -242,8 +242,19 @@ FeederRoute.post("/api/application/:id/approve", async (req, res) => {
     );
 
     if (rows.length === 0) {
-      return res.status(404).json({ error: "application not found" });
+      return res.status(404).json({ error: "Application not found" });
     }
+
+    const applicantId = rows[0].user_id;
+
+    // 🚫 Prevent self-approval
+    if (applicantId === reviewerId) {
+      return res
+        .status(403)
+        .json({ error: "You cannot approve your own application." });
+    }
+
+    // ✅ continue approval logic...
 
     const userId = rows[0].user_id;
     const fullName = `${rows[0].firstname} ${rows[0].lastname}`;

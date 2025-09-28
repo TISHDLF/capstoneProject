@@ -134,12 +134,21 @@ HVAdoptionRoute.post(
 );
 
 // ----------------- GET ALL ADOPTIONS -----------------
+// ----------------- GET ALL ADOPTIONS -----------------
 HVAdoptionRoute.get("/api/adoption", async (req, res) => {
   const db = getDB();
+  const currentUserId = req.user?.user_id; // assuming you store user in req.user after auth
+
   try {
-    const [rows] = await db.query(
-      `SELECT * FROM adoption ORDER BY date_created DESC`
-    );
+    let query = `SELECT * FROM adoption ORDER BY date_created DESC`;
+    let params = [];
+
+    if (currentUserId) {
+      query = `SELECT * FROM adoption WHERE adopter_id != ? ORDER BY date_created DESC`;
+      params = [currentUserId];
+    }
+
+    const [rows] = await db.query(query, params);
 
     const formatted = rows.map((r) => ({
       applicationNo: r.adoption_id,
@@ -147,7 +156,7 @@ HVAdoptionRoute.get("/api/adoption", async (req, res) => {
       name: r.adopter,
       type: r.cat_name,
       date: r.date_created ? r.date_created.toISOString().split("T")[0] : null,
-      status: r.status || "Pending", // fallback since status isn’t in schema
+      status: r.status || "Pending",
     }));
 
     res.json(formatted);
@@ -156,6 +165,7 @@ HVAdoptionRoute.get("/api/adoption", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch adoptions" });
   }
 });
+
 HVAdoptionRoute.get("/api/adoption/:id", async (req, res) => {
   const db = getDB();
   try {
@@ -247,64 +257,42 @@ HVAdoptionRoute.get("/api/adoption/:id/pdf", async (req, res) => {
 //approve adoption + reward points to the user + update cat status
 HVAdoptionRoute.post("/api/adoption/:id/approve", async (req, res) => {
   const db = getDB();
+  const { id } = req.params;
+  const approverId = req.user?.user_id; // assuming you attach session user to req.user
+
   try {
-    const adoptionId = req.params.id;
-    const [adoption] = await db.query(
-      "SELECT * FROM adoption WHERE adoption_id = ?",
-      [adoptionId]
+    // Fetch adoption first
+    const [rows] = await db.query(
+      "SELECT adopter_id FROM adoption WHERE adoption_id = ?",
+      [id]
     );
 
-    if (adoption.length === 0) {
-      return res.status(404).json({ error: "Adoption not found" });
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Application not found" });
     }
 
-    const userId = adoption[0].adopter_id;
-    const catId = adoption[0].adoptedcat_id;
-    const catName = adoption[0].cat_name;
+    const adoption = rows[0];
 
-    // Update adoption status
+    // Prevent self-approval
+    if (adoption.adopter_id === approverId) {
+      return res
+        .status(403)
+        .json({ error: "You cannot approve your own adoption application." });
+    }
+
+    // Approve adoption
     await db.query(
       "UPDATE adoption SET status = 'Approved' WHERE adoption_id = ?",
-      [adoptionId]
+      [id]
     );
 
-    // Update cat adoption_status
-    await db.query(
-      "UPDATE cat SET adoption_status = 'Adopted', date_updated = NOW() WHERE cat_id = ?",
-      [catId]
-    );
-
-    // Reward points
-    const rewardPoints = 40;
-    const [meter] = await db.query(
-      "SELECT * FROM whiskermeter WHERE user_id = ?",
-      [userId]
-    );
-
-    if (meter.length === 0) {
-      await db.query(
-        "INSERT INTO whiskermeter (user_id, points) VALUES (?, ?)",
-        [userId, rewardPoints]
-      );
-    } else {
-      await db.query(
-        "UPDATE whiskermeter SET points = points + ? WHERE user_id = ?",
-        [rewardPoints, userId]
-      );
-    }
-
-    // 🔔 CREATE APPROVAL NOTIFICATION
-    const approvalMessage = `🎉 Congratulations! Your adoption application for "${catName}" (Application ID: ${adoptionId}) has been approved! You've earned ${rewardPoints} whisker points. Please contact us to arrange the adoption process.`;
-    await createNotification(userId, approvalMessage, "adoption_approved");
-
-    res.json({
-      message: "Adoption approved, cat marked as Adopted, and points rewarded!",
-    });
+    res.json({ success: true, message: "Application approved successfully" });
   } catch (err) {
     console.error("❌ Error approving adoption:", err);
     res.status(500).json({ error: "Failed to approve adoption" });
   }
 });
+
 // ----------------- REJECT ADOPTION -----------------
 HVAdoptionRoute.post("/api/adoption/:id/reject", async (req, res) => {
   const db = getDB();

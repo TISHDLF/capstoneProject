@@ -28,6 +28,13 @@ const HeadVolunteerMainPage = () => {
   const { user, loading } = useSession();
   const itemsPerPage = 9;
   const totalPages = Math.ceil(apps.length / itemsPerPage);
+  const [rejectModal, setRejectModal] = useState({
+    open: false,
+    donationId: null,
+  });
+  const [rejectReason, setRejectReason] = useState("");
+
+  // Approve
   const handleApprove = async (donationId) => {
     try {
       const res = await axios.post(
@@ -35,9 +42,7 @@ const HeadVolunteerMainPage = () => {
         {},
         { withCredentials: true }
       );
-
       alert(res.data.message);
-
       setApps((prev) =>
         prev.map((app) =>
           app.donationId === donationId ? { ...app, status: "Approved" } : app
@@ -46,6 +51,30 @@ const HeadVolunteerMainPage = () => {
     } catch (err) {
       console.error("❌ Approval error:", err.response?.data || err.message);
       alert("Failed to approve donation");
+    }
+  };
+
+  // Reject
+  const handleReject = async () => {
+    try {
+      const res = await axios.post(
+        `http://localhost:5000/donate/api/donations/${rejectModal.donationId}/reject`,
+        { reason: rejectReason },
+        { withCredentials: true }
+      );
+      alert(res.data.message);
+      setApps((prev) =>
+        prev.map((app) =>
+          app.donationId === rejectModal.donationId
+            ? { ...app, status: "Rejected" }
+            : app
+        )
+      );
+      setRejectModal({ open: false, donationId: null });
+      setRejectReason("");
+    } catch (err) {
+      console.error("❌ Rejection error:", err.response?.data || err.message);
+      alert("Failed to reject donation");
     }
   };
 
@@ -160,30 +189,37 @@ const HeadVolunteerMainPage = () => {
                         </td>
 
                         <td className="px-6 py-3 flex items-center gap-2">
-                          <span
-                            className={
-                              app.status === "Approved"
-                                ? "text-blue-600"
-                                : app.status === "Rejected"
-                                ? "text-red-600"
-                                : "text-yellow-600"
-                            }
-                          >
-                            {app.status || "Pending"}
-                          </span>
-
-                          {app.status === "Approved" ||
-                          app.status === "Rejected" ? (
-                            <button className="px-4 py-1 rounded-lg text-white bg-blue-500 hover:bg-blue-600">
-                              View
-                            </button>
+                          {app.userId !== user.user_id ? (
+                            app.status === "Approved" ||
+                            app.status === "Rejected" ? (
+                              <button className="px-4 py-1 rounded-lg text-white bg-blue-500 hover:bg-blue-600">
+                                View
+                              </button>
+                            ) : (
+                              <>
+                                <button
+                                  onClick={() => handleApprove(app.donationId)}
+                                  className="px-4 py-1 rounded-lg text-white bg-lime-500 hover:bg-lime-600"
+                                >
+                                  Approve
+                                </button>
+                                <button
+                                  onClick={() =>
+                                    setRejectModal({
+                                      open: true,
+                                      donationId: app.donationId,
+                                    })
+                                  }
+                                  className="px-4 py-1 rounded-lg text-white bg-red-500 hover:bg-red-600"
+                                >
+                                  Reject
+                                </button>
+                              </>
+                            )
                           ) : (
-                            <button
-                              onClick={() => handleApprove(app.donationId)}
-                              className="px-4 py-1 rounded-lg text-white bg-lime-500 hover:bg-lime-600"
-                            >
-                              Process
-                            </button>
+                            <span className="text-gray-500 italic">
+                              Own Donation
+                            </span>
                           )}
                         </td>
                       </tr>
@@ -211,6 +247,40 @@ const HeadVolunteerMainPage = () => {
                   </div>
                 )}
               </table>
+              {/*Reject modal */}
+              {rejectModal.open && (
+                <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
+                  <div className="bg-white rounded-lg shadow-lg p-6 w-[400px] relative">
+                    <h2 className="text-lg font-bold mb-4 text-red-600">
+                      Reject Donation
+                    </h2>
+                    <textarea
+                      value={rejectReason}
+                      onChange={(e) => setRejectReason(e.target.value)}
+                      placeholder="Enter rejection reason (optional)"
+                      className="w-full border rounded p-2 mb-4"
+                      rows={3}
+                    />
+                    <div className="flex justify-end gap-2">
+                      <button
+                        onClick={() =>
+                          setRejectModal({ open: false, donationId: null })
+                        }
+                        className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleReject}
+                        className="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-red-600"
+                      >
+                        Confirm Reject
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="flex justify-center gap-2 mt-6 pt-10 pb-10">
                 <button
                   disabled={page === 1}

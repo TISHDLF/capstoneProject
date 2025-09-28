@@ -138,12 +138,18 @@ const FeederApplication = () => {
                       {/* Status column */}
                       <td className="px-6 py-3">
                         {app.status === "Pending" ? (
-                          <button
-                            onClick={() => handleApprove(app.application_id)}
-                            className="px-4 py-1 rounded-lg text-white bg-lime-500 hover:bg-lime-600"
-                          >
-                            Process
-                          </button>
+                          app.user_id !== user.user_id ? (
+                            <button
+                              onClick={() => handleApprove(app.application_id)}
+                              className="px-4 py-1 rounded-lg text-white bg-lime-500 hover:bg-lime-600"
+                            >
+                              Process
+                            </button>
+                          ) : (
+                            <span className="text-gray-500 italic">
+                              Own Application
+                            </span>
+                          )
                         ) : (
                           <span
                             className={

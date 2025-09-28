@@ -137,25 +137,25 @@ const AdoptionApplications = () => {
                       </td>
 
                       {/* Status column */}
-                      <td className="px-6 py-3">
-                        {app.status === "Pending" ? (
+                      <td className="px-6 py-3 ">
+                        <span
+                          className={
+                            app.status === "Approved"
+                              ? "text-blue-600 font-semibold pr-4"
+                              : "text-red-600 font-semibold pr-4"
+                          }
+                        >
+                          {app.status}
+                        </span>
+
+                        {app.user_id !== user.user_id ? (
                           <button
                             onClick={() => handleProcess(app.applicationNo)}
                             className="px-4 py-1 rounded-lg text-white bg-lime-500 hover:bg-lime-600"
                           >
                             Process
                           </button>
-                        ) : (
-                          <span
-                            className={
-                              app.status === "Approved"
-                                ? "text-blue-600 font-semibold"
-                                : "text-red-600 font-semibold"
-                            }
-                          >
-                            {app.status}
-                          </span>
-                        )}
+                        ) : null}
                       </td>
                     </tr>
                   ))

@@ -222,6 +222,8 @@ DonationRoute.post("/api/donations/:id/approve", async (req, res) => {
   const db = getDB();
   try {
     const donationId = req.params.id;
+    const reviewerId = req.session?.user?.user_id; // or however you store session user
+
     const [donation] = await db.query(
       "SELECT * FROM donation WHERE donation_id = ?",
       [donationId]
@@ -229,6 +231,13 @@ DonationRoute.post("/api/donations/:id/approve", async (req, res) => {
 
     if (donation.length === 0) {
       return res.status(404).json({ error: "Donation not found" });
+    }
+
+    // 🚫 Prevent self-approval
+    if (donation[0].donator_id === reviewerId) {
+      return res
+        .status(403)
+        .json({ error: "You cannot approve your own donation." });
     }
 
     const userId = donation[0].donator_id;
@@ -341,7 +350,7 @@ DonationRoute.post(
         ? fs.readFileSync(idImageFile.path)
         : null;
       // Insert into DB
-      await pool.query(
+      await db.query(
         `INSERT INTO Adoption (adoptedcat_id, adopter_id, cat_name, adopter, contactnumber, certificate, id_image) 
    VALUES (?, ?, ?, ?, ?, ?, ?)`,
         [
@@ -370,7 +379,7 @@ DonationRoute.post(
 DonationRoute.get("/api/adoption", async (req, res) => {
   const db = getDB();
   try {
-    const [rows] = await pool.query(
+    const [rows] = await db.query(
       `SELECT * FROM Adoption ORDER BY date_created DESC`
     );
     // Map DB columns to frontend-friendly names
@@ -393,7 +402,7 @@ DonationRoute.get("/api/adoption", async (req, res) => {
 DonationRoute.get("/api/adoption/:id/pdf", async (req, res) => {
   const db = getDB();
   try {
-    const [rows] = await pool.query(
+    const [rows] = await db.query(
       "SELECT certificate FROM Adoption WHERE adoption_id = ?",
       [req.params.id]
     );
