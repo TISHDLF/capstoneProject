@@ -21,6 +21,14 @@ function generateOTP() {
   return Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP
 }
 
+const transporter = nodemailer.createTransport({
+  service: "gmail", // or use "smtp.mailtrap.io" / your SMTP provider
+  auth: {
+    user: process.env.EMAIL, // your email
+    pass: process.env.MAILPASS, // your app password
+  },
+});
+
 UserRoute.use(
   cors({
     origin: "http://localhost:5173",
@@ -160,7 +168,8 @@ UserRoute.post("/signup", async (req, res) => {
   }
 });
 
-// OTP
+// Setup transporter (use your SMTP service)
+
 UserRoute.post("/send-otp", async (req, res) => {
   const { email, username } = req.body;
   const db = getDB();
@@ -190,7 +199,20 @@ UserRoute.post("/send-otp", async (req, res) => {
   req.session.otpEmail = email;
   req.session.otpExpires = Date.now() + 5 * 60 * 1000;
 
-  // send email...
+  try {
+    // ✉️ Send OTP email
+    await transporter.sendMail({
+      from: `"WhiskerWatch" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: "Your OTP Code",
+      text: `Your OTP is: ${otp}. It will expire in 5 minutes.`,
+    });
+
+    res.status(200).json({ message: "OTP sent successfully!" });
+  } catch (err) {
+    console.error("Error sending OTP:", err);
+    res.status(500).json({ error: "Failed to send OTP" });
+  }
 });
 
 //Verify OTP

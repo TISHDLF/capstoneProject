@@ -86,7 +86,7 @@ const VerificationPage = () => {
             className="border-b-2 border-b-[#A8784F] p-2 w-40"
           />
 
-          {!isCodeSent ? (
+          {/* {!isCodeSent ? (
             <button
               type="button"
               onClick={sendCode}
@@ -94,16 +94,15 @@ const VerificationPage = () => {
             >
               Send Code
             </button>
-          ) : (
-            <button
-              type="button"
-              onClick={verifyAndSignUp}
-              disabled={loading}
-              className="bg-[#B5C04A] text-white rounded-2xl p-2 hover:bg-[#838d2f]"
-            >
-              {loading ? "Verifying..." : "Verify & Sign Up"}
-            </button>
-          )}
+          ) : ( */}
+          <button
+            type="button"
+            onClick={verifyAndSignUp}
+            disabled={loading}
+            className="bg-[#B5C04A] text-white rounded-2xl p-2 hover:bg-[#838d2f]"
+          >
+            {loading ? "Verifying..." : "Verify & Sign Up"}
+          </button>
         </div>
 
         <div className="flex flex-col items-center gap-3 col-span-2">

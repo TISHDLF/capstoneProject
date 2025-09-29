@@ -521,5 +521,26 @@ CatRoute.get("/image/:cat_id", async (req, res) => {
     return res.status(500).json({ error: "Failed to fetch cat images" });
   }
 });
+CatRoute.delete("/delete/:cat_id", async (req, res) => {
+  const db = getDB();
+  const { cat_id } = req.params;
+
+  try {
+    // Delete cat from DB
+    const [result] = await db.query(
+      "UPDATE cat SET is_active = 0 WHERE cat_id = ?",
+      [cat_id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "Cat not found" });
+    }
+
+    res.status(200).json({ message: "Cat deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting cat:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 
 export default CatRoute;
