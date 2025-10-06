@@ -5,9 +5,6 @@ import axios from "axios";
 
 import { useSession } from "../../context/SessionContext";
 
-/// TODO: Separate account for Admin/User
-// Admin user have separate access for login user/ admin user
-
 const Login = () => {
   const navigate = useNavigate();
   const { setUser } = useSession();
@@ -29,10 +26,7 @@ const Login = () => {
       );
 
       user = response.data.user;
-
-      setUser(user); // from context
-      // Cookies.set("user", JSON.stringify(user), { expires: 30 });
-      // sessionStorage.setItem("user", JSON.stringify(user));
+      setUser(user);
 
       if (user.role === "regular") {
         navigate("/home");
@@ -51,17 +45,24 @@ const Login = () => {
   };
 
   return (
-    <div className="grid grid-cols-[60%_40%] place-items-center h-screen overflow-hidden">
-      <div className="block items-center box-border w-auto h-100% overflow-hidden">
-        <img src="src/assets/stray-cat.jpg" alt="stray-cat" />
+    <div className="md:grid md:grid-cols-[60%_40%] flex flex-col min-h-screen">
+      {/* Image Section - Hidden on mobile */}
+      <div className="hidden md:block items-center box-border w-full h-full overflow-hidden">
+        <img
+          src="src/assets/stray-cat.jpg"
+          alt="stray-cat"
+          className="w-full h-full object-cover"
+        />
       </div>
-      <div className="flex flex-col items-center gap-10 w-100% max-h-100% bg-[#FFF] p-20 rounded-[25px] shadow-md">
-        <div className="w-[250px] max-w-auto">
+
+      {/* Form Section */}
+      <div className="flex flex-col items-center justify-center gap-8 md:gap-10 w-full bg-[#FFF] p-8 md:p-20 min-h-screen">
+        <div className="w-40 md:w-[250px]">
           <img src="src/assets/whiskerwatchlogo-vertical.png" alt="logo" />
         </div>
         <form
           onSubmit={handleLogin}
-          className="flex flex-col items-center gap-10"
+          className="flex flex-col items-center gap-6 md:gap-10 w-full max-w-sm"
         >
           <input
             type="email"
@@ -70,7 +71,7 @@ const Login = () => {
             value={email}
             onChange={(event) => setEmail(event.target.value)}
             required
-            className="border-b-2 border-b-[#A8784F] p-2"
+            className="border-b-2 border-b-[#A8784F] p-2 w-full text-sm md:text-base"
           />
           <input
             type="password"
@@ -79,24 +80,24 @@ const Login = () => {
             onChange={(event) => setPassword(event.target.value)}
             placeholder="Password"
             required
-            className="border-b-2 border-b-[#A8784F] p-2"
+            className="border-b-2 border-b-[#A8784F] p-2 w-full text-sm md:text-base"
           />
-          <div className="flex flex-col items-center gap-3">
+          <div className="flex flex-col items-center gap-3 w-full">
             {error && (
-              <div className="mb-4 p-3 text-[#DC8801] bg-[#FDF5D8] rounded-lg">
+              <div className="mb-4 p-3 text-[#DC8801] bg-[#FDF5D8] rounded-lg text-xs md:text-sm text-center w-full">
                 {error}
               </div>
             )}
-            <div className="flex flex-row gap-1 justify-stretch">
+            <div className="flex flex-col md:flex-row gap-2 md:gap-1 justify-stretch w-full md:w-auto">
               <button
                 type="submit"
-                className="bg-[#B5C04A] text-[#FFF] p-[10px] w-30 rounded-[50px] active:bg-[#CFDA34] cursor-pointer"
+                className="bg-[#B5C04A] text-[#FFF] p-3 md:p-[10px] w-full md:w-30 rounded-[50px] active:bg-[#CFDA34] cursor-pointer text-sm md:text-base"
               >
                 Log in
               </button>
               <Link
                 to="/signup"
-                className="bg-amber-600 text-[#FFF] p-[10px] w-30 text-center rounded-[50px] active:bg-[#977655]"
+                className="bg-amber-600 text-[#FFF] p-3 md:p-[10px] w-full md:w-30 text-center rounded-[50px] active:bg-[#977655] text-sm md:text-base"
               >
                 Sign Up
               </Link>

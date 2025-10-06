@@ -6,7 +6,6 @@ const VerificationPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // ✅ Get user data from SignUp page
   const userData = location.state || {};
   const [otp, setOtp] = useState("");
   const [error, setError] = useState("");
@@ -38,14 +37,12 @@ const VerificationPage = () => {
     setLoading(true);
 
     try {
-      // ✅ Verify OTP
       await axios.post(
         "http://localhost:5000/user/verify-otp",
         { email: userData.email, otp },
         { withCredentials: true }
       );
 
-      // ✅ If OTP is valid → sign up user immediately
       const res = await axios.post("http://localhost:5000/user/signup", {
         ...userData,
       });
@@ -63,18 +60,24 @@ const VerificationPage = () => {
   };
 
   return (
-    <div className="grid grid-cols-[50%_50%] place-items-center h-screen overflow-hidden">
-      <div className="block items-center box-border w-auto h-100% overflow-hidden">
-        <img src="src/assets/stray-cat.jpg" alt="stray-cat" />
+    <div className="md:grid md:grid-cols-2 flex flex-col min-h-screen">
+      {/* Image Section - Hidden on mobile */}
+      <div className="hidden md:block items-center box-border w-full h-full overflow-hidden">
+        <img
+          src="src/assets/stray-cat.jpg"
+          alt="stray-cat"
+          className="w-full h-full object-cover"
+        />
       </div>
 
-      <div className="flex flex-col gap-8 items-center bg-[#FFF] p-12 rounded-[25px] shadow-md">
-        <div className="max-w-[200px]">
-          <img src="src/assets/whiskerwatchlogo-vertical.png" alt="" />
+      {/* Form Section */}
+      <div className="flex flex-col gap-6 md:gap-8 items-center justify-center bg-[#FFF] p-8 md:p-12 min-h-screen">
+        <div className="w-32 md:w-48">
+          <img src="src/assets/whiskerwatchlogo-vertical.png" alt="logo" />
         </div>
 
-        <div className="flex flex-col gap-2 col-span-2 items-center">
-          <p>
+        <div className="flex flex-col gap-4 items-center w-full max-w-md">
+          <p className="text-center text-sm md:text-base">
             Your Verification code was sent to: <b>{userData.email}</b>
           </p>
           <br />
@@ -83,33 +86,26 @@ const VerificationPage = () => {
             placeholder="Code"
             value={otp}
             onChange={(e) => setOtp(e.target.value)}
-            className="border-b-2 border-b-[#A8784F] p-2 w-40"
+            className="border-b-2 border-b-[#A8784F] p-2 w-40 text-center text-sm md:text-base"
           />
 
-          {/* {!isCodeSent ? (
-            <button
-              type="button"
-              onClick={sendCode}
-              className="bg-[#A8784F] text-white rounded-2xl p-2 hover:bg-[#8f623b]"
-            >
-              Send Code
-            </button>
-          ) : ( */}
           <button
             type="button"
             onClick={verifyAndSignUp}
             disabled={loading}
-            className="bg-[#B5C04A] text-white rounded-2xl p-2 hover:bg-[#838d2f]"
+            className="bg-[#B5C04A] text-white rounded-2xl p-3 px-6 hover:bg-[#838d2f] text-sm md:text-base"
           >
             {loading ? "Verifying..." : "Verify & Sign Up"}
           </button>
         </div>
 
-        <div className="flex flex-col items-center gap-3 col-span-2">
-          <label className="text-red-600">{error}</label>
+        <div className="flex flex-col items-center gap-3">
+          <label className="text-red-600 text-xs md:text-sm text-center">
+            {error}
+          </label>
 
-          <label>
-            Already a member of WhiskerWatch?
+          <label className="text-xs md:text-sm text-center">
+            Already a member of WhiskerWatch?{" "}
             <Link
               to="/login"
               className="font-normal md:font-bold hover:underline text-[#B5C04A]"

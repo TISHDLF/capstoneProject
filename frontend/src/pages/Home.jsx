@@ -49,110 +49,122 @@ const Home = () => {
   }, []);
 
   return (
-    <div className="flex flex-col min-h-screen pb-10">
-      <CatBot />
-      <NavigationBar />
-      <WhiskerMeter user={{ points }} />
-      {user?.role === "head_volunteer" && "admin" ? (
-        <HeadVolunteerSideBar />
-      ) : (
-        <SideNavigation />
-      )}
-      {/* Cat Community News Section */}
-      <div className="h-full w-full">
-        <div className="flex p-10 pl-0 pr-0">
-          <div className="flex justify-center p-10 gap-10">
-            <div className="w-13"></div>
-            <div className="justify-center w-270 rounded-br-4xl rounded-bl-4xl rounded-tl-4xl shadow-2xl hover:shadow-xl transition-shadow duration-300 p-3">
-              <img src={pic} alt="" className="w-full" />
-            </div>
-            <div></div>
-          </div>
-        </div>
-
-        <br />
-        <div className="flex p-10 pl-0 pr-0">
-          <div className="flex justify-center p-10 gap-10">
-            <div className="w-13"></div>
-            <div className="justify-center w-270 rounded-br-4xl rounded-bl-4xl rounded-tl-4xl shadow-2xl hover:shadow-xl transition-shadow duration-300 p-3">
-              <div>
-                <div className="bg-yellow-600 w-50 p-4 text-white rounded-tr-4xl rounded-tl-4xl absolute top-235 right-75 hover: transition-shadow duration-300 z-0">
-                  Be part of our mission
-                </div>
-                {}
-                <div className="flex-col p-5 w-auto">
-                  <div className="flex gap-5 justify-around pb-5 flex-auto w-full">
-                    <img src={news1} alt="" className="w-auto h-auto" />
-                    <img src={news2} alt="" className="w-[400px] h-auto" />
-                    <img src={news3} alt="" className="w-auto h-auto" />
-                  </div>
-                  <div>
-                    The Siena Park Cat Community is a group that cares for the
-                    welfare of stray cats in Siena Park Residences. The group
-                    advocates for responsible pet ownership by reducing the
-                    stray cat population and finding loving, permanent homes for
-                    these cats.
-                    <p className="font-semibold">
-                      Join us and be part of the change!
-                    </p>
-                  </div>
-                  <div className="flex justify-end">
-                    <Link
-                      to="/login"
-                      className="pl-5 pr-5 p-2 bg-yellow-600 active:bg-yellow-500 text-white rounded-2xl"
-                    >
-                      Join Now
-                    </Link>
-                  </div>
-                </div>
+    <>
+      <div className="flex flex-col min-h-screen  md:pb-10 pb-24">
+        <CatBot />
+        <NavigationBar />
+        <WhiskerMeter user={{ points }} />
+        {user?.role === "head_volunteer" || user?.role === "admin" ? (
+          <HeadVolunteerSideBar />
+        ) : (
+          <SideNavigation />
+        )}
+        {/* Cat Community News Section */}
+        <div className="h-full w-full">
+          <div className="flex p-10 md:pl-0 md:pr-0 pl-4 pr-4">
+            <div className="flex justify-center md:p-10 p-4 gap-10">
+              <div className="w-13 hidden md:block"></div>
+              <div className="justify-center w-full md:w-270 rounded-br-4xl rounded-bl-4xl rounded-tl-4xl shadow-2xl hover:shadow-xl transition-shadow duration-300 p-3">
+                <img src={pic} alt="" className="w-full" />
               </div>
+              <div className="hidden md:block"></div>
             </div>
           </div>
-        </div>
 
-        {/* Cat Community Adoption Section */}
-        <div className="flex p-10 pl-0 pr-0">
-          <div className="flex justify-center p-10 gap-10">
-            <div className="w-13"></div>
-            <div className="bg-yellow-600 w-50 p-4 flex justify-center  text-white rounded-tr-4xl rounded-tl-4xl absolute top-380 right-75 hover: transition-shadow duration-300 z-0">
-              Adopt a cat
-            </div>
-            <div className="justify-center w-270 rounded-br-4xl rounded-bl-4xl rounded-tl-4xl shadow-2xl hover:shadow-xl transition-shadow duration-300 p-5">
-              <div className="w-full h-45">
-                {/* Cat Images */}
-                {/* Cat Images */}
-                <div className="flex justify-around gap-3 overflow-hidden">
-                  {catImages.slice(0, 6).map((img, index) => (
-                    <img
-                      key={index}
-                      src={img.url}
-                      alt={`Cat ${index}`}
-                      className={`w-[160px] h-[160px] rounded-[10px] object-cover cursor-pointer ${
-                        selectedImage === img.url
-                          ? "opacity-100 border-2 border-[#DC8801]"
-                          : "opacity-100 hover:border-1s border-[#DC8801]"
-                      }`}
-                    />
-                  ))}
+          <br />
+          <div className="flex p-10 md:pl-0 md:pr-0 pl-4 pr-4">
+            <div className="flex justify-center md:p-10 p-4 gap-10">
+              <div className="w-13 hidden md:block"></div>
+              <div className="justify-center w-full md:w-270 rounded-br-4xl rounded-bl-4xl rounded-tl-4xl shadow-2xl hover:shadow-xl transition-shadow duration-300 p-3">
+                <div>
+                  <div className="bg-yellow-600 md:w-50 w-auto p-4 text-white rounded-tr-4xl rounded-tl-4xl md:absolute md:top-235 md:right-75 relative mb-4 md:mb-0 hover: transition-shadow duration-300 z-0">
+                    Be part of our mission
+                  </div>
+                  <div className="flex-col p-5 w-auto">
+                    <div className="flex md:flex-row flex-col gap-5 justify-around pb-5 flex-auto w-full">
+                      <img
+                        src={news1}
+                        alt=""
+                        className="w-full md:w-auto h-auto"
+                      />
+                      <img
+                        src={news2}
+                        alt=""
+                        className="w-full md:w-[400px] h-auto"
+                      />
+                      <img
+                        src={news3}
+                        alt=""
+                        className="w-full md:w-auto h-auto"
+                      />
+                    </div>
+                    <div className="text-sm md:text-base">
+                      The Siena Park Cat Community is a group that cares for the
+                      welfare of stray cats in Siena Park Residences. The group
+                      advocates for responsible pet ownership by reducing the
+                      stray cat population and finding loving, permanent homes
+                      for these cats.
+                      <p className="font-semibold mt-2">
+                        Join us and be part of the change!
+                      </p>
+                    </div>
+                    <div className="flex justify-end mt-4">
+                      <Link
+                        to="/login"
+                        className="pl-5 pr-5 p-2 bg-yellow-600 active:bg-yellow-500 text-white rounded-2xl"
+                      >
+                        Join Now
+                      </Link>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div className="flex justify-end">
-                <Link
-                  to={"/catadoption"}
-                  className="pl-5 pr-5 p-2 bg-yellow-600 text-white rounded-2xl active:bg-yellow-500"
-                >
-                  More info
-                </Link>
-              </div>
             </div>
-            <div></div>
           </div>
-        </div>
 
-        <WhiskerMeterGuide />
-        <Footer />
+          {/* Cat Community Adoption Section */}
+          <div className="flex p-10 md:pl-0 md:pr-0 pl-4 pr-4">
+            <div className="flex justify-center md:p-10 p-4 gap-10">
+              <div className="w-13 hidden md:block"></div>
+              <div className="bg-yellow-600 hidden md:w-270 w-auto p-4  justify-center text-white rounded-tr-4xl rounded-tl-4xl md:absolute md:top-380 md:right-75 relative mb-4 md:mb-0 hover: transition-shadow duration-300 z-0">
+                Adopt a cat
+              </div>
+              <div className="justify-center w-full md:w-270 rounded-br-4xl rounded-bl-4xl rounded-tl-4xl shadow-2xl hover:shadow-xl transition-shadow duration-300 p-5">
+                <div className="w-full h-auto md:h-45">
+                  {/* Cat Images */}
+                  <div className="grid grid-cols-2 md:flex md:justify-around gap-3 overflow-hidden">
+                    {catImages.slice(0, 6).map((img, index) => (
+                      <img
+                        key={index}
+                        src={img.url}
+                        alt={`Cat ${index}`}
+                        className={`w-full md:w-[160px] h-[160px] rounded-[10px] object-cover cursor-pointer ${
+                          selectedImage === img.url
+                            ? "opacity-100 border-2 border-[#DC8801]"
+                            : "opacity-100 hover:border-1s border-[#DC8801]"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </div>
+                <div className="flex justify-end mt-4">
+                  <Link
+                    to={"/catadoption"}
+                    className="pl-5 pr-5 p-2 bg-yellow-600 text-white rounded-2xl active:bg-yellow-500"
+                  >
+                    More info
+                  </Link>
+                </div>
+              </div>
+              <div className="hidden md:block"></div>
+            </div>
+          </div>
+
+          <WhiskerMeterGuide />
+          <Footer />
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

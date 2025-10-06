@@ -22,8 +22,6 @@ const Feeding = () => {
   const { user } = useSession();
   const { points } = useWhiskerMeter();
 
-  // const loggedUser = Cookies.get('user');
-  // const userParsed = JSON.parse(loggedUser);
   const [userData, setUserData] = useState(null);
 
   const [interestReason, setInterestReason] = useState("");
@@ -54,14 +52,12 @@ const Feeding = () => {
         console.log("Application status:", res.data);
 
         if (res.data.status === "approved") {
-          // redirect to feedinginfo/:id
           window.location.href = `/feedinginfo/${res.data.application_id}`;
         } else if (res.data.status === "pending") {
           setSubmitMessage(
             "You already have a pending application. Please wait for approval. We will notify you as soon as its approved through your email "
           );
         }
-        // else status === "none" → they stay on /feeding to apply
       } catch (err) {
         console.error("Failed to check application:", err);
       }
@@ -77,7 +73,7 @@ const Feeding = () => {
           withCredentials: true,
         });
         console.log("Fetched user:", response.data);
-        setUserData(response.data); // Store user data
+        setUserData(response.data);
       } catch (err) {
         console.error("Failed to fetch user data:", err);
         setError(err.response?.data?.error || "Failed to fetch user data");
@@ -87,15 +83,6 @@ const Feeding = () => {
   }, []);
 
   const generateFeedingForm = async () => {
-    // console.log({
-    //   interestReason,
-    //   feedingExperience,
-    //   experienceDetails,
-    //   feedingDay,
-    //   feedingSchedule,
-    //   concernReason
-    // });
-
     if (
       !interestReason.trim() ||
       !feedingExperience ||
@@ -140,11 +127,10 @@ const Feeding = () => {
     const filename = `feeding-form-${userData.firstname}-${userData.lastname}.pdf`;
 
     formData.append("application_form", pdfBlob, filename);
-
     formData.append("user_id", userData.user_id);
 
     try {
-      axios.post("http://localhost:5000/feeder/apply", formData, formData, {
+      axios.post("http://localhost:5000/feeder/apply", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
@@ -155,7 +141,7 @@ const Feeding = () => {
       console.log(
         "You successfully submitted your application!\nPlease wait for approval. Thank you!"
       );
-      console.log("CLiking submit!");
+      console.log("Clicking submit!");
     } catch (err) {
       if (err.response && err.response.status === 409) {
         const errorMsg = err.response.data?.error;
@@ -180,32 +166,32 @@ const Feeding = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-full pb-10">
+    <div className="flex flex-col min-h-full md:pb-10 pb-24">
       <CatBot />
       <NavigationBar />
 
       <WhiskerMeter user={{ points }} />
 
-      <div className="grid grid-cols-[80%_20%] h-full">
-        <div className="flex flex-col pl-50 p-10">
+      <div className="md:grid md:grid-cols-[80%_20%] h-full">
+        <div className="flex flex-col md:pl-50 md:p-10 p-4">
           <div className="flex flex-col min-h-screen w-auto gap-3">
-            <div className="relative grid grid-cols-[20%_80%] w-full rounded-[25px] gap-3">
+            <div className="relative md:grid md:grid-cols-[20%_80%] flex flex-col w-full rounded-[25px] gap-3">
               <div className="flex flex-col gap-5">
                 <div className="flex flex-row justify-between items-center p-3 bg-[#FFF] rounded-[15px] shadow-md">
-                  <label className="font-bold text-[#DC8801]">
+                  <label className="font-bold text-[#DC8801] text-sm md:text-base">
                     Feeders Form
                   </label>
                   <div className="flex items-center justify-center w-[30px] h-auto">
                     <img
                       src="src/assets/icons/clipboard-white.png"
                       alt="white clipboard"
-                      className="w-full h-auto "
+                      className="w-full h-auto"
                     />
                   </div>
                 </div>
 
                 <div className="flex flex-row justify-between items-center p-3 border-dashed border-2 border-[#DC8801] rounded-[15px]">
-                  <label className="text-[#DC8801]">
+                  <label className="text-[#DC8801] text-xs md:text-sm">
                     Please answer the following questions to submit a request
                     and become a part of the feeders team!
                   </label>
@@ -218,28 +204,28 @@ const Feeding = () => {
                   className="flex flex-col justify-center gap-8 p-5 bg-[#FFF] rounded-[15px] w-full h-fit"
                 >
                   <div className="flex flex-col gap-2">
-                    <label>
+                    <label className="text-sm md:text-base">
                       1. Why are you interested in becoming a feeder for the
-                      Siera Park Residences Cat Community?
+                      Sierra Park Residences Cat Community?
                     </label>
                     <textarea
                       placeholder="Answer here"
                       rows={5}
                       value={interestReason}
                       onChange={(e) => setInterestReason(e.target.value)}
-                      className="p-2 border-1 border-[#252525] rounded-[8px] resize-none"
+                      className="p-2 border-1 border-[#252525] rounded-[8px] resize-none text-sm"
                     ></textarea>
                   </div>
 
                   <div className="flex flex-col gap-2">
-                    <label>
+                    <label className="text-sm md:text-base">
                       2. Do you have any prior experience with feeding or caring
                       for stray cats or community animals?
                     </label>
-                    <div className="flex flex-row gap-2">
+                    <div className="flex flex-row gap-2 flex-wrap">
                       <label
                         htmlFor="feedingYes"
-                        className="flex items-center gap-2 p-2 border-1 border-[#252525] rounded-[8px]"
+                        className="flex items-center gap-2 p-2 border-1 border-[#252525] rounded-[8px] text-sm"
                       >
                         <input
                           type="radio"
@@ -253,7 +239,7 @@ const Feeding = () => {
                       </label>
                       <label
                         htmlFor="feedingNo"
-                        className="flex items-center gap-2 p-2 border-1 border-[#252525] rounded-[8px]"
+                        className="flex items-center gap-2 p-2 border-1 border-[#252525] rounded-[8px] text-sm"
                       >
                         <input
                           type="radio"
@@ -267,14 +253,8 @@ const Feeding = () => {
                       </label>
                     </div>
                     {feedingExperience === "Yes" && (
-                      <div
-                        className={
-                          feedingExperience === "No"
-                            ? "hidden"
-                            : "flex flex-col"
-                        }
-                      >
-                        <label htmlFor="feedingDescribe">
+                      <div className="flex flex-col">
+                        <label htmlFor="feedingDescribe" className="text-sm">
                           if <strong>Yes</strong>, please describe your
                           experience to us.
                         </label>
@@ -286,26 +266,24 @@ const Feeding = () => {
                           rows={5}
                           value={experienceDetails}
                           onChange={(e) => setExperienceDetails(e.target.value)}
-                          className={
-                            "p-2 border-1 border-[#252525] rounded-[8px] resize-none"
-                          }
+                          className="p-2 border-1 border-[#252525] rounded-[8px] resize-none text-sm"
                         ></textarea>
                       </div>
                     )}
                   </div>
 
                   <div className="flex flex-col gap-2">
-                    <label htmlFor="">
+                    <label className="text-sm md:text-base">
                       3. Which day of the week can you commit to feeding the
                       cats?
                     </label>
-                    <div className="flex flex-row gap-2">
+                    <div className="flex flex-col md:flex-row gap-2">
                       <select
                         name="feedingDay"
                         id="feedingDay"
                         value={feedingDay}
                         onChange={(e) => setFeedingDay(e.target.value)}
-                        className="flex items-center justify-center border-1 border-[#A3A3A3] rounded-[10px]"
+                        className="flex items-center justify-center border-1 border-[#A3A3A3] rounded-[10px] p-2 text-sm"
                       >
                         <option hidden>Select a day</option>
                         <option value="Monday">Monday</option>
@@ -317,7 +295,7 @@ const Feeding = () => {
                         <option value="Sunday">Sunday</option>
                       </select>
 
-                      <label className="text-[14px] text-[#626262] italic leading-tight">
+                      <label className="text-xs md:text-[14px] text-[#626262] italic leading-tight">
                         (There's no guarantee that day you choose will be your
                         feeding day due to other active feeders. Coordinate with
                         the Head volunteers for this matter.)
@@ -326,15 +304,15 @@ const Feeding = () => {
                   </div>
 
                   <div className="flex flex-col gap-4">
-                    <label>
+                    <label className="text-sm md:text-base">
                       4. Feeding typically begins at 8:00 pm and may continue
                       late into the evening. Are you comfortable with this
                       schedule?{" "}
                     </label>
-                    <div className="flex flex-row gap-2">
+                    <div className="flex flex-row gap-2 flex-wrap">
                       <label
                         htmlFor="eveningYes"
-                        className="flex items-center gap-2 p-2 border-1 border-[#252525] rounded-[8px]"
+                        className="flex items-center gap-2 p-2 border-1 border-[#252525] rounded-[8px] text-sm"
                       >
                         <input
                           type="radio"
@@ -348,7 +326,7 @@ const Feeding = () => {
                       </label>
                       <label
                         htmlFor="eveningNo"
-                        className="flex items-center gap-2 p-2 border-1 border-[#252525] rounded-[8px]"
+                        className="flex items-center gap-2 p-2 border-1 border-[#252525] rounded-[8px] text-sm"
                       >
                         <input
                           type="radio"
@@ -366,7 +344,7 @@ const Feeding = () => {
                         feedingSchedule === "No" ? "flex flex-col" : "hidden"
                       }
                     >
-                      <label htmlFor="nightFeedConcern">
+                      <label htmlFor="nightFeedConcern" className="text-sm">
                         if <strong>No</strong>, please explain if you have any
                         concerns.
                       </label>
@@ -376,12 +354,12 @@ const Feeding = () => {
                         rows={5}
                         value={concernReason}
                         onChange={(e) => setConcernReason(e.target.value)}
-                        className="p-2 border-1 border-[#252525] rounded-[8px] resize-none"
+                        className="p-2 border-1 border-[#252525] rounded-[8px] resize-none text-sm"
                       ></textarea>
                     </div>
                   </div>
                   {error && (
-                    <label className="font-[14px] italic text-[#DC8801]">
+                    <label className="text-sm italic text-[#DC8801]">
                       {error}
                     </label>
                   )}
@@ -389,11 +367,11 @@ const Feeding = () => {
               ) : (
                 <div className="flex items-center justify-center p-5 bg-[#FFF] rounded-[15px] w-full h-full">
                   {error ? (
-                    <label className="font-[14px] italic text-[#DC8801]">
+                    <label className="text-sm italic text-[#DC8801]">
                       {error}
                     </label>
                   ) : (
-                    <label className="text-[#DC8801] text-center">
+                    <label className="text-[#DC8801] text-center text-sm md:text-base">
                       {submitMessage}
                     </label>
                   )}
@@ -404,9 +382,7 @@ const Feeding = () => {
               <button
                 type="button"
                 onClick={generateFeedingForm}
-                className={
-                  "self-end w-fit text-center bg-[#B5C04A] text-[#FFF] font-bold p-2 pl-4 pr-4 rounded-[15px] hover:bg-[#CFDA34] active:bg-[#B5C04A] cursor-pointer"
-                }
+                className="self-end w-fit text-center bg-[#B5C04A] text-[#FFF] font-bold p-2 pl-4 pr-4 rounded-[15px] hover:bg-[#CFDA34] active:bg-[#B5C04A] cursor-pointer text-sm md:text-base"
               >
                 Submit
               </button>
