@@ -2,7 +2,7 @@ import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import axios from "axios";
-
+import LoadingModal from "../../modal/LoadingModal";
 const SignUp = () => {
   const [firstname, setFirstname] = useState("");
   const [lastname, setLastname] = useState("");
@@ -13,13 +13,10 @@ const SignUp = () => {
   const [address, setAddress] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [passwordMatchError, setPasswordMatchError] = useState(false);
+  const [, setPasswordMatchError] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const [otp, setOtp] = useState("");
-  const [isCodeSent, setIsCodeSent] = useState(false);
-  const [otpVerified, setOtpVerified] = useState(false);
 
   const HandleSignUp = async (event) => {
     event.preventDefault();
@@ -41,14 +38,12 @@ const SignUp = () => {
     }
 
     try {
-      // 🔹 Ask backend to check for duplicates AND send OTP
       await axios.post("http://localhost:5000/user/send-otp", {
         email,
         username,
         contactnumber,
       });
 
-      // ✅ If successful → navigate to verify page
       navigate("/verify", {
         state: {
           firstname,
@@ -181,7 +176,6 @@ const SignUp = () => {
             >
               {loading ? "Signing Up..." : "Sign Up"}
             </button>
-
             <label>
               Already a member of WhiskerWatch?
               <Link
@@ -195,6 +189,7 @@ const SignUp = () => {
           </div>
         </form>
       </div>
+      <LoadingModal isOpen={loading} />
     </div>
   );
 };
