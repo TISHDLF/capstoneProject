@@ -1,4 +1,3 @@
-// CatProfile.jsx
 import React, { useState, useEffect } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import NavigationBar from "../../components/NavigationBar";
@@ -12,7 +11,6 @@ import WhiskerMeter from "../../components/WhiskerMeter";
 import { useSession } from "../../context/SessionContext";
 
 const CatProfile = () => {
-  // CatProfile.jsx
   const { cat_id } = useParams();
 
   const { user, loading, refreshSession } = useSession();
@@ -24,7 +22,6 @@ const CatProfile = () => {
   const [cat, setCat] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
 
-  // Fetch all cats
   useEffect(() => {
     const fetchCats = async () => {
       try {
@@ -43,7 +40,6 @@ const CatProfile = () => {
     const fetchCat = async () => {
       try {
         setCatLoading(true);
-        // optionally: you can set a local loading state if needed
         const res = await fetch(
           `http://localhost:5000/cats/catprofile/${cat_id}`
         );
@@ -60,7 +56,6 @@ const CatProfile = () => {
     if (cat_id) fetchCat();
   }, [cat_id]);
 
-  // Fetch one image
   useEffect(() => {
     const fetchImage = async () => {
       try {
@@ -100,7 +95,7 @@ const CatProfile = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen pb-10">
+    <div className="flex flex-col min-h-screen md:pb-10 pb-24">
       <CatBot />
       <NavigationBar />
       {user?.role === "head_volunteer" ? (
@@ -111,14 +106,39 @@ const CatProfile = () => {
         <SideNavigation />
       )}
 
-      <div className="grid grid-cols-[80%_20%] h-full">
-        <div className="relative flex flex-col pl-50 p-8">
-          <div className="relative flex flex-row items-center gap-2">
-            {/* Left Arrow */}
+      <div className="md:grid md:grid-cols-[80%_20%] h-full">
+        <div className="relative flex flex-col md:pl-50 md:p-8 p-4">
+          <div className="relative flex md:flex-row flex-col items-center gap-2 md:gap-4">
+            {/* Navigation Arrows - Side by side on mobile, surrounding on desktop */}
+            <div className="flex md:hidden w-full justify-between mb-4">
+              <button
+                onClick={goToPrevCat}
+                disabled={currentIndex <= 0}
+                className="flex items-center justify-center bg-[#B5C04A] w-[50px] h-[50px] p-2 rounded-[50%] hover:bg-[#CFDA34] disabled:opacity-50"
+              >
+                <img
+                  src="/src/assets/icons/arrow-left-no-tail.png"
+                  alt="arrow left"
+                />
+              </button>
+
+              <button
+                onClick={goToNextCat}
+                disabled={currentIndex >= cats.length - 1}
+                className="flex items-center justify-center bg-[#B5C04A] w-[50px] h-[50px] rounded-[50%] p-2 hover:bg-[#CFDA34] disabled:opacity-50"
+              >
+                <img
+                  src="/src/assets/icons/arrow-right-no-tail.png"
+                  alt="arrow right"
+                />
+              </button>
+            </div>
+
+            {/* Left Arrow - Desktop only */}
             <button
               onClick={goToPrevCat}
               disabled={currentIndex <= 0}
-              className="flex items-center justify-center bg-[#B5C04A] w-[50px] h-[50px] p-2 rounded-[50%] hover:bg-[#CFDA34] disabled:opacity-50"
+              className="hidden md:flex items-center justify-center bg-[#B5C04A] w-[50px] h-[50px] p-2 rounded-[50%] hover:bg-[#CFDA34] disabled:opacity-50"
             >
               <img
                 src="/src/assets/icons/arrow-left-no-tail.png"
@@ -127,26 +147,26 @@ const CatProfile = () => {
             </button>
 
             {/* Cat Details */}
-            <div className="relative grid grid-cols-[60%_40%] w-[1000px] bg-white p-5 rounded-[25px] shadow-md">
-              {/* Left: Image */}
+            <div className="relative md:grid md:grid-cols-[60%_40%] flex flex-col w-full md:w-[1000px] bg-white p-4 md:p-5 rounded-[25px] shadow-md">
+              {/* Image */}
               <div className="flex flex-col bg-[#FDF5D8] p-4 gap-4 rounded-[20px]">
-                <div className="flex flex-col items-center h-[450px] w-full rounded-[16px] overflow-hidden">
+                <div className="flex flex-col items-center h-[300px] md:h-[450px] w-full rounded-[16px] overflow-hidden">
                   <img
                     src={selectedImage}
                     alt={cat?.name || "Cat"}
-                    className="h-full w-auto object-cover"
+                    className="h-full w-full object-cover"
                   />
                 </div>
               </div>
 
-              {/* Right: Info */}
-              <div className="flex flex-col justify-between p-5">
+              {/* Info */}
+              <div className="flex flex-col justify-between p-4 md:p-5 mt-4 md:mt-0">
                 <div>
-                  <h2 className="text-2xl font-bold text-[#DC8801] border-b-2 border-b-[#DC8801] pb-2">
+                  <h2 className="text-xl md:text-2xl font-bold text-[#DC8801] border-b-2 border-b-[#DC8801] pb-2">
                     {cat?.name || "Unnamed Cat"}
                   </h2>
 
-                  <div className="mt-4 space-y-3 text-sm text-gray-700">
+                  <div className="mt-4 space-y-3 text-xs md:text-sm text-gray-700">
                     <p>
                       <strong>Gender:</strong> {cat?.gender || "Unknown"}
                     </p>
@@ -159,7 +179,7 @@ const CatProfile = () => {
                     </p>
                   </div>
 
-                  <p className="mt-4 text-justify">
+                  <p className="mt-4 text-justify text-xs md:text-sm">
                     {cat?.description || "No description available."}
                   </p>
                 </div>
@@ -168,14 +188,14 @@ const CatProfile = () => {
                   {!user ? (
                     <Link
                       to="/login"
-                      className="bg-[#B5C04A] text-white font-bold p-3 rounded-[15px] text-center hover:bg-[#CFDA34]"
+                      className="bg-[#B5C04A] text-white font-bold p-3 rounded-[15px] text-center hover:bg-[#CFDA34] text-sm md:text-base"
                     >
                       Login to adopt this cat
                     </Link>
                   ) : (
                     <Link
                       to={`/adopteeform/${cat_id}`}
-                      className="bg-[#B5C04A] text-white font-bold p-3 rounded-[15px] text-center hover:bg-[#CFDA34]"
+                      className="bg-[#B5C04A] text-white font-bold p-3 rounded-[15px] text-center hover:bg-[#CFDA34] text-sm md:text-base"
                     >
                       I want to adopt this cat
                     </Link>
@@ -183,7 +203,7 @@ const CatProfile = () => {
 
                   <Link
                     to="/catadoption"
-                    className="border-2 border-[#B5C04A] text-[#B5C04A] font-bold p-3 rounded-[15px] text-center hover:bg-[#B5C04A] hover:text-white"
+                    className="border-2 border-[#B5C04A] text-[#B5C04A] font-bold p-3 rounded-[15px] text-center hover:bg-[#B5C04A] hover:text-white text-sm md:text-base"
                   >
                     See other Cats
                   </Link>
@@ -191,11 +211,11 @@ const CatProfile = () => {
               </div>
             </div>
 
-            {/* Right Arrow */}
+            {/* Right Arrow - Desktop only */}
             <button
               onClick={goToNextCat}
               disabled={currentIndex >= cats.length - 1}
-              className="flex items-center justify-center bg-[#B5C04A] w-[50px] h-[50px] rounded-[50%] p-2 hover:bg-[#CFDA34] disabled:opacity-50"
+              className="hidden md:flex items-center justify-center bg-[#B5C04A] w-[50px] h-[50px] rounded-[50%] p-2 hover:bg-[#CFDA34] disabled:opacity-50"
             >
               <img
                 src="/src/assets/icons/arrow-right-no-tail.png"

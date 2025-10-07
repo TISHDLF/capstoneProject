@@ -69,18 +69,22 @@ const SideNavigation = () => {
   const handleLogout = () => {
     logout();
     resetWhiskerMeter();
-    navigate("/home"); // ✅ instead of window.location.href
+    navigate("/home");
   };
 
   const toggleProfileMenu = () => {
-    setIsVisible((prev) => !prev);
+    if (!isLoggedIn) {
+      setModalOpen(true);
+    } else {
+      setIsVisible((prev) => !prev);
+    }
   };
 
   const handleProtectedNav = (path) => {
     if (!isLoggedIn) {
       setModalOpen(true);
     } else {
-      navigate(path); // ✅ single-page navigation
+      navigate(path);
     }
   };
 
@@ -386,13 +390,13 @@ const SideNavigation = () => {
         </div>
 
         {/* Mobile Profile Menu Modal */}
-        {isVisible && (
+        {isVisible && isLoggedIn && (
           <div
-            className="fixed inset-0 bg-black/50 bg-opacity-50 z-40"
+            className="fixed inset-0 bg-black/50 z-40 flex items-end justify-center pb-20"
             onClick={() => setIsVisible(false)}
           >
             <div
-              className="absolute bottom-20 left-1/2 transform -translate-x-1/2 w-11/12 max-w-sm bg-white rounded-2xl shadow-xl p-4"
+              className="w-11/12 max-w-sm bg-white rounded-2xl shadow-xl p-4 mb-4"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center gap-3 mb-4 pb-4 border-b border-gray-200">
@@ -451,17 +455,7 @@ const SideNavigation = () => {
                     Log out
                   </button>
                 </div>
-              ) : (
-                <button
-                  onClick={() => {
-                    setIsVisible(false);
-                    setTimeout(() => navigate("/login"), 100);
-                  }}
-                  className="block text-center py-3 bg-[#fef8e2] hover:bg-[#f9e394] active:bg-[#feaf31] rounded-xl font-medium w-full"
-                >
-                  Log in
-                </button>
-              )}
+              ) : null}
             </div>
           </div>
         )}

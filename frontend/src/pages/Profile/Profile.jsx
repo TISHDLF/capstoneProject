@@ -49,10 +49,8 @@ const Profile = () => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Show preview immediately
     const previewUrl = URL.createObjectURL(file);
 
-    // Set temporary preview and store file
     setProfile((prev) => ({
       ...prev,
       profile_image: previewUrl,
@@ -65,15 +63,13 @@ const Profile = () => {
     try {
       const formData = new FormData();
 
-      // Append text fields
       formData.append("firstname", profile.firstname);
       formData.append("lastname", profile.lastname);
       formData.append("address", profile.address);
       formData.append("email", profile.email);
       formData.append("birthday", profile.birthday);
-      formData.append("badge", profile.badge); // if needed
+      formData.append("badge", profile.badge);
 
-      // If there's a new file, include it
       if (profile._newFile) {
         formData.append("profile_image", profile._newFile);
         formData.append("old_image", profile.old_image || "");
@@ -94,7 +90,6 @@ const Profile = () => {
 
       URL.revokeObjectURL(profile.profile_image);
 
-      // AFTER REPLACING SOME INFOS ON THE UPDATE VIEW, REFETCH THE DATA TO SEE CHANGES ON THE READ VIEW
       const updated = await axios.get("http://localhost:5000/user/profile", {
         withCredentials: true,
       });
@@ -110,15 +105,15 @@ const Profile = () => {
 
   const profileUpdateWindow = () => {
     if (updateProfile) {
-      setProfile(originalProfile); // Restore original profile
+      setProfile(originalProfile);
       if (profile.profile_image?.startsWith("blob:")) {
-        URL.revokeObjectURL(profile.profile_image); // Clean up blob URL
+        URL.revokeObjectURL(profile.profile_image);
       }
     } else {
-      setOriginalProfile(profile); // Save current state
+      setOriginalProfile(profile);
     }
     setUpdateProfile((prev) => !prev);
-    setError(""); // Clear error on cancel or edit
+    setError("");
   };
 
   useEffect(() => {
@@ -130,35 +125,37 @@ const Profile = () => {
   }, [profile.profile_image]);
 
   return (
-    <div className="flex flex-col min-h-screen pb-10">
+    <div className="flex flex-col min-h-screen md:pb-10 pb-24">
       <NavigationBar />
 
-      <div className="grid grid-cols-[80%_20%] h-full">
-        <div className="flex flex-col pl-50 p-10">
+      <div className="md:grid md:grid-cols-[80%_20%] h-full">
+        <div className="flex flex-col md:pl-50 md:p-10 p-4">
           {/* ALL CONTENTS HERE */}
-          <div className="grid grid-cols-[20%_80%] bg-[#FFF] rounded-[12px] overflow-hidden">
-            <div className="flex flex-col gap-10 pt-10">
-              <div className="flex flex-row justify-between items-center p-3 bg-[#FFF] rounded-tr-[20px] rounded-br-[20px] shadow-md">
-                <label className="font-bold text-[#DC8801]">My Profile</label>
-                <div className="flex items-center justify-center w-[30px] h-auto">
+          <div className="md:grid md:grid-cols-[20%_80%] flex flex-col bg-[#FFF] rounded-[12px] overflow-hidden">
+            <div className="flex flex-col gap-6 md:gap-10 md:pt-10 pt-4 p-4 md:p-0">
+              <div className="flex flex-row justify-between items-center p-3 bg-[#FFF] md:rounded-tr-[20px] md:rounded-br-[20px] rounded-[15px] shadow-md">
+                <label className="font-bold text-[#DC8801] text-sm md:text-base">
+                  My Profile
+                </label>
+                <div className="flex items-center justify-center w-[25px] md:w-[30px] h-auto">
                   <img
                     src="/src/assets/icons/account.png"
-                    alt="white clipboard"
-                    className="w-full h-auto "
+                    alt="profile icon"
+                    className="w-full h-auto"
                   />
                 </div>
               </div>
             </div>
 
-            <div className="flex flex-col bg-[#FFF] p-10 gap-5">
-              <div className="flex flex-col gap-4 bg-[#FDF5D8] p-10 rounded-[15px] shadow-md">
+            <div className="flex flex-col bg-[#FFF] p-4 md:p-10 gap-5">
+              <div className="flex flex-col gap-4 bg-[#FDF5D8] p-4 md:p-10 rounded-[15px] shadow-md">
                 {/* MAIN PROFILE */}
 
                 {!updateProfile && (
                   <>
                     {profile && (
-                      <div className="relative flex flex-row gap-5">
-                        <div className="flex w-[250px] h-[200px] bg-[#B5C04A] rounded-sm p-2">
+                      <div className="relative flex md:flex-row flex-col gap-5">
+                        <div className="flex w-full md:w-[250px] h-[200px] bg-[#B5C04A] rounded-sm p-2">
                           <img
                             src={
                               `http://localhost:5000/FileUploads/${profile.profile_image}` ||
@@ -168,14 +165,16 @@ const Profile = () => {
                             className="w-full h-full object-cover"
                           />
                         </div>
-                        <div className="flex flex-col">
+                        <div className="flex flex-col w-full">
                           <div className="flex flex-row gap-3 border-b-2 border-dashed border-[#bbc3c1] pt-2 pb-2">
-                            <label className="font-bold">Name:</label>
-                            <label>{`${profile.firstname} ${profile.lastname}`}</label>
+                            <label className="font-bold text-sm md:text-base">
+                              Name:
+                            </label>
+                            <label className="text-sm md:text-base">{`${profile.firstname} ${profile.lastname}`}</label>
                           </div>
                           <div className="flex flex-row items-center gap-3 border-b-2 border-dashed border-[#bbc3c1] pt-2 pb-2">
-                            <label className="flex flex-row items-center font-bold gap-[5px]">
-                              <div className="w-[30px] h-auto">
+                            <label className="flex flex-row items-center font-bold gap-[5px] text-sm md:text-base">
+                              <div className="w-[25px] md:w-[30px] h-auto">
                                 <img
                                   src="/src/assets/icons/location-orange.png"
                                   alt=""
@@ -183,11 +182,13 @@ const Profile = () => {
                               </div>
                               Address:
                             </label>
-                            <label> {profile.address} </label>
+                            <label className="text-sm md:text-base">
+                              {profile.address}
+                            </label>
                           </div>
                           <div className="flex flex-row items-center gap-3 border-b-2 border-dashed border-[#bbc3c1] pt-2 pb-2">
-                            <label className="flex flex-row items-center font-bold gap-[5px]">
-                              <div className="w-[30px] h-auto">
+                            <label className="flex flex-row items-center font-bold gap-[5px] text-sm md:text-base">
+                              <div className="w-[25px] md:w-[30px] h-auto">
                                 <img
                                   src="/src/assets/icons/email-orange.png"
                                   alt=""
@@ -195,11 +196,13 @@ const Profile = () => {
                               </div>
                               Email:
                             </label>
-                            <label>{profile.email}</label>
+                            <label className="text-sm md:text-base break-all">
+                              {profile.email}
+                            </label>
                           </div>
                           <div className="flex flex-row items-center gap-3 border-b-2 border-dashed border-[#bbc3c1] pt-2 pb-2">
-                            <label className="flex flex-row items-center font-bold gap-[5px]">
-                              <div className="w-[30px] h-auto">
+                            <label className="flex flex-row items-center font-bold gap-[5px] text-sm md:text-base">
+                              <div className="w-[25px] md:w-[30px] h-auto">
                                 <img
                                   src="/src/assets/icons/birthday-cake.png"
                                   alt=""
@@ -207,11 +210,13 @@ const Profile = () => {
                               </div>
                               Birthday:
                             </label>
-                            <label>{profile.birthday}</label>
+                            <label className="text-sm md:text-base">
+                              {profile.birthday}
+                            </label>
                           </div>
                           <div className="flex flex-row items-center gap-3 border-b-2 border-dashed border-[#bbc3c1] pt-2 pb-2">
-                            <label className="flex flex-row items-center font-bold gap-[5px]">
-                              <div className="w-[30px] h-auto">
+                            <label className="flex flex-row items-center font-bold gap-[5px] text-sm md:text-base">
+                              <div className="w-[25px] md:w-[30px] h-auto">
                                 <img
                                   src="/src/assets/icons/badge-orange.png"
                                   alt=""
@@ -219,9 +224,11 @@ const Profile = () => {
                               </div>
                               Badge:
                             </label>
-                            <label>{profile.badge}</label>
+                            <label className="text-sm md:text-base">
+                              {profile.badge}
+                            </label>
                           </div>
-                          <label className="leading-tight text-[14px] pt-4 pb-2 text-[#645e5f]">
+                          <label className="leading-tight text-xs md:text-[14px] pt-4 pb-2 text-[#645e5f]">
                             You've received the <strong>Snuggle Scout</strong>{" "}
                             badge! You're cuddly corners and warming hearts
                             along the way. <br />
@@ -229,10 +236,10 @@ const Profile = () => {
                             contributions don't go unnoticed!
                           </label>
                         </div>
-                        <div className="absolute bottom-0 left-0 flex flex-row gap-2">
+                        <div className="md:absolute relative md:bottom-0 md:left-0 bottom-auto left-auto flex flex-row gap-2 mt-4 md:mt-0">
                           <button
                             onClick={profileUpdateWindow}
-                            className="bg-[#B5C04A] min-w-[90px] p-2 rounded-[10px] text-[#000] hover:bg-[#CFDA34] active:bg-[#B5C04A]"
+                            className="bg-[#B5C04A] w-full md:min-w-[90px] p-2 rounded-[10px] text-[#000] hover:bg-[#CFDA34] active:bg-[#B5C04A] text-sm md:text-base"
                           >
                             Edit Profile
                           </button>
@@ -247,16 +254,16 @@ const Profile = () => {
                     {profile && (
                       <form
                         onSubmit={handleSave}
-                        className="relative flex flex-row gap-5"
+                        className="relative flex md:flex-row flex-col gap-5"
                       >
-                        <div className="relative flex w-[250px] h-[200px] bg-[#B5C04A] rounded-sm p-2">
+                        <div className="relative flex w-full md:w-[250px] h-[200px] bg-[#B5C04A] rounded-sm p-2">
                           <label
                             htmlFor="profile_image"
-                            className="absolute bottom-3 left-3 bg-[#DC8801] rounded-[15px] cursor-pointer  pl-2 pr-2"
+                            className="absolute bottom-3 left-3 bg-[#DC8801] rounded-[15px] cursor-pointer pl-2 pr-2 py-1"
                           >
                             <label
                               htmlFor="profile_image"
-                              className="cursor-pointer text-[#FFF] text-[12px]"
+                              className="cursor-pointer text-[#FFF] text-[10px] md:text-[12px]"
                             >
                               {!profile.profile_image ? "Add Photo" : "Replace"}
                             </label>
@@ -281,14 +288,15 @@ const Profile = () => {
                           />
                         </div>
 
-                        <div className="flex flex-col">
-                          <div className="flex flex-row w-full gap-3 border-b-2 border-dashed border-[#bbc3c1] pt-2 pb-2">
-                            <div className="flex items-center gap-2">
-                              <label className="font-bold">Firstname:</label>
-                              {/* <label>{`${profile.firstname} ${profile.lastname}`}</label> */}
+                        <div className="flex flex-col w-full">
+                          <div className="flex md:flex-row flex-col w-full gap-3 border-b-2 border-dashed border-[#bbc3c1] pt-2 pb-2">
+                            <div className="flex items-center gap-2 w-full">
+                              <label className="font-bold text-sm md:text-base whitespace-nowrap">
+                                Firstname:
+                              </label>
                               <input
                                 type="text"
-                                className="w-full"
+                                className="w-full text-sm md:text-base"
                                 value={profile.firstname || ""}
                                 onChange={(e) =>
                                   setProfile((prev) => ({
@@ -298,11 +306,13 @@ const Profile = () => {
                                 }
                               />
                             </div>
-                            <div className="flex items-center gap-2">
-                              <label className="font-bold">Lastname:</label>
+                            <div className="flex items-center gap-2 w-full">
+                              <label className="font-bold text-sm md:text-base whitespace-nowrap">
+                                Lastname:
+                              </label>
                               <input
                                 type="text"
-                                className="w-full"
+                                className="w-full text-sm md:text-base"
                                 value={profile.lastname || ""}
                                 onChange={(e) =>
                                   setProfile((prev) => ({
@@ -314,8 +324,8 @@ const Profile = () => {
                             </div>
                           </div>
                           <div className="flex flex-row items-center gap-3 border-b-2 border-dashed border-[#bbc3c1] pt-2 pb-2">
-                            <label className="flex flex-row items-center font-bold gap-[5px]">
-                              <div className="w-[30px] h-auto">
+                            <label className="flex flex-row items-center font-bold gap-[5px] text-sm md:text-base whitespace-nowrap">
+                              <div className="w-[25px] md:w-[30px] h-auto">
                                 <img
                                   src="/src/assets/icons/location-orange.png"
                                   alt=""
@@ -326,7 +336,7 @@ const Profile = () => {
                             <input
                               type="text"
                               value={profile.address || ""}
-                              className="w-full"
+                              className="w-full text-sm md:text-base"
                               onChange={(e) =>
                                 setProfile((prev) => ({
                                   ...prev,
@@ -336,8 +346,8 @@ const Profile = () => {
                             />
                           </div>
                           <div className="flex flex-row items-center gap-3 border-b-2 border-dashed border-[#bbc3c1] pt-2 pb-2">
-                            <label className="flex flex-row items-center font-bold gap-[5px]">
-                              <div className="w-[30px] h-auto">
+                            <label className="flex flex-row items-center font-bold gap-[5px] text-sm md:text-base whitespace-nowrap">
+                              <div className="w-[25px] md:w-[30px] h-auto">
                                 <img
                                   src="/src/assets/icons/email-orange.png"
                                   alt=""
@@ -348,7 +358,7 @@ const Profile = () => {
                             <input
                               type="text"
                               value={profile.email}
-                              className="w-full"
+                              className="w-full text-sm md:text-base"
                               onChange={(e) =>
                                 setProfile((prev) => ({
                                   ...prev,
@@ -358,8 +368,8 @@ const Profile = () => {
                             />
                           </div>
                           <div className="flex flex-row items-center gap-3 border-b-2 border-dashed border-[#bbc3c1] pt-2 pb-2">
-                            <label className="flex flex-row items-center font-bold gap-[5px]">
-                              <div className="w-[30px] h-auto">
+                            <label className="flex flex-row items-center font-bold gap-[5px] text-sm md:text-base whitespace-nowrap">
+                              <div className="w-[25px] md:w-[30px] h-auto">
                                 <img
                                   src="/src/assets/icons/birthday-cake.png"
                                   alt=""
@@ -370,6 +380,7 @@ const Profile = () => {
                             <input
                               type="date"
                               value={profile.birthday}
+                              className="text-sm md:text-base"
                               onChange={(e) =>
                                 setProfile((prev) => ({
                                   ...prev,
@@ -379,8 +390,8 @@ const Profile = () => {
                             />
                           </div>
                           <div className="flex flex-row items-center gap-3 border-b-2 border-dashed border-[#bbc3c1] pt-2 pb-2">
-                            <label className="flex flex-row items-center font-bold gap-[5px]">
-                              <div className="w-[30px] h-auto">
+                            <label className="flex flex-row items-center font-bold gap-[5px] text-sm md:text-base">
+                              <div className="w-[25px] md:w-[30px] h-auto">
                                 <img
                                   src="/src/assets/icons/badge-orange.png"
                                   alt=""
@@ -388,9 +399,11 @@ const Profile = () => {
                               </div>
                               Badge:
                             </label>
-                            <label>{profile.badge}</label>
+                            <label className="text-sm md:text-base">
+                              {profile.badge}
+                            </label>
                           </div>
-                          <label className="leading-tight text-[14px] pt-4 pb-2 text-[#645e5f]">
+                          <label className="leading-tight text-xs md:text-[14px] pt-4 pb-2 text-[#645e5f]">
                             You've received the <strong>Snuggle Scout</strong>{" "}
                             badge! You're cuddly corners and warming hearts
                             along the way. <br />
@@ -398,17 +411,17 @@ const Profile = () => {
                             contributions don't go unnoticed!
                           </label>
                         </div>
-                        <div className="absolute bottom-0 left-0 flex flex-row gap-2">
+                        <div className="md:absolute relative md:bottom-0 md:left-0 bottom-auto left-auto flex flex-row gap-2 mt-4 md:mt-0">
                           <button
                             type="submit"
-                            className="bg-[#B5C04A] min-w-[90px] p-2 rounded-[10px] text-[#000] hover:bg-[#CFDA34] active:bg-[#B5C04A] cursor-pointer"
+                            className="bg-[#B5C04A] w-full md:min-w-[90px] p-2 rounded-[10px] text-[#000] hover:bg-[#CFDA34] active:bg-[#B5C04A] cursor-pointer text-sm md:text-base"
                           >
                             Save
                           </button>
                           <button
                             type="button"
                             onClick={profileUpdateWindow}
-                            className="bg-[#DC8801] min-w-[90px] p-2 rounded-[10px] text-[#000] hover:bg-[#fe9f07] active:bg-[#977655] cursor-pointer"
+                            className="bg-[#DC8801] w-full md:min-w-[90px] p-2 rounded-[10px] text-[#000] hover:bg-[#fe9f07] active:bg-[#977655] cursor-pointer text-sm md:text-base"
                           >
                             Cancel
                           </button>
@@ -419,7 +432,7 @@ const Profile = () => {
                 )}
               </div>
 
-              <div className="flex flex-col gap-4 bg-[#FDF5D8] p-10 rounded-[15px] shadow-md">
+              <div className="flex flex-col gap-4 bg-[#FDF5D8] p-4 md:p-10 rounded-[15px] shadow-md">
                 {/* WHISKER METER */}
                 <ProgressBar user={{ points }} />
               </div>

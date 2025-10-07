@@ -36,39 +36,46 @@ const ReportandAnalytics = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen pb-10">
+    <div className="flex flex-col min-h-screen md:pb-10 pb-24">
       <CatBot />
       <NavigationBar />
       <WhiskerMeter user={{ points }} />
-      <main className="relative p-20 pl-40 flex justify-start flex-col">
-        <div className="pl-190"></div>
-        <div className="relative w-250 h-300 bg-white p-20 shadow-xl  flex-col justify-center rounded-2xl  z-10">
-          {/* Analytics Tab */}
-          <div
-            className={`bg-[#B5C04A] text-white w-60 justify-center rounded-t-2xl p-4 absolute -top-14.5 right-3 cursor-pointer transition-all duration-300 ease-in-out border-2 border-b-0 ${
-              activeTab === "Analytics" ? "z-20" : "z-10 -top-10 opacity-80"
-            }`}
-            onClick={() => handleTabClick("Analytics")}
-          >
-            <div className="flex">Analytics</div>
-          </div>
+      <main className="relative md:p-20 md:pl-40 p-4 flex justify-start flex-col">
+        <div className="md:pl-190"></div>
+        <div className="relative w-full md:w-250 h-auto md:h-300 bg-white md:p-20 p-4 shadow-xl flex-col justify-center rounded-2xl z-10">
+          {/* Tab Navigation - Mobile: Stacked, Desktop: Side by side */}
+          <div className="flex md:flex-row flex-col gap-2 md:gap-0 mb-4 md:mb-0">
+            {/* Analytics Tab */}
+            <div
+              className={`bg-[#B5C04A] text-white md:w-60 w-full justify-center md:rounded-t-2xl rounded-xl p-4 md:absolute md:-top-14.5 md:right-3 relative top-0 right-0 cursor-pointer transition-all duration-300 ease-in-out border-2 md:border-b-0 text-center text-sm md:text-base ${
+                activeTab === "Analytics"
+                  ? "z-20"
+                  : "z-10 md:-top-10 opacity-80"
+              }`}
+              onClick={() => handleTabClick("Analytics")}
+            >
+              <div className="flex justify-center">Analytics</div>
+            </div>
 
-          {/* Reports Tab */}
-          <div
-            className={`bg-[#B5C04A] text-white w-60 justify-center rounded-t-2xl p-4 absolute -top-14.5 right-65 cursor-pointer transition-all duration-300 ease-in-out border-2 border-b-0 ${
-              activeTab === "Reports" ? "z-20 " : "z-10 -top-10 opacity-80"
-            }`}
-            onClick={() => handleTabClick("Reports")}
-          >
-            <div className="flex">Reports</div>
+            {/* Reports Tab */}
+            <div
+              className={`bg-[#B5C04A] text-white md:w-60 w-full justify-center md:rounded-t-2xl rounded-xl p-4 md:absolute md:-top-14.5 md:right-65 relative top-0 right-0 cursor-pointer transition-all duration-300 ease-in-out border-2 md:border-b-0 text-center text-sm md:text-base ${
+                activeTab === "Reports" ? "z-20 " : "z-10 md:-top-10 opacity-80"
+              }`}
+              onClick={() => handleTabClick("Reports")}
+            >
+              <div className="flex justify-center">Reports</div>
+            </div>
           </div>
 
           {/* Dynamic Content */}
-          {activeTab === "Analytics" ? (
-            <AnalyticsContainer totalAmount={totalAmount} />
-          ) : (
-            <ReportsContainer totalAmount={totalAmount} />
-          )}
+          <div className="mt-4 md:mt-0">
+            {activeTab === "Analytics" ? (
+              <AnalyticsContainer totalAmount={totalAmount} />
+            ) : (
+              <ReportsContainer totalAmount={totalAmount} />
+            )}
+          </div>
         </div>
       </main>
 

@@ -141,7 +141,7 @@ const CatBot = () => {
       </div>
 
       {/* Mobile CatBot - Shown only on mobile */}
-      <div className="md:hidden fixed bottom-20 right-4 z-20">
+      <div className="md:hidden fixed bottom-25 right-4 z-20">
         {/* Chat Panel */}
         {isChatOpen && (
           <div className="absolute bottom-20 right-0 w-72 bg-white rounded-2xl shadow-2xl overflow-hidden mb-2">

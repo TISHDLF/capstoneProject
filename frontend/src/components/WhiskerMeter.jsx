@@ -25,7 +25,7 @@ const WhiskerMeter = () => {
   return (
     <>
       {/* Desktop WhiskerMeter - Hidden on mobile */}
-      <div className="hidden md:block fixed -left-4 top-[20%] scale-90 z-10 pointer-events-none">
+      <div className="hidden md:block fixed -left-4 top-[20%] scale-90 z-50 pointer-events-none">
         <div
           className={`transition-all duration-300 ease-in-out ${
             expanded ? "w-80" : "w-24"
@@ -128,7 +128,7 @@ const WhiskerMeter = () => {
       </div>
 
       {/* Mobile WhiskerMeter - Shown only on mobile */}
-      <div className="md:hidden fixed bottom-25 left-4 z-10">
+      <div className="md:hidden fixed bottom-25 left-4 z-30">
         <div
           className={`transition-all duration-300 ease-in-out cursor-pointer ${
             expanded ? "bg-yellow-50 rounded-3xl shadow-lg p-4 w-64" : ""

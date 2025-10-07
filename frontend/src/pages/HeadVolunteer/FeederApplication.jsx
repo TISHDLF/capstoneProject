@@ -48,7 +48,6 @@ const FeederApplication = () => {
         `http://localhost:5000/feeder/application/${applicationId}/form`,
         { responseType: "blob" }
       );
-      // Create a temporary URL for the blob
       const fileURL = URL.createObjectURL(response.data);
       window.open(fileURL, "_blank");
     } catch (err) {
@@ -92,11 +91,78 @@ const FeederApplication = () => {
     );
 
   return (
-    <div className="flex flex-col min-h-screen pb-10">
+    <div className="flex flex-col min-h-screen md:pb-10 pb-24">
       <NavigationBar />
-      <div className="grid grid-cols-[80%_20%] h-full pb-30 pt-10">
-        <div className="p-10">
-          <div className="overflow-x-auto rounded-2xl shadow-lg bg-white h-250">
+      <div className="md:grid md:grid-cols-[80%_20%] h-full pb-30 pt-10">
+        <div className="p-4 md:p-10">
+          {/* Mobile Card View */}
+          <div className="md:hidden space-y-4">
+            {currentApps.length === 0 ? (
+              <div className="bg-white rounded-lg shadow p-6 text-center">
+                No volunteer applications found.
+              </div>
+            ) : (
+              currentApps.map((app) => (
+                <div
+                  key={app.application_id}
+                  className="bg-white rounded-lg shadow-lg p-4"
+                >
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-start">
+                      <span className="font-bold text-[#DC8801]">
+                        #{app.application_id}
+                      </span>
+                      <span
+                        className={`px-2 py-1 rounded text-xs font-semibold ${
+                          app.status === "Accepted"
+                            ? "bg-blue-100 text-blue-600"
+                            : app.status === "Pending"
+                            ? "bg-yellow-100 text-yellow-600"
+                            : "bg-red-100 text-red-600"
+                        }`}
+                      >
+                        {app.status}
+                      </span>
+                    </div>
+                    <div className="text-sm">
+                      <p>
+                        <span className="font-semibold">User ID:</span>{" "}
+                        {app.user_id}
+                      </p>
+                      <p>
+                        <span className="font-semibold">Name:</span>{" "}
+                        {app.user_name}
+                      </p>
+                      <p>
+                        <span className="font-semibold">Date:</span>{" "}
+                        {app.application_date}
+                      </p>
+                    </div>
+                    <div className="flex gap-2 pt-2">
+                      <button
+                        className="flex-1 px-4 py-2 rounded-lg text-white bg-blue-500 text-sm"
+                        onClick={() => handleViewForm(app.application_id)}
+                      >
+                        View Form
+                      </button>
+                      {app.status === "Pending" &&
+                        app.user_id !== user.user_id && (
+                          <button
+                            onClick={() => handleApprove(app.application_id)}
+                            className="flex-1 px-4 py-2 rounded-lg text-white bg-lime-500 hover:bg-lime-600 text-sm"
+                          >
+                            Process
+                          </button>
+                        )}
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Desktop Table View */}
+          <div className="hidden md:block overflow-x-auto rounded-2xl shadow-lg bg-white h-250">
             <table className="min-w-full text-sm text-left border-collapse">
               <thead>
                 <tr className="bg-[#DC8801] text-white text-sm">
@@ -125,8 +191,6 @@ const FeederApplication = () => {
                       <td className="px-6 py-3">{app.user_id}</td>
                       <td className="px-6 py-3">{app.user_name}</td>
                       <td className="px-6 py-3">{app.application_date}</td>
-
-                      {/* Form column */}
                       <td className="px-6 py-3 flex items-center gap-2">
                         <button
                           className="px-4 py-1 rounded-lg text-white bg-blue-500"
@@ -135,7 +199,6 @@ const FeederApplication = () => {
                           View Form
                         </button>
                       </td>
-                      {/* Status column */}
                       <td className="px-6 py-3">
                         {app.status === "Pending" ? (
                           app.user_id !== user.user_id ? (
@@ -167,37 +230,37 @@ const FeederApplication = () => {
                 )}
               </tbody>
             </table>
+          </div>
 
-            {/* Pagination */}
-            <div className="flex justify-center gap-2 mt-6 pt-10 pb-10">
+          {/* Pagination */}
+          <div className="flex justify-center gap-2 mt-6 flex-wrap">
+            <button
+              disabled={page === 1}
+              onClick={() => setPage((p) => p - 1)}
+              className="px-3 md:px-4 py-2 rounded bg-gray-200 disabled:opacity-50 text-sm"
+            >
+              Prev
+            </button>
+            {[...Array(totalPages)].map((_, i) => (
               <button
-                disabled={page === 1}
-                onClick={() => setPage((p) => p - 1)}
-                className="px-4 py-2 rounded bg-gray-200 disabled:opacity-50"
+                key={i + 1}
+                onClick={() => setPage(i + 1)}
+                className={`px-3 md:px-4 py-2 rounded text-sm ${
+                  page === i + 1
+                    ? "bg-yellow-500 text-white"
+                    : "bg-gray-100 hover:bg-gray-300"
+                }`}
               >
-                Prev
+                {i + 1}
               </button>
-              {[...Array(totalPages)].map((_, i) => (
-                <button
-                  key={i + 1}
-                  onClick={() => setPage(i + 1)}
-                  className={`px-4 py-2 rounded ${
-                    page === i + 1
-                      ? "bg-yellow-500 text-white"
-                      : "bg-gray-100 hover:bg-gray-300"
-                  }`}
-                >
-                  {i + 1}
-                </button>
-              ))}
-              <button
-                disabled={page === totalPages}
-                onClick={() => setPage((p) => p + 1)}
-                className="px-4 py-2 rounded bg-gray-200 disabled:opacity-50"
-              >
-                Next
-              </button>
-            </div>
+            ))}
+            <button
+              disabled={page === totalPages}
+              onClick={() => setPage((p) => p + 1)}
+              className="px-3 md:px-4 py-2 rounded bg-gray-200 disabled:opacity-50 text-sm"
+            >
+              Next
+            </button>
           </div>
         </div>
         <div className="overflow-y-auto max-h-screen">
