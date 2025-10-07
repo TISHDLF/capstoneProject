@@ -120,7 +120,7 @@ const CatBot = () => {
   return (
     <>
       {/* Desktop CatBot - Hidden on mobile */}
-      <div className="hidden md:flex fixed bottom-5 right-5 flex-col justify-end items-end gap-2 z-10">
+      <div className="hidden md:flex fixed bottom-5 right-5 flex-col justify-end items-end gap-2 z-90">
         <div
           className={`relative right-9 flex flex-col items-center justify-center text-[#000] max-w-[275px] h-auto bg-[#DC8801] p-4 rounded-bl-xl rounded-tl-xl rounded-tr-xl transition-opacity duration-300  ${
             isLabelVisible ? "opacity-100" : "opacity-0 hidden"

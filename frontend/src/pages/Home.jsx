@@ -10,7 +10,7 @@ import Footer from "../components/Footer";
 import CatBot from "../components/CatBot";
 import WhiskerMeterGuide from "../components/WhiskerMeterGuide";
 import WhiskerMeter from "../components/WhiskerMeter";
-
+import CatCarousel from "../components/CatCarousel";
 import pic from "../assets/CatNewsModel.png";
 import news1 from "../assets/SampleNewsPic.png";
 import news2 from "../assets/news2.png";
@@ -123,40 +123,29 @@ const Home = () => {
           </div>
 
           {/* Cat Community Adoption Section */}
-          <div className="flex p-10 md:pl-0 md:pr-0 pl-4 pr-4">
-            <div className="flex justify-center md:p-10 p-4 gap-10">
-              <div className="w-13 hidden md:block"></div>
-              <div className="bg-yellow-600 hidden md:w-270 w-auto p-4  justify-center text-white rounded-tr-4xl rounded-tl-4xl md:absolute md:top-380 md:right-75 relative mb-4 md:mb-0 hover: transition-shadow duration-300 z-0">
-                Adopt a cat
+          <div className="flex  px-4 md:px-20 py-6 md:py-10">
+            <div className=" md:w-13"></div>
+            <div className="relative flex flex-col items-center w-full md:w-270">
+              {/* Section Label */}
+              <div className="bg-yellow-600 w-50 p-4 text-center text-white rounded-tl-4xl rounded-tr-4xl mb-2 shadow-md absolute -top-14 right-0 z-10">
+                Adopt a Cat
               </div>
-              <div className="justify-center w-full md:w-270 rounded-br-4xl rounded-bl-4xl rounded-tl-4xl shadow-2xl hover:shadow-xl transition-shadow duration-300 p-5">
-                <div className="w-full h-auto md:h-45">
-                  {/* Cat Images */}
-                  <div className="grid grid-cols-2 md:flex md:justify-around gap-3 overflow-hidden">
-                    {catImages.slice(0, 6).map((img, index) => (
-                      <img
-                        key={index}
-                        src={img.url}
-                        alt={`Cat ${index}`}
-                        className={`w-full md:w-[160px] h-[160px] rounded-[10px] object-cover cursor-pointer ${
-                          selectedImage === img.url
-                            ? "opacity-100 border-2 border-[#DC8801]"
-                            : "opacity-100 hover:border-1s border-[#DC8801]"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                </div>
-                <div className="flex justify-end mt-4">
-                  <Link
-                    to={"/catadoption"}
-                    className="pl-5 pr-5 p-2 bg-yellow-600 text-white rounded-2xl active:bg-yellow-500"
-                  >
-                    More info
-                  </Link>
-                </div>
+
+              {/* Carousel */}
+              <CatCarousel
+                catImages={catImages}
+                selectedImage={selectedImage}
+              />
+
+              {/* More Info Button */}
+              <div className="flex justify-center mt-4 pt-3">
+                <Link
+                  to="/catadoption"
+                  className="px-5 py-2 bg-yellow-600 text-white rounded-2xl active:bg-yellow-500 text-sm md:text-base"
+                >
+                  More info
+                </Link>
               </div>
-              <div className="hidden md:block"></div>
             </div>
           </div>
 

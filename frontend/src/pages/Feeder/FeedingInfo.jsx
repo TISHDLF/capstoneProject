@@ -80,7 +80,7 @@ const FeedingInfo = () => {
       )}
 
       <div className="md:p-10 md:pl-50 p-4 h-full">
-        <div className="relative flex flex-col gap-5 bg-[#FFF] rounded-[25px] md:w-240 w-full h-auto shadow-2xl">
+        <div className="relative flex flex-col gap-5 bg-[#FFF] rounded-[25px] md:w-240 w-full h-auto shadow-2xl pb-10">
           <div className="md:absolute md:-left-11.5 md:top-10 relative left-0 top-0 flex items-center gap-3 md:gap-5 p-4 bg-[#ffffff] shadow-md rounded-[15px] md:w-40 w-full">
             <label className="flex flex-row font-bold text-[#DC8801] text-sm md:text-base">
               Feeding Information
