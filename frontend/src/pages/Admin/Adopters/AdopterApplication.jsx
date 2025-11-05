@@ -34,18 +34,20 @@ const AdopterApplication = () => {
                 {/* Application ID/Application Name/ Date Applied */}
                 <table className='flex flex-col w-full gap-2'>
                   <thead className='flex w-full'>
-                    <tr className='grid grid-cols-5 justify-items-start place-items-start w-full bg-[#DC8801] p-3 rounded-[15px] text-[#FFF]'>
+                    <tr className='grid grid-cols-6 justify-items-start place-items-start w-full bg-[#DC8801] p-3 rounded-[15px] text-[#FFF]'>
                       <th>Application No.</th>
                       <th>Applicant Name</th>
+                      <th>Cat Name</th>
                       <th>Date Applied</th>
                       <th>Application Form</th>
                       <th>Status</th>
                     </tr>
                   </thead>
                   <tbody className='flex flex-col w-full overflow-y-scroll min-h-[550px]'>
-                    <tr className='grid grid-cols-5 justify-items-start place-items-center w-full bg-[#FFF] p-3 rounded-[15px] text-[#2F2F2F] border-b-1 border-b-[#595959]'>
+                    <tr className='grid grid-cols-6 justify-items-start place-items-center w-full bg-[#FFF] p-3 rounded-[15px] text-[#2F2F2F] border-b-1 border-b-[#595959]'>
                       <td>01</td>
                       <td>Angelo Cabangal</td>
+                      <td>Joleta</td>
                       <td>00/00/0000</td>
                       <td>
                         <Link to="/adopterapplication/adopterapplicationview" className='flex items-center gap-4 text-[#DC8801] underline font-bold hover:text-[#977655] active:text-[#DC8801]'>

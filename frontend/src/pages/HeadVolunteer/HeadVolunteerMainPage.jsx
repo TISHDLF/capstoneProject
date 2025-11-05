@@ -63,7 +63,9 @@ const HeadVolunteerMainPage = () => {
       </div>
     );
 
+    console.log("Rendering HeadVolunteerMainPage");
   return (
+    
     <div>
       <div className="flex flex-col min-h-screen pb-10">
         <CatBot />

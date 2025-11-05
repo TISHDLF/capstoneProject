@@ -4,6 +4,9 @@ import { useState, useEffect } from 'react'
 import  axios  from 'axios';
 import Cookies from 'js-cookie'
 
+// TODO: Automatic validator for Head_volunteer/Admin
+// Remove Dropdown selection: Head_volunteer => Email, Admin => Username
+
 const AdminLogin = () => {
     const navigate = useNavigate();
 
@@ -15,7 +18,7 @@ const AdminLogin = () => {
     function handeAdminLogin(event) {
         event.preventDefault();
 
-        axios.post('http://localhost:5000/users/adminlogin', {username, role, password})
+        axios.post('http://localhost:5000/user/adminlogin', {username, password})
             .then(response => {
                 const user = response.data.user;
 
@@ -26,9 +29,19 @@ const AdminLogin = () => {
 
 
                 console.log(user)
-                Cookies.set('user', JSON.stringify(user), { expires: 30 }); 
-                const dashboardPath = user.role === 'admin' ? '/dashboard' : '/testhvhomepage';
-                navigate(dashboardPath);
+                
+                // const dashboardPath = user.role === 'admin' ? '/dashboard' : '/hvdashboard';
+                // navigate(dashboardPath);
+
+                if (user.role == 'admin') {
+                    Cookies.set('user', JSON.stringify(user), { expires: 30 }); 
+                    navigate('/dashboard');
+                } else if (user.role == 'head_volunteer') {
+                    Cookies.set('user', JSON.stringify(user), { expires: 30 }); 
+                    navigate('/hvdashboard');
+                } else {
+                    setError('Your account is invalid!');
+                }
                 
             })
             .catch((err) => {
@@ -52,11 +65,11 @@ const AdminLogin = () => {
                 </div>
                 <form onSubmit={handeAdminLogin} className='flex flex-col items-center gap-8'>
                     <input type="text" placeholder='Username' value={username} onChange={(event) => setUsername(event.target.value)} className='border-b-2 border-b-[#977655] p-2' />
-                    <select value={role} onChange={(event) => setRole(event.target.value)} className='border-b-2 border-b-[#977655] w-full p-2'>
+                    {/* <select value={role} onChange={(event) => setRole(event.target.value)} className='border-b-2 border-b-[#977655] w-full p-2'>
                         <option value="" disabled hidden>Select a role</option>
                         <option value="admin"> Admin </option>
                         <option value="head_volunteer" > Head Volunteer </option>
-                    </select>
+                    </select> */}
                     <input type="password" placeholder='Password' value={password} onChange={(event) => setPassword(event.target.value)} className='border-b-2 border-b-[#977655] p-2' />
 
                     <div className='flex gap-2'>

@@ -33,7 +33,7 @@ const CatProfileProperty = () => {
 
         const fetchProfile = async () => {
             try {
-                const response = await axios.get(`http://localhost:5000/catprofile/${cat_id}`);
+                const response = await axios.get(`http://localhost:5000/cat/catprofile/${cat_id}`);
                 console.log(response.data.date_created)
                 setCatprofile(response.data)
                 setOriginalCatprofile(response.data)
@@ -77,6 +77,7 @@ const CatProfileProperty = () => {
                 description: catprofile.description
             });
 
+            window.location.reload();
         } catch(err) {
             console.error('Update failed:', err.response?.data || err.message);
         }
@@ -116,7 +117,7 @@ const CatProfileProperty = () => {
             });
 
             const response = await axios.post(
-                `http://localhost:5000/upload/catimages/${cat_id}`,
+                `http://localhost:5000/cat/uploadcatimages/${cat_id}`,
                 formData, {
                     headers: {
                         'Content-Type': 'multipart/form-data'
@@ -138,7 +139,7 @@ const CatProfileProperty = () => {
     // Fetching Image data of the CAT
     const fetchCatImage = async () => {
         try {
-            const response = await axios.get(`http://localhost:5000/image/${cat_id}`);
+            const response = await axios.get(`http://localhost:5000/cat/image/${cat_id}`);
 
             const imageUrls = response.data.map(filename => ({
                 filename: filename,
@@ -153,7 +154,7 @@ const CatProfileProperty = () => {
 
     const handleDeleteImage = async (filename) => {
     try {
-        await axios.delete(`http://localhost:5000/image/${filename}`);
+        await axios.delete(`http://localhost:5000/cat/image/${filename}`);
             console.log(`Deleted image: ${filename}`);
             fetchCatImage(); // Refresh the image list
 
@@ -193,7 +194,7 @@ const CatProfileProperty = () => {
                                 </div>
                                 <div className='flex items-center gap-2'> 
                                     <label className='text-[14px]'>Date updated:</label>
-                                    <label className='text-[14px] font-bold'>{(catprofile.date_created == catprofile.date_updated) ? 'No updates' : catprofile.updated_at  }</label>
+                                    <label className='text-[14px] font-bold'>{(catprofile.date_created == catprofile.date_updated) ? 'No updates' : catprofile.date_updated  }</label>
                                 </div>
                             </div>
                             <div className='flex flex-row justify-between pb-2 border-b-1 border-b-[#CFCFCF]'>
@@ -255,7 +256,7 @@ const CatProfileProperty = () => {
                             <div className='flex flex-col gap-1'>
                                 <label className='text-[16px] text-[#595959]'>Adoption history</label>
                                 <div className='flex flex-row justify-between p-2 rounded-[10px] border-2 border-[#F2F2F2] bg-[#F2F2F2]'>
-                                    <div className='flex flex-row gap-5'>
+                                    {/* <div className='flex flex-row gap-5'>
                                         <label className='text-[#595959]'>Adopter: </label>
                                         <label className='text-[#2F2F2F] font-bold'>Angelo M. Cabangal</label>
                                     </div>
@@ -268,7 +269,9 @@ const CatProfileProperty = () => {
                                     <div className='flex flex-row gap-5'>
                                         <label className='text-[#595959]'>Contact #: </label>
                                         <label className='text-[#2F2F2F] font-bold'>09084853419</label>
-                                    </div>
+                                    </div> */}
+
+                                    <label className='italic text-[#a3a3a3]'>{`${catprofile.name} have no adoption history.`}</label>
                                 </div>
                             </div>
 
@@ -284,95 +287,6 @@ const CatProfileProperty = () => {
 
 
                             {/* Image/s */}
-                            {/* FUNCTION: Fetches all the Image data from the Database */}
-                            {/* <div className={uploaderVisible ? 'hidden' : 'flex flex-col'}>
-                                <div className='flex items-center justify-between pb-2'>
-                                    <label className='text-[#595959]'>Image/s</label>
-                                    <div className='flex gap-2 items-center'>
-                                    
-                                        <button type='button' onClick={handleImageUploaderWindow}
-                                        className={!uploaderVisible ? 'flex gap-2 items-center justify-center p-2 pl-3 pr-4 w-auto h-auto bg-[#2F2F2F] text-[#FFF] rounded-[15px] cursor-pointer hover:bg-[#595959] active:bg-[#2F2F2F]' : 'hidden' }>
-                                            <div className='flex items-center w-[25px] h-auto'>
-                                                <img src="/src/assets/icons/admin-icons/setting_white.png" alt="settings" />
-                                            </div>
-                                            Manage Image
-                                        </button>
-                                    </div>
-                                </div>
-                                <div className='grid grid-cols-5 gap-2 w-full'>
-                                    {catImage.map((image, index) => (
-                                        <div key={index} className='relative flex items-center bg-[#595959] max-w-[250px] h-[250px] rounded-[10px] overflow-hidden'>
-                                            <img src={image} alt={`uploaded-${index}`} className="w-full h-full object-cover"/> 
-                                        </div>
-                                        
-                                    ))}
-                                </div>
-                            </div> */}
-
-                            {/* FUNCTION: Display all the image and delete selected image */}
-                            {/* {uploaderVisible && (
-                                <>
-                                    <div className='flex flex-col w-full gap-2 p-5 rounded-[10px] border-1 border-[#a3a3a3] bg-[#FDF5D8]'>
-                                    <div className='flex w-full gap-2 justify-between border-b-1 border-b-[#595959] pb-2'>
-                                        <div className='flex gap-4 items-center'>
-                                        <label className='text-[18px] text-[#2F2F2F] font-bold'>UPLOAD NEW IMAGE</label>
-                                        <label htmlFor="catImageUpload"
-                                            className='flex items-center justify-center p-2 pl-4 pr-4 gap-2 w-auto h-auto bg-[#2F2F2F] text-[#FFF] rounded-[20px] cursor-pointer hover:bg-[#595959] active:bg-[#2F2F2F]'>
-                                               <div className='w-[15px] h-auto'>
-                                                <img src="/src/assets/icons/add-white.png" alt="" />
-                                               </div>
-                                            Add Image
-                                            <input type="file" accept='image/*' id="catImageUpload" onChange={handleImageChange} className='hidden' />
-                                        </label>
-                                        </div>
-                                        <button type='button' onClick={handleImageUploaderWindow}
-                                        className='cursor-pointer p-2 pl-6 pr-6 hover:bg-[#CCCCCC] active:bg-[#FFF] rounded-[15px]'>
-                                        Close
-                                        </button>
-                                    </div>
-
-                                    <div className='grid grid-cols-5 gap-2 w-full'>
-                                        {catImage.map((base64Str, index) => (
-                                            <div key={`existing-${index}`} className='relative flex items-center bg-[#595959] max-w-[250px] h-[250px] rounded-[10px] overflow-hidden'>
-                                            <button
-                                                type='button'
-                                                className='absolute top-2 right-2 p-1 pl-4 pr-4 bg-[#FFF] text-[#2F2F2F] font-bold rounded-[10px] cursor-pointer active:bg-[#CFCFCF]'>
-                                                Delete
-                                            </button>
-                                            <img src={base64Str} alt={`uploaded-${index}`} className="w-full h-full object-cover" />
-                                            </div>
-                                        ))}
-
-                                        {catImagePreview.map((previewBase64Str, index) => (
-                                            <div key={`preview-${index}`} className='relative flex items-center bg-[#CFCFCF] max-w-[250px] h-[250px] rounded-[10px] overflow-hidden'>
-                                            <button
-                                                type='button'
-                                                onClick={() => handleDeleteImage(index)} // Deletes from preview
-                                                className='absolute top-2 right-2 p-1 pl-4 pr-4 bg-[#FFF] text-[#2F2F2F] font-bold rounded-[10px] cursor-pointer active:bg-[#AAA]' >
-                                                Delete
-                                            </button>
-                                            <img src={previewBase64Str} alt={`preview-${index}`} className="w-full h-full object-cover opacity-90" />
-                                            <span className='absolute bottom-2 left-2 text-xs bg-white text-black px-2 py-1 rounded'>Preview</span>
-                                            </div>
-                                        ))}
-
-                                        
-
-                                    </div>
-
-                                    <div className='flex w-full gap-2 justify-end'>
-                                        <div className='flex gap-2 items-center'>
-                                            <button type='button' onClick={() => handleUploadImages(cat_id)}
-                                                className={!catImagePreview.length ? 'hidden' : 'p-2 pl-6 pr-6 w-auto h-auto bg-[#B5C04A] text-[#FFF] rounded-[15px] cursor-pointer hover:bg-[#CFDA34] active:bg-[#B5C04A]'}>
-                                                Save
-                                            </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </> 
-                            )} */}
-
-
                             {/* THIS BLOCK DISPLAYS THE IMAGE SAVED ON DATABASE w/ DELETE FUNCTIONALITY */}
                             {!uploaderVisible && (
                                 <div className='flex flex-col gap-2 border-1 border-[#a3a3a3] p-3 rounded-[15px]'>

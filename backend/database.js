@@ -4,10 +4,10 @@ import dotenv from 'dotenv';
 // Load environment variables
 dotenv.config();
 
-
-async function connectDB() {
+let db;
+export async function connectDB() {
   try {
-    const db = await mysql.createConnection({
+    db = await mysql.createConnection({
       host: process.env.DB_HOST || 'localhost',
       user: process.env.DB_USER || 'root',
       password: process.env.DB_PASSWORD || '',
@@ -23,5 +23,12 @@ async function connectDB() {
   }
 }
 
+
 // Initialize the connection
-export default async () => await getDB();
+export function getDB() {
+  if (!db) {
+    throw new Error('Database not connected. Call connectDB() first.');
+  }
+  return db;
+}
+
